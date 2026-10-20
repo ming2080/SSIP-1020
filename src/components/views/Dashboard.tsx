@@ -49,7 +49,8 @@ import {
   Sparkles,
   Camera,
   TrendingUp,
-  X
+  X,
+  Tv
 } from 'lucide-react';
 import { ViewType } from '@/src/types';
 
@@ -4219,6 +4220,31 @@ export function Dashboard({ onExit, onNavigate, initialProjectId, initialViewSco
               <Cloud className="w-3.5 h-3.5 mr-1 text-[#00d2ff] shrink-0" /> 25°C 晴
             </span>
           </div>
+
+          {/* 📺 作业面大屏链接按钮 */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              try {
+                if (!document.fullscreenElement) {
+                  document.documentElement.requestFullscreen?.().catch(() => {});
+                }
+              } catch (_) {}
+
+              if (onNavigate) {
+                onNavigate('workface_screen');
+              } else {
+                window.dispatchEvent(new CustomEvent('navigate_view', { detail: { view: 'workface_screen' } }));
+              }
+            }}
+            className="px-3 py-1 text-xs font-bold border border-[#00d2ff]/80 bg-gradient-to-r from-[#06244d] via-[#0d3b6f] to-[#082046] text-[#00d2ff] hover:text-white hover:border-[#00e676] hover:shadow-[0_0_14px_rgba(0,230,118,0.5)] rounded-full transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer shadow-[0_0_12px_rgba(0,210,255,0.4)] active:scale-95 group"
+            title="进入作业面大屏安全监控系统 (关联 src/yxkj-v5.html)"
+          >
+            <Tv className="w-3.5 h-3.5 text-[#00d2ff] group-hover:scale-110 group-hover:text-[#00e676] transition-transform animate-pulse" />
+            <span>作业面大屏</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00d2ff] group-hover:bg-[#00e676] shadow-[0_0_6px_#00d2ff]"></span>
+          </button>
 
           {/* 🚨 触发告警信息按钮 (与左侧查询框互换位置) */}
           <button 

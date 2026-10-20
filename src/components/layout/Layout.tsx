@@ -27,6 +27,7 @@ interface LayoutProps {
 
 export function Layout({ currentUser, onLogout }: LayoutProps = {}) {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
+  const [previousView, setPreviousView] = useState<ViewType>('dashboard');
   const [personnelNavState, setPersonnelNavState] = useState<{ personId?: string; autoPlay?: boolean } | null>(null);
   const [dashboardNavState, setDashboardNavState] = useState<{ projectId?: string; viewScope?: 'yard' | 'project' } | null>(null);
   const [selectedEmpForUserCreation, setSelectedEmpForUserCreation] = useState<string | undefined>(undefined);
@@ -60,6 +61,9 @@ export function Layout({ currentUser, onLogout }: LayoutProps = {}) {
 
   const handleNavigate = (view: ViewType, extra?: { personId?: string; autoPlay?: boolean; projectId?: string; viewScope?: 'yard' | 'project' }) => {
     if (typeof view !== 'string') return;
+    if (view === 'workface_screen' && currentView !== 'workface_screen') {
+      setPreviousView(currentView);
+    }
     if ((view === 'personnel' || view === 'personnel_track') && extra) {
       setPersonnelNavState({ personId: extra.personId, autoPlay: extra.autoPlay });
     }
@@ -68,6 +72,13 @@ export function Layout({ currentUser, onLogout }: LayoutProps = {}) {
         projectId: extra.projectId,
         viewScope: extra.viewScope || (extra.projectId ? 'project' : undefined)
       });
+    }
+    setCurrentView(view);
+  };
+
+  const handleSidebarChangeView = (view: ViewType) => {
+    if (view === 'workface_screen' && currentView !== 'workface_screen') {
+      setPreviousView(currentView);
     }
     setCurrentView(view);
   };
@@ -191,11 +202,23 @@ export function Layout({ currentUser, onLogout }: LayoutProps = {}) {
     );
   }
 
+  // 需求：作业面大屏打开时默认为全屏显示 (脱离普通后台布局限制，100%全景沉浸式渲染，支持ESC与控制台双向联动)
+  if (currentView === 'workface_screen') {
+    return (
+      <WorkfaceScreenView 
+        onExit={() => setCurrentView(previousView || 'dashboard')}
+        onNavigateToDashboard={() => setCurrentView('dashboard')}
+        onNavigateToConfig={() => setCurrentView('workface_config')}
+        onNavigateToMonitor={() => setCurrentView('workface_monitor')}
+      />
+    );
+  }
+
   return (
     <div className="flex h-screen bg-slate-50 text-slate-800 overflow-hidden font-sans">
       <Sidebar 
         currentView={currentView} 
-        onChangeView={setCurrentView} 
+        onChangeView={handleSidebarChangeView} 
         currentUser={currentUser}
         onLogout={onLogout}
       />

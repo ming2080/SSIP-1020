@@ -613,7 +613,14 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
             {onNavigateToScreen && (
               <button
                 type="button"
-                onClick={onNavigateToScreen}
+                onClick={() => {
+                  try {
+                    if (!document.fullscreenElement) {
+                      document.documentElement.requestFullscreen?.().catch(() => {});
+                    }
+                  } catch (_) {}
+                  onNavigateToScreen();
+                }}
                 className="px-3 py-1.5 border border-cyan-300 text-cyan-800 bg-cyan-50/80 hover:bg-cyan-100 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
                 title="进入作业面大屏全景监控系统"
               >

@@ -163,6 +163,13 @@ export function Sidebar({ currentView, onChangeView, currentUser, onLogout }: Si
 
   // 点击二级子菜单
   const handleChildClick = (childId: ViewType) => {
+    if (childId === 'workface_screen') {
+      try {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen?.().catch(() => {});
+        }
+      } catch (_) {}
+    }
     onChangeView(childId);
   };
 
