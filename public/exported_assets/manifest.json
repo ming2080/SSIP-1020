@@ -1,0 +1,559 @@
+{
+  "exportDate": "2026-09-14T03:34:58.615Z",
+  "totalIcons": 108,
+  "icons": [
+    {
+      "name": "Bell",
+      "fileName": "bell.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Search",
+      "fileName": "search.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Settings",
+      "fileName": "settings.svg",
+      "type": "svg"
+    },
+    {
+      "name": "User",
+      "fileName": "user.svg",
+      "type": "svg"
+    },
+    {
+      "name": "ChevronDown",
+      "fileName": "chevron-down.svg",
+      "type": "svg"
+    },
+    {
+      "name": "LogOut",
+      "fileName": "log-out.svg",
+      "type": "svg"
+    },
+    {
+      "name": "ShieldCheck",
+      "fileName": "shield-check.svg",
+      "type": "svg"
+    },
+    {
+      "name": "KeyRound",
+      "fileName": "key-round.svg",
+      "type": "svg"
+    },
+    {
+      "name": "FileText",
+      "fileName": "file-text.svg",
+      "type": "svg"
+    },
+    {
+      "name": "CheckCircle2",
+      "fileName": "check-circle2.svg",
+      "type": "svg"
+    },
+    {
+      "name": "HelpCircle",
+      "fileName": "help-circle.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Sparkles",
+      "fileName": "sparkles.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Layers",
+      "fileName": "layers.svg",
+      "type": "svg"
+    },
+    {
+      "name": "X",
+      "fileName": "x.svg",
+      "type": "svg"
+    },
+    {
+      "name": "LayoutDashboard",
+      "fileName": "layout-dashboard.svg",
+      "type": "svg"
+    },
+    {
+      "name": "FolderKanban",
+      "fileName": "folder-kanban.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Users",
+      "fileName": "users.svg",
+      "type": "svg"
+    },
+    {
+      "name": "ShieldAlert",
+      "fileName": "shield-alert.svg",
+      "type": "svg"
+    },
+    {
+      "name": "BellRing",
+      "fileName": "bell-ring.svg",
+      "type": "svg"
+    },
+    {
+      "name": "ServerCrash",
+      "fileName": "server-crash.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Ship",
+      "fileName": "ship.svg",
+      "type": "svg"
+    },
+    {
+      "name": "List",
+      "fileName": "list.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Plus",
+      "fileName": "plus.svg",
+      "type": "svg"
+    },
+    {
+      "name": "RotateCw",
+      "fileName": "rotate-cw.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Trash2",
+      "fileName": "trash2.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Edit3",
+      "fileName": "edit3.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Eye",
+      "fileName": "eye.svg",
+      "type": "svg"
+    },
+    {
+      "name": "GitBranch",
+      "fileName": "git-branch.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Clock",
+      "fileName": "clock.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Filter",
+      "fileName": "filter.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Calendar",
+      "fileName": "calendar.svg",
+      "type": "svg"
+    },
+    {
+      "name": "ChevronRight",
+      "fileName": "chevron-right.svg",
+      "type": "svg"
+    },
+    {
+      "name": "ArrowRight",
+      "fileName": "arrow-right.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Minus",
+      "fileName": "minus.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Check",
+      "fileName": "check.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Info",
+      "fileName": "info.svg",
+      "type": "svg"
+    },
+    {
+      "name": "AlertTriangle",
+      "fileName": "alert-triangle.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Anchor",
+      "fileName": "anchor.svg",
+      "type": "svg"
+    },
+    {
+      "name": "MapPin",
+      "fileName": "map-pin.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Ban",
+      "fileName": "ban.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Maximize2",
+      "fileName": "maximize2.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Minimize2",
+      "fileName": "minimize2.svg",
+      "type": "svg"
+    },
+    {
+      "name": "PenTool",
+      "fileName": "pen-tool.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Radio",
+      "fileName": "radio.svg",
+      "type": "svg"
+    },
+    {
+      "name": "AlertCircle",
+      "fileName": "alert-circle.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Cpu",
+      "fileName": "cpu.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Building2",
+      "fileName": "building2.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Link",
+      "fileName": "link.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Lock",
+      "fileName": "lock.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Compass",
+      "fileName": "compass.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Activity",
+      "fileName": "activity.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Edit",
+      "fileName": "edit.svg",
+      "type": "svg"
+    },
+    {
+      "name": "UserCheck",
+      "fileName": "user-check.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Maximize",
+      "fileName": "maximize.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Cloud",
+      "fileName": "cloud.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Server",
+      "fileName": "server.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Crosshair",
+      "fileName": "crosshair.svg",
+      "type": "svg"
+    },
+    {
+      "name": "EyeOff",
+      "fileName": "eye-off.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Flame",
+      "fileName": "flame.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Gauge",
+      "fileName": "gauge.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Wifi",
+      "fileName": "wifi.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Volume2",
+      "fileName": "volume2.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Wind",
+      "fileName": "wind.svg",
+      "type": "svg"
+    },
+    {
+      "name": "BatteryCharging",
+      "fileName": "battery-charging.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Zap",
+      "fileName": "zap.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Shield",
+      "fileName": "shield.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Camera",
+      "fileName": "camera.svg",
+      "type": "svg"
+    },
+    {
+      "name": "TrendingUp",
+      "fileName": "trending-up.svg",
+      "type": "svg"
+    },
+    {
+      "name": "RotateCcw",
+      "fileName": "rotate-ccw.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Video",
+      "fileName": "video.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Tv",
+      "fileName": "tv.svg",
+      "type": "svg"
+    },
+    {
+      "name": "RefreshCw",
+      "fileName": "refresh-cw.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Boxes",
+      "fileName": "boxes.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Footprints",
+      "fileName": "footprints.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Settings2",
+      "fileName": "settings2.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Map",
+      "fileName": "map.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Battery",
+      "fileName": "battery.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Play",
+      "fileName": "play.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Pause",
+      "fileName": "pause.svg",
+      "type": "svg"
+    },
+    {
+      "name": "ChevronLeft",
+      "fileName": "chevron-left.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Phone",
+      "fileName": "phone.svg",
+      "type": "svg"
+    },
+    {
+      "name": "HardHat",
+      "fileName": "hard-hat.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Sliders",
+      "fileName": "sliders.svg",
+      "type": "svg"
+    },
+    {
+      "name": "ZoomIn",
+      "fileName": "zoom-in.svg",
+      "type": "svg"
+    },
+    {
+      "name": "ZoomOut",
+      "fileName": "zoom-out.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Navigation",
+      "fileName": "navigation.svg",
+      "type": "svg"
+    },
+    {
+      "name": "GitCommit",
+      "fileName": "git-commit.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Split",
+      "fileName": "split.svg",
+      "type": "svg"
+    },
+    {
+      "name": "SlidersHorizontal",
+      "fileName": "sliders-horizontal.svg",
+      "type": "svg"
+    },
+    {
+      "name": "ExternalLink",
+      "fileName": "external-link.svg",
+      "type": "svg"
+    },
+    {
+      "name": "ToggleLeft",
+      "fileName": "toggle-left.svg",
+      "type": "svg"
+    },
+    {
+      "name": "ToggleRight",
+      "fileName": "toggle-right.svg",
+      "type": "svg"
+    },
+    {
+      "name": "History",
+      "fileName": "history.svg",
+      "type": "svg"
+    },
+    {
+      "name": "PanelRightClose",
+      "fileName": "panel-right-close.svg",
+      "type": "svg"
+    },
+    {
+      "name": "PanelRightOpen",
+      "fileName": "panel-right-open.svg",
+      "type": "svg"
+    },
+    {
+      "name": "ChevronUp",
+      "fileName": "chevron-up.svg",
+      "type": "svg"
+    },
+    {
+      "name": "ArrowUpRight",
+      "fileName": "arrow-up-right.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Thermometer",
+      "fileName": "thermometer.svg",
+      "type": "svg"
+    },
+    {
+      "name": "LayoutGrid",
+      "fileName": "layout-grid.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Box",
+      "fileName": "box.svg",
+      "type": "svg"
+    },
+    {
+      "name": "CheckCircle",
+      "fileName": "check-circle.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Wrench",
+      "fileName": "wrench.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Image",
+      "fileName": "image.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Paperclip",
+      "fileName": "paperclip.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Send",
+      "fileName": "send.svg",
+      "type": "svg"
+    },
+    {
+      "name": "FileEdit",
+      "fileName": "file-edit.svg",
+      "type": "svg"
+    },
+    {
+      "name": "UploadCloud",
+      "fileName": "upload-cloud.svg",
+      "type": "svg"
+    },
+    {
+      "name": "FileCheck",
+      "fileName": "file-check.svg",
+      "type": "svg"
+    }
+  ],
+  "images": [
+    "extracted_brand.png",
+    "extracted_logo.png",
+    "extracted_logo_bright.png",
+    "extracted_system_name.png",
+    "login_backgroud.png",
+    "login_backgroud1.png",
+    "shipyard_berths_map.jpg",
+    "shipyard_wide_bg.jpg",
+    "停泊位示意图.png",
+    "船厂背景-宽屏版.jpg",
+    "船厂背景.jpeg"
+  ]
+}
