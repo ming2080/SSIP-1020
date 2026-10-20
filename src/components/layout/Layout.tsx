@@ -17,6 +17,7 @@ import { TagManagement } from '../views/TagManagement';
 import { OvertimeManagement } from '../views/OvertimeManagement';
 import { WorkfaceManagement } from '../views/workface/WorkfaceManagement';
 import { WorkfaceMonitorAnalytics } from '../views/workface/WorkfaceMonitorAnalytics';
+import { WorkfaceScreenView } from '../views/workface/WorkfaceScreenView';
 import { FullScreenAlarmMonitor } from '../views/fullscreen/FullScreenAlarmMonitor';
 
 interface LayoutProps {
@@ -132,6 +133,12 @@ export function Layout({ currentUser, onLogout }: LayoutProps = {}) {
       case 'alarm_analysis': return <AlarmConfig initialTab="analytics" />;
       case 'alarms': return <AlarmConfig initialTab="rules" />;
       case 'devices': return <DeviceManagement />;
+      case 'workface_screen': return (
+        <WorkfaceScreenView 
+          onNavigateToConfig={() => setCurrentView('workface_config')}
+          onNavigateToMonitor={() => setCurrentView('workface_monitor')}
+        />
+      );
       case 'workface_monitor': return (
         <WorkfaceMonitorAnalytics 
           onNavigateToTracking={(personId) => handleNavigate('personnel', { personId })}
@@ -143,6 +150,7 @@ export function Layout({ currentUser, onLogout }: LayoutProps = {}) {
         <WorkfaceManagement 
           onNavigateToTracking={(personId) => handleNavigate('personnel', { personId })} 
           onNavigateToMonitor={() => setCurrentView('workface_monitor')}
+          onNavigateToScreen={() => setCurrentView('workface_screen')}
         />
       );
       default: return <Dashboard />;
@@ -163,6 +171,7 @@ export function Layout({ currentUser, onLogout }: LayoutProps = {}) {
       case 'fence': return '电子围栏';
       case 'tags': return '定位标签';
       case 'devices': return '设备管理';
+      case 'workface_screen': return '作业面大屏';
       case 'workface_monitor': return '监控分析';
       case 'workface_config': return '作业面配置';
       case 'workface': return '作业面配置';

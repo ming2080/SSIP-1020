@@ -16,7 +16,8 @@ export type ViewType =
   | 'models'
   | 'workface'
   | 'workface_monitor'
-  | 'workface_config';
+  | 'workface_config'
+  | 'workface_screen';
 
 export interface Project {
   id: string;

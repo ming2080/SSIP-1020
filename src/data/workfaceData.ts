@@ -243,7 +243,10 @@ export interface WorkfaceRecord {
   code: string;                   // 作业面编号
   name: string;                   // 作业面名称
   
-  // 归属区域类型: 船厂厂区 | 造船项目
+  // 作业面类型: 有限空间 | 通用作业面
+  workfaceType?: '有限空间' | '通用作业面';
+
+  // 归属区域类型: 船厂厂区 | 建造船模选择 (原造船项目)
   belongingType: WorkfaceBelongingType;
   
   // 1. 若为船厂厂区 (yard)
@@ -253,13 +256,19 @@ export interface WorkfaceRecord {
   yardSubAreaName?: string;       // 二级具体工位/车间名称 (如 总组装焊平台一)
   yardSpecs?: string;             // 平面图解析规格 (如 121m×30m=3630㎡)
   
-  // 2. 若为造船项目 (project)
+  // 2. 若为建造船模选择 (原造船项目 project)
+  shipModelId?: string;           // 关联网格船模ID (如 M-001)
+  shipModelName?: string;         // 关联船模名称 (如 17.4万m³ 薄膜型大型LNG船)
+  shipModelType?: string;         // 关联船模类型 (如 LNG液化天然气船)
+  shipModelLayerId?: string;      // 船模型分层ID (如 L-02)
+  shipModelLayerName?: string;    // 船模型分层名称 (如 货舱层 (NO.1-4 LNG货舱))
+  
   projectId?: string;             // 所属项目ID (如 PRJ-2026-LNG01)
   projectName?: string;           // 所属项目名称
   shipCode?: string;              // 船体编码 (如 HULL-LNG-174)
   dockingArea?: string;           // 泊位 / 船台 (如 东南造船厂 1号造船台)
-  modelLevel?: 'deck' | 'middle' | 'bottom' | 'engine' | 'bridge'; // 二级楼层位置ID
-  modelLevelName?: string;        // 二级楼层位置名称 (主甲板层/中舱货油层/双层底舱/机舱区/驾驶台)
+  modelLevel?: 'deck' | 'middle' | 'bottom' | 'engine' | 'bridge' | string; // 二级楼层/分层位置ID
+  modelLevelName?: string;        // 二级楼层/分层位置名称
   elevation?: string;             // 标高范围 (如 +8.0m ~ +18.5m)
   
   // 作业面区域划定数据
@@ -277,7 +286,7 @@ export interface WorkfaceRecord {
   teamName: string;               // 施工班组
   teamLeader: string;             // 班组长
   teamLeaderPhone: string;        // 班组长电话
-  capacityLimit: number;          // 定员上限 (人)
+  capacityLimit?: number;         // 定员上限 (人, 可选)
   currentPersonnelCount: number;  // 当前在场人数
   currentPersonnel: WorkfacePersonnel[]; // 实时作业人员清单
   
@@ -287,10 +296,10 @@ export interface WorkfaceRecord {
   boundCameras: WorkfaceCamera[];
   boundAlarms: WorkfaceAlarmDevice[];
   
-  // 计划与时段
-  startDate: string;              // 开工日期
-  endDate: string;                // 竣工/完工日期
-  dailyWorkHours: string;         // 作业时段 (如 08:00 - 21:30)
+  // 计划与时段 (可选)
+  startDate?: string;             // 开工日期
+  endDate?: string;               // 竣工/完工日期
+  dailyWorkHours?: string;        // 作业时段 (如 08:00 - 21:30)
   
   // 安全防护与规范
   safetyMeasures: string[];       // 现场管控措施

@@ -35,7 +35,8 @@ import {
   ChevronRight,
   MoreVertical,
   Check,
-  BarChart3
+  BarChart3,
+  Tv
 } from 'lucide-react';
 import { 
   WorkfaceRecord, 
@@ -53,9 +54,10 @@ import { WorkfaceDetailModal } from './WorkfaceDetailModal';
 interface WorkfaceManagementProps {
   onNavigateToTracking?: (personId?: string) => void;
   onNavigateToMonitor?: () => void;
+  onNavigateToScreen?: () => void;
 }
 
-export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor }: WorkfaceManagementProps) {
+export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, onNavigateToScreen }: WorkfaceManagementProps) {
   // 数据列表
   const [workfaces, setWorkfaces] = useState<WorkfaceRecord[]>(() => getStoredWorkfaces());
   
@@ -64,6 +66,7 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor }
   
   // 检索筛选条件
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterWorkfaceType, setFilterWorkfaceType] = useState<'ALL' | '有限空间' | '通用作业面'>('ALL');
   const [filterBelonging, setFilterBelonging] = useState<'ALL' | 'yard' | 'project'>('ALL');
   const [filterYardZone, setFilterYardZone] = useState('ALL');
   const [filterProject, setFilterProject] = useState('ALL');
@@ -100,6 +103,7 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor }
   // 重置筛选
   const handleResetFilters = () => {
     setSearchTerm('');
+    setFilterWorkfaceType('ALL');
     setFilterBelonging('ALL');
     setFilterYardZone('ALL');
     setFilterProject('ALL');
@@ -119,17 +123,26 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor }
         const keyword = searchTerm.toLowerCase().trim();
         const matchCode = wf.code.toLowerCase().includes(keyword);
         const matchName = wf.name.toLowerCase().includes(keyword);
+        const matchType = wf.workfaceType?.toLowerCase().includes(keyword);
         const matchOfficer = wf.safetyOfficer.toLowerCase().includes(keyword);
         const matchTeam = wf.teamName.toLowerCase().includes(keyword);
-        const matchProject = wf.projectName?.toLowerCase().includes(keyword);
+        const matchProject = wf.projectName?.toLowerCase().includes(keyword) || wf.shipModelName?.toLowerCase().includes(keyword);
         const matchYardZone = wf.yardZoneName?.toLowerCase().includes(keyword);
         const matchYardSub = wf.yardSubAreaName?.toLowerCase().includes(keyword);
-        if (!matchCode && !matchName && !matchOfficer && !matchTeam && !matchProject && !matchYardZone && !matchYardSub) {
+        if (!matchCode && !matchName && !matchType && !matchOfficer && !matchTeam && !matchProject && !matchYardZone && !matchYardSub) {
           return false;
         }
       }
 
-      // 归属区域类型筛选 (厂区 / 项目)
+      // 作业面类型筛选 (有限空间 / 通用作业面)
+      if (filterWorkfaceType !== 'ALL') {
+        const itemType = wf.workfaceType || (wf.workType === '密闭舱室作业' ? '有限空间' : '通用作业面');
+        if (itemType !== filterWorkfaceType) {
+          return false;
+        }
+      }
+
+      // 归属区域类型筛选 (厂区 / 船模)
       if (filterBelonging !== 'ALL' && wf.belongingType !== filterBelonging) {
         return false;
       }
@@ -377,9 +390,9 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor }
         </div>
       )}
 
-      {/* 顶部概览统计卡片栏 */}
+      {/* 顶部概览统计卡片栏 (将现场作业总人数移到作业面总数后，移除重大/较大风险面) */}
       <div className="p-4 pb-2 bg-white border-b border-slate-200 shrink-0">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* 1. 总作业面 */}
           <div className="p-3 bg-slate-50/80 rounded-xl border border-slate-200 flex items-center justify-between shadow-2xs">
             <div>
@@ -392,7 +405,19 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor }
             </div>
           </div>
 
-          {/* 2. 进行中作业面 */}
+          {/* 2. 现场作业总人数 (紧随作业面总数后) */}
+          <div className="p-3 bg-amber-50/40 rounded-xl border border-amber-100 flex items-center justify-between shadow-2xs">
+            <div>
+              <div className="text-xs text-amber-800 font-medium">现场作业总人数</div>
+              <div className="text-xl font-bold font-mono text-amber-700 mt-1">{stats.totalWorkers}</div>
+              <div className="text-[10px] text-amber-700/80 mt-0.5">实名标签在线打卡</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg bg-amber-100/70 text-amber-700 flex items-center justify-center">
+              <Users className="w-5 h-5" />
+            </div>
+          </div>
+
+          {/* 3. 进行中作业面 */}
           <div className="p-3 bg-emerald-50/40 rounded-xl border border-emerald-100 flex items-center justify-between shadow-2xs">
             <div>
               <div className="text-xs text-emerald-700 font-medium">当前作业中</div>
@@ -401,18 +426,6 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor }
             </div>
             <div className="w-10 h-10 rounded-lg bg-emerald-100/70 text-emerald-700 flex items-center justify-center">
               <CheckCircle2 className="w-5 h-5" />
-            </div>
-          </div>
-
-          {/* 3. 高/较大风险 */}
-          <div className="p-3 bg-red-50/40 rounded-xl border border-red-100 flex items-center justify-between shadow-2xs">
-            <div>
-              <div className="text-xs text-red-700 font-medium">重大/较大风险面</div>
-              <div className="text-xl font-bold font-mono text-red-600 mt-1">{stats.highRisk}</div>
-              <div className="text-[10px] text-red-600/80 mt-0.5">动火/受限空间一级重保</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-red-100/70 text-red-600 flex items-center justify-center">
-              <ShieldAlert className="w-5 h-5" />
             </div>
           </div>
 
@@ -427,20 +440,9 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor }
               <Cpu className="w-5 h-5" />
             </div>
           </div>
-
-          {/* 5. 在场作业人员 */}
-          <div className="p-3 bg-amber-50/40 rounded-xl border border-amber-100 flex items-center justify-between shadow-2xs">
-            <div>
-              <div className="text-xs text-amber-800 font-medium">现场作业总人数</div>
-              <div className="text-xl font-bold font-mono text-amber-700 mt-1">{stats.totalWorkers}</div>
-              <div className="text-[10px] text-amber-700/80 mt-0.5">实名标签在线打卡</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-amber-100/70 text-amber-700 flex items-center justify-center">
-              <Users className="w-5 h-5" />
-            </div>
-          </div>
         </div>
       </div>
+
 
       {/* 综合操作与筛选工具栏 */}
       <div className="p-4 bg-white border-b border-slate-200 shrink-0 space-y-3">
@@ -462,7 +464,21 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor }
               />
             </div>
 
-            {/* 归属类型筛选 (厂区 / 造船项目) */}
+            {/* 需求 4：作业面类型筛选 (有限空间 / 通用作业面) */}
+            <select
+              value={filterWorkfaceType}
+              onChange={e => {
+                setFilterWorkfaceType(e.target.value as any);
+                setCurrentPage(1);
+              }}
+              className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
+            >
+              <option value="ALL">全部空间类型</option>
+              <option value="通用作业面">📦 通用作业面</option>
+              <option value="有限空间">🛡️ 有限空间 (密闭舱室)</option>
+            </select>
+
+            {/* 需求 3：归属类型筛选 (厂区 / 建造船模) */}
             <select
               value={filterBelonging}
               onChange={e => {
@@ -473,9 +489,9 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor }
               }}
               className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
             >
-              <option value="ALL">全部归属类型</option>
+              <option value="ALL">全部归属区域</option>
               <option value="yard">🏢 船厂厂区</option>
-              <option value="project">🚢 造船项目</option>
+              <option value="project">🚢 建造船模</option>
             </select>
 
             {/* 联动筛选 A: 厂区功能分区 (平面图区域) */}
@@ -594,6 +610,18 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor }
 
           {/* 右侧主操作按钮 */}
           <div className="flex items-center gap-2">
+            {onNavigateToScreen && (
+              <button
+                type="button"
+                onClick={onNavigateToScreen}
+                className="px-3 py-1.5 border border-cyan-300 text-cyan-800 bg-cyan-50/80 hover:bg-cyan-100 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                title="进入作业面大屏全景监控系统"
+              >
+                <Tv className="w-3.5 h-3.5 text-cyan-600" />
+                <span>作业面大屏</span>
+              </button>
+            )}
+
             {onNavigateToMonitor && (
               <button
                 type="button"
@@ -605,15 +633,6 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor }
                 <span>监控分析</span>
               </button>
             )}
-
-            <button
-              type="button"
-              onClick={handleExportData}
-              className="px-3 py-1.5 border border-slate-200 hover:border-slate-300 text-slate-700 bg-white rounded-lg text-xs font-medium hover:bg-slate-50 transition-colors flex items-center gap-1.5 shadow-2xs"
-            >
-              <Download className="w-3.5 h-3.5 text-slate-500" />
-              <span>导出台账</span>
-            </button>
 
             <button
               type="button"
@@ -721,16 +740,28 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor }
                         {wf.code}
                       </td>
 
-                      {/* 作业面名称 - 精简为单行纯净名称，支持点击直达详情 */}
+                      {/* 作业面名称与类型标签 */}
                       <td className="py-2.5 px-3">
-                        <button 
-                          type="button"
-                          onClick={() => handleOpenDetail(wf)}
-                          className="font-medium text-slate-900 hover:text-blue-600 cursor-pointer transition-colors text-left truncate max-w-[200px] block"
-                          title={wf.name}
-                        >
-                          {wf.name}
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          {wf.workfaceType === '有限空间' ? (
+                            <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-0.5" title="受限空间/密闭舱室作业面">
+                              <ShieldAlert className="w-2.5 h-2.5 text-amber-600" />
+                              <span>有限空间</span>
+                            </span>
+                          ) : (
+                            <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200" title="通用常规作业面">
+                              通用
+                            </span>
+                          )}
+                          <button 
+                            type="button"
+                            onClick={() => handleOpenDetail(wf)}
+                            className="font-medium text-slate-900 hover:text-blue-600 cursor-pointer transition-colors text-left truncate max-w-[180px] block"
+                            title={wf.name}
+                          >
+                            {wf.name}
+                          </button>
+                        </div>
                       </td>
 
                       {/* 归属类型 */}
@@ -741,7 +772,7 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor }
                           </span>
                         ) : (
                           <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
-                            项目
+                            船模
                           </span>
                         )}
                       </td>
@@ -753,8 +784,8 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor }
                             {wf.yardZoneName || '东南造船基地'}
                           </span>
                         ) : (
-                          <span title={wf.projectName}>
-                            {wf.projectName}
+                          <span title={wf.shipModelName || wf.projectName}>
+                            {wf.shipModelName || wf.projectName}
                           </span>
                         )}
                       </td>
@@ -766,8 +797,8 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor }
                             {wf.yardSubAreaName || wf.dockingArea}
                           </span>
                         ) : (
-                          <span>
-                            {wf.modelLevelName || '主甲板层'}
+                          <span className="font-medium text-slate-800">
+                            {wf.shipModelLayerName || wf.modelLevelName || '主甲板层'}
                           </span>
                         )}
                       </td>
@@ -813,12 +844,16 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor }
                         {wf.teamName}
                       </td>
 
-                      {/* 在场 / 定员 - 单行紧凑展示，超员标红 */}
+                      {/* 在场人数 / 定员 */}
                       <td className="py-2.5 px-3 text-center whitespace-nowrap font-mono">
                         <span className={`font-semibold ${isOverCapacity ? 'text-red-600 font-bold' : 'text-slate-800'}`}>
                           {wf.currentPersonnelCount}
                         </span>
-                        <span className="text-slate-400"> / {wf.capacityLimit}人</span>
+                        {wf.capacityLimit ? (
+                          <span className="text-slate-400"> / {wf.capacityLimit}人</span>
+                        ) : (
+                          <span className="text-slate-400"> 人</span>
+                        )}
                         {isOverCapacity && (
                           <span className="ml-1 text-[10px] text-red-500 font-sans font-medium">(超员)</span>
                         )}

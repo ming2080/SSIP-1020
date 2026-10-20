@@ -101,6 +101,7 @@ const MENU_STRUCTURE: MenuItem[] = [
     label: '作业面管理', 
     icon: Layers, 
     children: [
+      { id: 'workface_screen', label: '作业面大屏', icon: Tv },
       { id: 'workface_monitor', label: '监控分析', icon: BarChart3 },
       { id: 'workface_config', label: '作业面配置', icon: SlidersHorizontal },
     ]
@@ -287,7 +288,8 @@ export function Sidebar({ currentView, onChangeView, currentUser, onLogout }: Si
         </nav>
       </div>
 
-      {/* 指挥中心大屏全屏监控模式入口 */}
+      {/* 隐藏侧边栏底部大屏监控模式入口 (页面保留以备后期使用) */}
+      {/* 
       <div className="p-2.5 mx-2 mb-1 bg-gradient-to-r from-slate-900 to-indigo-950 rounded-xl border border-cyan-900/60 shadow-sm shrink-0">
         <button
           type="button"
@@ -314,6 +316,7 @@ export function Sidebar({ currentView, onChangeView, currentUser, onLogout }: Si
           </span>
         </button>
       </div>
+      */}
 
       {/* 侧边栏底部系统状态 */}
       <div className="p-3 border-t border-slate-200 bg-slate-50/70 shrink-0">

@@ -3,15 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  * 
  * 智慧船厂 - 作业面管理：新增 / 编辑作业面表单模态框
+ * 优化重点：
+ * 1. 顶部新增作业面类型单选标签 (有限空间 / 通用作业面)
+ * 2. 移除定员上限、开工日期、完工日期及作业时段
+ * 3. 步骤简化合并为：【基础信息】与【责任与安全要求】
+ * 4. 归属类型造船项目改造为【建造船模选择】，动态关联船模管理中的船模类型，并加载二级分层与标高
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   X, 
   Layers, 
   ShieldAlert, 
   ShieldCheck,
-  Cpu, 
   FileText, 
   Users, 
   Radio, 
@@ -31,7 +35,10 @@ import {
   ChevronRight,
   PenTool,
   ChevronDown,
-  Box
+  Box,
+  Ship,
+  AlertTriangle,
+  Info
 } from 'lucide-react';
 import { 
   WorkfaceRecord, 
@@ -47,9 +54,12 @@ import {
   SOUTHEAST_SHIPYARD_ZONES,
   PROJECT_FLOOR_OPTIONS
 } from '@/src/data/workfaceData';
+import { 
+  getStoredShipModels, 
+  ShipModel, 
+  ShipLayer 
+} from '@/src/data/shipModelData';
 import { MOCK_PROJECTS } from '@/src/data/mockProjects';
-import { MODEL_LAYER_OPTIONS } from '@/src/components/views/DeviceManagement';
-import { WorkfaceFenceDrawer } from './WorkfaceFenceDrawer';
 import { Workface3DSpatialDrawModal } from './Workface3DSpatialDrawModal';
 import { SafetyOfficerSelect } from './SafetyOfficerSelect';
 
@@ -103,43 +113,45 @@ const CANDIDATE_ALARMS = [
 ];
 
 const COMMON_SAFETY_MEASURES = [
-  '进入密闭受限空间前强制机械通风30分钟以上',
+  '进入密闭受限空间前强制机械通风30分钟以上并完成准入检测',
   '作业全过程开启4合1便携及固定式气体连续在线监测',
   '所有进出人员100%佩戴本安型防爆定位工牌',
-  '动火作业需专职安全员现场全时旁站监护',
+  '动火作业需专职安全员现场全时旁站监护并配备干粉灭火器',
   '高空作业严格佩戴五点双大钩安全带并双钩互锁挂扣',
   '起吊作业垂直投影下方严禁任何人员滞留 (联动声光告警)',
-  '作业区域外围设置电子围栏并专设应急呼叫喇叭'
+  '作业区域外围设置电子围栏并专设应急呼叫喇叭与撤离指示'
 ];
 
 export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: WorkfaceFormModalProps) {
-  // 表单活动标签页
-  const [activeTab, setActiveTab] = useState<'basic' | 'personnel' | 'safety'>('basic');
+  // 表单活动标签页：合并为两步【基础信息】与【责任与安全要求】
+  const [activeTab, setActiveTab] = useState<'basic' | 'responsibilityAndSafety'>('basic');
   
-  // 表单状态定义
+  // 需求 4：作业面类型单选标签 (有限空间 / 通用作业面)
+  const [workfaceType, setWorkfaceType] = useState<'有限空间' | '通用作业面'>('通用作业面');
+
+  // 基本字段
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   
-  // 归属区域类型: 船厂厂区 | 造船项目
+  // 归属区域类型: 船厂厂区 | 建造船模选择 (原造船项目)
   const [belongingType, setBelongingType] = useState<WorkfaceBelongingType>('yard');
   
   // 1. 厂区二级联动状态 (东南造船基地平面图)
   const [yardZoneId, setYardZoneId] = useState<string>(SOUTHEAST_SHIPYARD_ZONES[0].id);
   const [yardSubAreaId, setYardSubAreaId] = useState<string>(SOUTHEAST_SHIPYARD_ZONES[0].subAreas[0].id);
 
-  // 2. 造船项目及二级楼层联动状态
-  const [projectId, setProjectId] = useState('');
-  const [projectName, setProjectName] = useState('');
-  const [shipCode, setShipCode] = useState('');
-  const [dockingArea, setDockingArea] = useState('');
-  const [modelLevel, setModelLevel] = useState<'deck' | 'middle' | 'bottom' | 'engine' | 'bridge'>('middle');
+  // 需求 3：动态关联船模管理中的船模类型及二级分层选择
+  const [shipModelsList, setShipModelsList] = useState<ShipModel[]>([]);
+  const [selectedShipModelId, setSelectedShipModelId] = useState<string>('M-001');
+  const [selectedShipLayerId, setSelectedShipLayerId] = useState<string>('L-01');
   const [elevation, setElevation] = useState('');
-  
+
+  // 作业基本属性
   const [workType, setWorkType] = useState<WorkfaceRecord['workType']>('合拢焊接');
   const [riskLevel, setRiskLevel] = useState<WorkfaceRecord['riskLevel']>('重大风险(红)');
   const [status, setStatus] = useState<WorkfaceRecord['status']>('active');
 
-  // 作业面区域划定数据状态 (不叫电子围栏，是作业面区域划定)
+  // 作业面区域划定数据状态
   const [areaDemarcationType, setAreaDemarcationType] = useState<string>('作业区');
   const [areaDemarcationShape, setAreaDemarcationShape] = useState<string>('矩形');
   const [areaDemarcationColor, setAreaDemarcationColor] = useState<string>('#3b82f6');
@@ -161,6 +173,75 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
     perimeter: '302 m',
     status: 'active'
   });
+
+  // 设备关联
+  const [selectedBaseStationIds, setSelectedBaseStationIds] = useState<string[]>(['BS-LNG-01']);
+  const [enableGasDetectors, setEnableGasDetectors] = useState<boolean>(false);
+  const [selectedGasDetectorIds, setSelectedGasDetectorIds] = useState<string[]>([]);
+  const [enableCameras, setEnableCameras] = useState<boolean>(false);
+  const [selectedCameraIds, setSelectedCameraIds] = useState<string[]>([]);
+  const [enableAlarms, setEnableAlarms] = useState<boolean>(false);
+  const [selectedAlarmIds, setSelectedAlarmIds] = useState<string[]>([]);
+
+  // 步骤二：责任与安全要求 (合并安全要求与责任)
+  const [selectedOfficers, setSelectedOfficers] = useState<SafetyOfficerItem[]>([
+    SHIPYARD_SAFETY_OFFICERS[0]
+  ]);
+  const [safetyOfficer, setSafetyOfficer] = useState('周卫国');
+  const [safetyOfficerPhone, setSafetyOfficerPhone] = useState('13812345601');
+  const [teamName, setTeamName] = useState('船体二分厂-绝热结构合拢班');
+  const [teamLeader, setTeamLeader] = useState('赵宏');
+  const [teamLeaderPhone, setTeamLeaderPhone] = useState('13955667788');
+
+  // 安全防范与说明
+  const [selectedMeasures, setSelectedMeasures] = useState<string[]>([]);
+  const [customMeasureInput, setCustomMeasureInput] = useState('');
+  const [description, setDescription] = useState('');
+
+  // 错误提示
+  const [errorMsg, setErrorMsg] = useState('');
+
+  // 每次打开弹窗时，从持久化库中获取最新船模列表
+  useEffect(() => {
+    if (isOpen) {
+      const models = getStoredShipModels();
+      setShipModelsList(models);
+    }
+  }, [isOpen]);
+
+  // 获取当前选中的船模对象及分层列表
+  const currentShipModel = useMemo(() => {
+    if (shipModelsList.length === 0) return null;
+    return shipModelsList.find(m => m.id === selectedShipModelId) || shipModelsList[0];
+  }, [shipModelsList, selectedShipModelId]);
+
+  // 获取当前选中的分层对象
+  const currentShipLayer = useMemo(() => {
+    if (!currentShipModel || !currentShipModel.layers || currentShipModel.layers.length === 0) return null;
+    return currentShipModel.layers.find(l => l.id === selectedShipLayerId) || currentShipModel.layers[0];
+  }, [currentShipModel, selectedShipLayerId]);
+
+  // 当选择不同船模时，自动选中第一分层并设置标高范围
+  const handleShipModelChange = (modelId: string) => {
+    setSelectedShipModelId(modelId);
+    const targetModel = shipModelsList.find(m => m.id === modelId);
+    if (targetModel && targetModel.layers && targetModel.layers.length > 0) {
+      const firstLayer = targetModel.layers[0];
+      setSelectedShipLayerId(firstLayer.id);
+      setElevation(firstLayer.elevationRange);
+    }
+  };
+
+  // 当选择不同分层时，自动联动标高范围
+  const handleShipLayerChange = (layerId: string) => {
+    setSelectedShipLayerId(layerId);
+    if (currentShipModel && currentShipModel.layers) {
+      const found = currentShipModel.layers.find(l => l.id === layerId);
+      if (found) {
+        setElevation(found.elevationRange);
+      }
+    }
+  };
 
   // 三维空间区域划定保存回调
   const handle3DSpatialSave = (result: {
@@ -184,63 +265,43 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
     }
   };
 
-  // 人员与安全责任 (支持设定多个责任安全员)
-  const [selectedOfficers, setSelectedOfficers] = useState<SafetyOfficerItem[]>([
-    SHIPYARD_SAFETY_OFFICERS[0]
-  ]);
-  const [safetyOfficer, setSafetyOfficer] = useState('周卫国');
-  const [safetyOfficerPhone, setSafetyOfficerPhone] = useState('13812345601');
-  const [teamName, setTeamName] = useState('船体二分厂-绝热结构合拢班');
-  const [teamLeader, setTeamLeader] = useState('赵宏');
-  const [teamLeaderPhone, setTeamLeaderPhone] = useState('13955667788');
-  const [capacityLimit, setCapacityLimit] = useState(12);
-
-  // 计划与时段
-  const [startDate, setStartDate] = useState('2026-10-01');
-  const [endDate, setEndDate] = useState('2026-12-31');
-  const [dailyWorkHours, setDailyWorkHours] = useState('08:00 - 20:30');
-
-  // 绑定设备 (主基站必选，其余三类设备按需开启)
-  const [selectedBaseStationIds, setSelectedBaseStationIds] = useState<string[]>(['BS-LNG-01']);
-  const [enableGasDetectors, setEnableGasDetectors] = useState<boolean>(false);
-  const [selectedGasDetectorIds, setSelectedGasDetectorIds] = useState<string[]>([]);
-  const [enableCameras, setEnableCameras] = useState<boolean>(false);
-  const [selectedCameraIds, setSelectedCameraIds] = useState<string[]>([]);
-  const [enableAlarms, setEnableAlarms] = useState<boolean>(false);
-  const [selectedAlarmIds, setSelectedAlarmIds] = useState<string[]>([]);
-
-  // 安全防范与说明
-  const [selectedMeasures, setSelectedMeasures] = useState<string[]>([]);
-  const [customMeasureInput, setCustomMeasureInput] = useState('');
-  const [description, setDescription] = useState('');
-
-  // 错误提示
-  const [errorMsg, setErrorMsg] = useState('');
-
   // 辅助获取当前选中的厂区区域与工位
   const currentYardZone = SOUTHEAST_SHIPYARD_ZONES.find(z => z.id === yardZoneId) || SOUTHEAST_SHIPYARD_ZONES[0];
   const currentYardSubArea = currentYardZone.subAreas.find(s => s.id === yardSubAreaId) || currentYardZone.subAreas[0];
 
   // 初始化填充数据
   useEffect(() => {
+    const models = getStoredShipModels();
+    setShipModelsList(models);
+
     if (initialData) {
+      // 回填作业面类型
+      setWorkfaceType(initialData.workfaceType || (initialData.workType === '密闭舱室作业' ? '有限空间' : '通用作业面'));
       setCode(initialData.code);
       setName(initialData.name);
       setBelongingType(initialData.belongingType || (initialData.yardZoneId ? 'yard' : 'project'));
       setYardZoneId(initialData.yardZoneId || SOUTHEAST_SHIPYARD_ZONES[0].id);
       setYardSubAreaId(initialData.yardSubAreaId || SOUTHEAST_SHIPYARD_ZONES[0].subAreas[0].id);
-      
-      setProjectId(initialData.projectId || (MOCK_PROJECTS[0]?.id || ''));
-      setProjectName(initialData.projectName || (MOCK_PROJECTS[0]?.name || ''));
-      setShipCode(initialData.shipCode || '');
-      setDockingArea(initialData.dockingArea || '');
-      setModelLevel(initialData.modelLevel || 'middle');
-      setElevation(initialData.elevation || '');
+
+      // 船模与分层回填
+      if (initialData.shipModelId) {
+        setSelectedShipModelId(initialData.shipModelId);
+      } else {
+        setSelectedShipModelId(models[0]?.id || 'M-001');
+      }
+
+      if (initialData.shipModelLayerId) {
+        setSelectedShipLayerId(initialData.shipModelLayerId);
+      } else if (initialData.modelLevel) {
+        setSelectedShipLayerId(initialData.modelLevel);
+      }
+
+      setElevation(initialData.elevation || '+18.5m ~ +26.25m');
       setWorkType(initialData.workType);
       setRiskLevel(initialData.riskLevel);
       setStatus(initialData.status);
 
-      // 安全员解析与回填 (支持多安全员)
+      // 安全员解析与回填
       if (initialData.safetyOfficers && initialData.safetyOfficers.length > 0) {
         setSelectedOfficers(initialData.safetyOfficers);
       } else if (initialData.safetyOfficer) {
@@ -280,19 +341,6 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
 
       if (initialData.fence) {
         setFence(initialData.fence);
-      } else {
-        setFence({
-          type: 'rectangle',
-          points: [
-            { x: 18, y: 20 },
-            { x: 82, y: 20 },
-            { x: 82, y: 76 },
-            { x: 18, y: 76 }
-          ],
-          area: '3,630 ㎡',
-          perimeter: '302 m',
-          status: 'active'
-        });
       }
 
       setSafetyOfficer(initialData.safetyOfficer);
@@ -300,11 +348,6 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
       setTeamName(initialData.teamName);
       setTeamLeader(initialData.teamLeader);
       setTeamLeaderPhone(initialData.teamLeaderPhone);
-      setCapacityLimit(initialData.capacityLimit);
-
-      setStartDate(initialData.startDate);
-      setEndDate(initialData.endDate);
-      setDailyWorkHours(initialData.dailyWorkHours);
 
       // 设备回填与按需开启判定
       const bsIds = initialData.boundBaseStations?.map(b => b.id) || [];
@@ -312,7 +355,7 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
 
       const gasIds = initialData.boundGasDetectors?.map(g => g.id) || [];
       setSelectedGasDetectorIds(gasIds);
-      setEnableGasDetectors(gasIds.length > 0);
+      setEnableGasDetectors(gasIds.length > 0 || initialData.workfaceType === '有限空间');
 
       const camIds = initialData.boundCameras?.map(c => c.id) || [];
       setSelectedCameraIds(camIds);
@@ -327,21 +370,22 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
     } else {
       // 默认生成编号
       const randomSeq = Math.floor(100 + Math.random() * 900);
+      setWorkfaceType('通用作业面');
       setCode(`WF-AUTO-${randomSeq}`);
       setName('');
       setBelongingType('yard');
       setYardZoneId(SOUTHEAST_SHIPYARD_ZONES[0].id);
       setYardSubAreaId(SOUTHEAST_SHIPYARD_ZONES[0].subAreas[0].id);
       
-      if (MOCK_PROJECTS.length > 0) {
-        const first = MOCK_PROJECTS[0];
-        setProjectId(first.id);
-        setProjectName(first.name);
-        setShipCode(first.shipCode || 'HULL-LNG-174');
-        setDockingArea(first.dockingArea || '东南造船厂 1号造船台');
+      const firstModel = models[0];
+      if (firstModel) {
+        setSelectedShipModelId(firstModel.id);
+        if (firstModel.layers && firstModel.layers.length > 0) {
+          setSelectedShipLayerId(firstModel.layers[0].id);
+          setElevation(firstModel.layers[0].elevationRange);
+        }
       }
-      setModelLevel('middle');
-      setElevation('+8.0m ~ +16.0m (中舱货油/货舱层)');
+
       setWorkType('合拢焊接');
       setRiskLevel('重大风险(红)');
       setStatus('active');
@@ -351,10 +395,6 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
       setTeamName('总装分厂-分段总组一班');
       setTeamLeader('陈志强');
       setTeamLeaderPhone('13959012302');
-      setCapacityLimit(15);
-      setStartDate('2026-10-01');
-      setEndDate('2026-12-31');
-      setDailyWorkHours('08:00 - 20:30');
       
       // 主基站必选：默认选中1台，其余三类设备默认不开启
       setSelectedBaseStationIds(['BS-LNG-01']);
@@ -406,26 +446,6 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
     setYardSubAreaId(subId);
   };
 
-  // 当选择不同造船项目时，自动联动船体编号和泊位
-  const handleProjectChange = (pId: string) => {
-    setProjectId(pId);
-    const proj = MOCK_PROJECTS.find(p => p.id === pId);
-    if (proj) {
-      setProjectName(proj.name);
-      setShipCode(proj.shipCode || '');
-      setDockingArea(proj.dockingArea || '标准船台泊位');
-    }
-  };
-
-  // 当选择不同二级楼层位置时，自动填充推荐标高范围
-  const handleModelLevelChange = (lvl: 'deck' | 'middle' | 'bottom' | 'engine' | 'bridge') => {
-    setModelLevel(lvl);
-    const floor = PROJECT_FLOOR_OPTIONS.find(l => l.id === lvl);
-    if (floor) {
-      setElevation(floor.elevation);
-    }
-  };
-
   // 添加自定义安全防范措施
   const handleAddCustomMeasure = () => {
     if (!customMeasureInput.trim()) return;
@@ -438,13 +458,13 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
   // 提交保存
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
-      setErrorMsg('请输入作业面名称');
+    if (!code.trim()) {
+      setErrorMsg('请输入作业面编号');
       setActiveTab('basic');
       return;
     }
-    if (!code.trim()) {
-      setErrorMsg('请输入作业面编号');
+    if (!name.trim()) {
+      setErrorMsg('请输入作业面名称');
       setActiveTab('basic');
       return;
     }
@@ -455,8 +475,8 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
         return;
       }
     } else {
-      if (!projectId) {
-        setErrorMsg('请选择所属造船工程项目');
+      if (!selectedShipModelId) {
+        setErrorMsg('请选择建造船模类型');
         setActiveTab('basic');
         return;
       }
@@ -465,7 +485,7 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
     // 必填校验：责任安全员 (支持多个)
     if (selectedOfficers.length === 0) {
       setErrorMsg('请至少设定一位责任安全员');
-      setActiveTab('personnel');
+      setActiveTab('responsibilityAndSafety');
       return;
     }
 
@@ -529,33 +549,46 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
           }))
       : [];
 
-    const floorObj = PROJECT_FLOOR_OPTIONS.find(l => l.id === modelLevel);
     const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
-
     const officerNames = selectedOfficers.map(o => o.name).join('、');
     const officerPhones = selectedOfficers.map(o => o.phone).filter(Boolean).join(', ');
+
+    // 船模信息解析
+    const modelObj = currentShipModel;
+    const layerObj = currentShipLayer;
 
     const recordToSave: WorkfaceRecord = {
       id: initialData ? initialData.id : `WF-${Date.now().toString().slice(-6)}`,
       code: code.trim(),
       name: name.trim(),
+      
+      // 需求 4：作业面类型
+      workfaceType,
+
       belongingType,
       
-      // 厂区专属字段
+      // 1. 厂区专属字段
       yardZoneId: belongingType === 'yard' ? yardZoneId : undefined,
       yardZoneName: belongingType === 'yard' ? currentYardZone.name : undefined,
       yardSubAreaId: belongingType === 'yard' ? yardSubAreaId : undefined,
       yardSubAreaName: belongingType === 'yard' ? currentYardSubArea.name : undefined,
       yardSpecs: belongingType === 'yard' ? currentYardSubArea.specs : undefined,
       
-      // 项目专属字段与兜底
-      projectId: belongingType === 'project' ? projectId : 'SEC-YARD',
-      projectName: belongingType === 'project' ? projectName : '东南造船基地',
-      shipCode: belongingType === 'project' ? shipCode : '',
-      dockingArea: belongingType === 'project' ? (dockingArea || '标准船台泊位') : currentYardSubArea.name,
-      modelLevel: belongingType === 'project' ? modelLevel : 'deck',
-      modelLevelName: belongingType === 'project' ? (floorObj ? floorObj.name : '主甲板层') : currentYardSubArea.name,
-      elevation: belongingType === 'project' ? (elevation || (floorObj ? floorObj.elevation : '+16.0m ~ +22.0m')) : currentYardSubArea.specs,
+      // 2. 需求 3：建造船模选择专属字段
+      shipModelId: belongingType === 'project' ? modelObj?.id : undefined,
+      shipModelName: belongingType === 'project' ? modelObj?.name : undefined,
+      shipModelType: belongingType === 'project' ? modelObj?.type : undefined,
+      shipModelLayerId: belongingType === 'project' ? layerObj?.id : undefined,
+      shipModelLayerName: belongingType === 'project' ? layerObj?.name : undefined,
+      
+      // 兼容老字段
+      projectId: belongingType === 'project' ? (modelObj?.id || 'M-001') : 'SEC-YARD',
+      projectName: belongingType === 'project' ? (modelObj?.name || '船模数字孪生') : '东南造船基地',
+      shipCode: belongingType === 'project' ? (modelObj?.type || 'HULL-SHIP-MOD') : '',
+      dockingArea: belongingType === 'project' ? (modelObj?.name || '标准造船坞台') : currentYardSubArea.name,
+      modelLevel: belongingType === 'project' ? (layerObj?.id || 'deck') : 'deck',
+      modelLevelName: belongingType === 'project' ? (layerObj?.name || '甲板层') : currentYardSubArea.name,
+      elevation: belongingType === 'project' ? (layerObj?.elevationRange || elevation || '+18.5m ~ +26.25m') : currentYardSubArea.specs,
       
       // 作业面区域划定与空间范围数据
       areaDefinition: {
@@ -578,16 +611,19 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
       teamName: teamName.trim(),
       teamLeader: teamLeader.trim(),
       teamLeaderPhone: teamLeaderPhone.trim(),
-      capacityLimit: Number(capacityLimit) || 10,
+      
+      // 需求 1：定员上限与周期已删除，保存保留已有数据或安全默认
+      capacityLimit: initialData?.capacityLimit ?? 15,
       currentPersonnelCount: initialData ? initialData.currentPersonnelCount : (status === 'active' ? 4 : 0),
       currentPersonnel: initialData ? initialData.currentPersonnel : [],
       boundBaseStations: boundStations,
       boundGasDetectors: boundGases,
       boundCameras: boundCams,
       boundAlarms: boundAlms,
-      startDate,
-      endDate,
-      dailyWorkHours,
+      startDate: initialData?.startDate || '2026-10-01',
+      endDate: initialData?.endDate || '2026-12-31',
+      dailyWorkHours: initialData?.dailyWorkHours || '08:00 - 20:30',
+      
       safetyMeasures: selectedMeasures,
       description: description.trim(),
       createdAt: initialData ? initialData.createdAt : nowStr,
@@ -615,6 +651,9 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
               <h2 className="text-base font-bold text-slate-800">
                 {initialData ? `编辑作业面 - ${initialData.name}` : '新增作业面'}
               </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                基于高精度数字孪生与三维空间网格规范定义作业管控面
+              </p>
             </div>
           </div>
           <button 
@@ -634,8 +673,8 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
           </div>
         )}
 
-        {/* 步骤 / 选项卡导航 */}
-        <div className="flex border-b border-slate-200 bg-white px-6 gap-6 text-xs font-medium">
+        {/* 需求 2：步骤导航合并为【基础信息】与【责任与安全要求】 */}
+        <div className="flex border-b border-slate-200 bg-white px-6 gap-8 text-xs font-medium">
           <button
             type="button"
             onClick={() => setActiveTab('basic')}
@@ -646,34 +685,20 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
             }`}
           >
             <FileText className="w-4 h-4" />
-            <span>基础信息</span>
+            <span>步骤一：基础信息</span>
           </button>
 
           <button
             type="button"
-            onClick={() => setActiveTab('personnel')}
+            onClick={() => setActiveTab('responsibilityAndSafety')}
             className={`py-3 flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-              activeTab === 'personnel' 
+              activeTab === 'responsibilityAndSafety' 
                 ? 'border-blue-600 text-blue-600 font-bold' 
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Users className="w-4 h-4" />
-            <span>责任与定员</span>
-          </button>
-
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('safety')}
-            className={`py-3 flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-              activeTab === 'safety' 
-                ? 'border-blue-600 text-blue-600 font-bold' 
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <ShieldAlert className="w-4 h-4" />
-            <span>安全要求</span>
+            <ShieldCheck className="w-4 h-4" />
+            <span>步骤二：责任与安全要求</span>
           </button>
         </div>
 
@@ -682,6 +707,85 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
           {/* TAB 1: 基础信息 */}
           {activeTab === 'basic' && (
             <div className="space-y-4">
+              
+              {/* 需求 4：在作业面编号上方加一个作业面类型表单，单选标签选择，单选项为有限空间、通用作业面 */}
+              <div className="p-3.5 bg-slate-50/80 border border-slate-200 rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <span className="text-red-500">*</span>
+                    <span>作业面类型</span>
+                  </label>
+                  {workfaceType === '有限空间' && (
+                    <span className="text-[11px] text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-300 font-medium flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3 text-amber-500" />
+                      <span>已启用《受限空间/密闭舱室特种作业监护规程》</span>
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {/* 通用作业面标签按钮 */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWorkfaceType('通用作业面');
+                      if (workType === '密闭舱室作业') setWorkType('合拢焊接');
+                    }}
+                    className={`p-3 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-3 ${
+                      workfaceType === '通用作业面'
+                        ? 'border-blue-600 bg-blue-50/80 text-blue-900 ring-2 ring-blue-500/20 shadow-xs'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                      workfaceType === '通用作业面' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
+                    }`}>
+                      <Box className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-xs font-bold flex items-center justify-between">
+                        <span>通用作业面</span>
+                        {workfaceType === '通用作业面' && <Check className="w-3.5 h-3.5 stroke-[3] text-blue-600" />}
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">露天甲板、总装平台、常规船台装焊等标准连续施工</div>
+                    </div>
+                  </button>
+
+                  {/* 有限空间标签按钮 */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWorkfaceType('有限空间');
+                      setWorkType('密闭舱室作业');
+                      setAreaDemarcationType('受限空间');
+                      setEnableGasDetectors(true); // 有限空间自动开启气体检测联动
+                    }}
+                    className={`p-3 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-3 ${
+                      workfaceType === '有限空间'
+                        ? 'border-amber-600 bg-amber-50/90 text-amber-950 ring-2 ring-amber-500/20 shadow-xs'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                      workfaceType === '有限空间' ? 'bg-amber-600 text-white' : 'bg-slate-100 text-slate-500'
+                    }`}>
+                      <ShieldAlert className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-xs font-bold flex items-center justify-between">
+                        <span className="flex items-center gap-1">
+                          <span>有限空间</span>
+                          <span className="text-[10px] bg-amber-200 text-amber-900 px-1 py-0.2 rounded font-normal">重点监管</span>
+                        </span>
+                        {workfaceType === '有限空间' && <Check className="w-3.5 h-3.5 stroke-[3] text-amber-700" />}
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">货舱绝热舱、双层底压载水舱、油舱等密闭受限空间</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* 作业面编号与名称行 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* 作业面编号 */}
                 <div>
@@ -692,8 +796,8 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                     type="text"
                     value={code}
                     onChange={e => setCode(e.target.value)}
-                    placeholder="如 WF-LNG-01"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    placeholder="如 WF-LNG-01 或 WF-SEC-05"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     required
                   />
                 </div>
@@ -714,17 +818,21 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                 </div>
               </div>
 
-              {/* 作业面归属区域类型选择 (厂区 / 造船项目) */}
+              {/* 需求 3：作业面归属区域类型选择 (造船项目作业面改为【建造船模选择】) */}
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                     <MapPin className="w-4 h-4 text-blue-600" />
                     <span>作业面归属区域类型 <span className="text-red-500">*</span></span>
                   </label>
+                  <span className="text-[11px] text-slate-500">
+                    {belongingType === 'yard' ? '基于船厂总体地理平面图分区' : '基于船舶数字孪生三维数模分层'}
+                  </span>
                 </div>
 
                 {/* 归属类型卡片式单选组 */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* 选项 1：船厂厂区作业面 */}
                   <button
                     type="button"
                     onClick={() => setBelongingType('yard')}
@@ -742,12 +850,13 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                     <div className="flex-1">
                       <div className="text-xs font-bold flex items-center justify-between">
                         <span>船厂厂区作业面</span>
-                        {belongingType === 'yard' && <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />}
+                        {belongingType === 'yard' && <span className="w-2 h-2 rounded-full bg-blue-600" />}
                       </div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">东南造船基地平面图车间/工位</div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">东南造船基地平面图车间与工位</div>
                     </div>
                   </button>
 
+                  {/* 选项 2：需求 3【建造船模选择】 */}
                   <button
                     type="button"
                     onClick={() => setBelongingType('project')}
@@ -760,14 +869,14 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                       belongingType === 'project' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
                     }`}>
-                      <Layers className="w-4 h-4" />
+                      <Ship className="w-4 h-4" />
                     </div>
                     <div className="flex-1">
                       <div className="text-xs font-bold flex items-center justify-between">
-                        <span>造船项目作业面</span>
-                        {belongingType === 'project' && <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />}
+                        <span>建造船模选择</span>
+                        {belongingType === 'project' && <span className="w-2 h-2 rounded-full bg-blue-600" />}
                       </div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">在建工程船舶与船体楼层分层</div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">关联船模管理船型与三维分层</div>
                     </div>
                   </button>
                 </div>
@@ -784,7 +893,7 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                         <select
                           value={yardZoneId}
                           onChange={e => handleYardZoneChange(e.target.value)}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
                         >
                           {SOUTHEAST_SHIPYARD_ZONES.map(zone => (
                             <option key={zone.id} value={zone.id}>
@@ -802,7 +911,7 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                         <select
                           value={yardSubAreaId}
                           onChange={e => handleYardSubAreaChange(e.target.value)}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
                         >
                           {currentYardZone.subAreas.map(sub => (
                             <option key={sub.id} value={sub.id}>
@@ -812,48 +921,75 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                         </select>
                       </div>
                     </div>
-
                   </div>
                 )}
 
-                {/* 2. 项目类型: 造船项目与二级楼层位置选择 */}
+                {/* 2. 需求 3：【建造船模选择】动态关联船模管理中的船模类型，二级加载分层选择 */}
                 {belongingType === 'project' && (
                   <div className="pt-3 border-t border-slate-200 space-y-3 animate-in fade-in duration-150">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* 一级：造船项目 */}
+                      {/* 一级：关联船模管理中的船模类型 */}
                       <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          一级：所属造船项目 <span className="text-red-500">*</span>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center justify-between">
+                          <span className="flex items-center gap-1">
+                            <Ship className="w-3.5 h-3.5 text-blue-600" />
+                            <span>一级：关联建造船模类型 <span className="text-red-500">*</span></span>
+                          </span>
+                          <span className="text-[10px] text-blue-600 font-normal">
+                            已接入船模库 ({shipModelsList.length}款)
+                          </span>
                         </label>
                         <select
-                          value={projectId}
-                          onChange={e => handleProjectChange(e.target.value)}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                          value={selectedShipModelId}
+                          onChange={e => handleShipModelChange(e.target.value)}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer font-medium text-slate-800"
                         >
-                          {MOCK_PROJECTS.map(p => (
-                            <option key={p.id} value={p.id}>
-                              {p.name} ({p.shipCode || p.id})
+                          {shipModelsList.map(model => (
+                            <option key={model.id} value={model.id}>
+                              {model.name} [{model.type}] - {model.shipScale}船型
                             </option>
                           ))}
                         </select>
+                        {currentShipModel && (
+                          <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-slate-500 bg-white p-2 rounded border border-slate-200">
+                            <span className="font-semibold text-blue-700">尺寸规格:</span>
+                            <span>长 {currentShipModel.parameters.loa}m · 宽 {currentShipModel.parameters.beam}m · 型深 {currentShipModel.parameters.depth}m</span>
+                            <span className="text-slate-300">|</span>
+                            <span>{currentShipModel.lodLevel}</span>
+                          </div>
+                        )}
                       </div>
 
-                      {/* 二级：楼层位置选择 */}
+                      {/* 二级：加载对应船模型自身的分层选择 */}
                       <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          二级：船体楼层位置选择 <span className="text-red-500">*</span>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center justify-between">
+                          <span className="flex items-center gap-1">
+                            <Layers className="w-3.5 h-3.5 text-indigo-600" />
+                            <span>二级：船模型分层选择 <span className="text-red-500">*</span></span>
+                          </span>
+                          {currentShipLayer && (
+                            <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                              标高: {currentShipLayer.elevationRange}
+                            </span>
+                          )}
                         </label>
                         <select
-                          value={modelLevel}
-                          onChange={e => handleModelLevelChange(e.target.value as any)}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                          value={selectedShipLayerId}
+                          onChange={e => handleShipLayerChange(e.target.value)}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer font-medium text-slate-800"
                         >
-                          {PROJECT_FLOOR_OPTIONS.map(layer => (
+                          {currentShipModel?.layers?.map(layer => (
                             <option key={layer.id} value={layer.id}>
-                              {layer.name} ({layer.code}) - {layer.elevation}
+                              {layer.name} ({layer.code}) - 标高: {layer.elevationRange}
                             </option>
                           ))}
                         </select>
+                        {currentShipLayer && (
+                          <div className="mt-1.5 text-[11px] text-slate-500 bg-white p-2 rounded border border-slate-200">
+                            <span className="font-semibold text-indigo-700">分层描述: </span>
+                            <span>{currentShipLayer.description} (空间标高 {currentShipLayer.elevationRange})</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -919,7 +1055,7 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                   {/* 绘制区域操作按钮 */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      <span className="text-red-500 mr-1">*</span>绘制区域
+                      <span className="text-red-500 mr-1">*</span>三维空间绘制
                     </label>
                     <button
                       type="button"
@@ -927,7 +1063,7 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                       className="w-full px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98] cursor-pointer"
                     >
                       <Box className="w-4 h-4" />
-                      <span>{drawnCoordinatesText ? '进入三维页面重新设置' : '点此进入三维页面设置'}</span>
+                      <span>{drawnCoordinatesText ? '进入三维空间重新框选' : '点此进入三维设置'}</span>
                     </button>
                   </div>
                 </div>
@@ -941,11 +1077,14 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                         {drawnCoordinatesText || '[25.4, 25.8  58.2, 25.8  58.2, 68.4  25.4, 68.4]'}
                       </span>
                     </div>
-
+                    <div className="flex items-center gap-3 text-slate-500 font-mono text-[11px]">
+                      <span>标定面积: <strong>{fence.area || '3,630 ㎡'}</strong></span>
+                      <span>周长: <strong>{fence.perimeter || '302 m'}</strong></span>
+                    </div>
                   </div>
                 </div>
 
-                {/* 在些范围内关联的基站设备，支持手动添加及移除功能 */}
+                {/* 范围内关联的基站设备 */}
                 <div className="space-y-2 pt-1">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -1015,12 +1154,6 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                         </div>
                       </div>
 
-                      <div className="text-[11px] font-semibold text-slate-600 flex items-center justify-between">
-                        <span>点击勾选添加主基站到当前作业面：</span>
-                        <span className="text-slate-400 font-normal">
-                          符合条件 {CANDIDATE_BASE_STATIONS.filter(bs => bs.name.toLowerCase().includes(stationSearchQuery.toLowerCase()) || bs.code.toLowerCase().includes(stationSearchQuery.toLowerCase())).length} / 共 {CANDIDATE_BASE_STATIONS.length} 台
-                        </span>
-                      </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-1">
                         {CANDIDATE_BASE_STATIONS
                           .filter(bs => bs.name.toLowerCase().includes(stationSearchQuery.toLowerCase()) || bs.code.toLowerCase().includes(stationSearchQuery.toLowerCase()))
@@ -1053,99 +1186,78 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                                 </div>
                               </div>
                             );
-                        })}
+                          })}
                       </div>
                     </div>
                   )}
 
-                  {/* 关联基站列表：显示编号和名称，支持手动移除 */}
-                  {selectedBaseStationIds.length === 0 ? (
-                    <div className="p-3 text-center bg-white border border-dashed border-slate-300 rounded-lg text-slate-400 text-xs">
-                      当前划定范围内未关联主基站，请点击右上角「手动添加基站」或在三维页面中框选
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
-                      {selectedBaseStationIds.map(bsId => {
-                        const bs = CANDIDATE_BASE_STATIONS.find(b => b.id === bsId) || {
-                          id: bsId,
-                          name: bsId,
-                          code: bsId
-                        };
-                        return (
-                          <div
-                            key={bsId}
-                            className="p-2.5 bg-white border border-slate-200 rounded-lg flex items-center justify-between text-xs hover:border-blue-200 transition-colors shadow-2xs"
+                  {/* 已选基站胶囊列表 */}
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {selectedBaseStationIds.map(bsId => {
+                      const st = CANDIDATE_BASE_STATIONS.find(b => b.id === bsId);
+                      return (
+                        <span key={bsId} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-blue-50 text-blue-800 text-xs border border-blue-200">
+                          <Radio className="w-3 h-3 text-blue-600" />
+                          <span className="font-medium">{st ? st.name : bsId}</span>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedBaseStationIds(selectedBaseStationIds.filter(id => id !== bsId))}
+                            className="hover:text-red-600 text-blue-400 cursor-pointer ml-1 text-sm font-bold"
                           >
-                            <div className="flex items-center gap-2 truncate">
-                              <div className="w-2 h-2 rounded-full bg-blue-600 shrink-0" />
-                              <span className="font-mono font-medium text-slate-500 text-[11px]">{bs.code}</span>
-                              <span className="font-medium text-slate-800 truncate">{bs.name}</span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSelectedBaseStationIds(selectedBaseStationIds.filter(id => id !== bsId));
-                              }}
-                              className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer shrink-0 ml-1"
-                              title="移除该基站"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                            ×
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
+              {/* 作业类型、风险等级与运行状态行 */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* 作业类型 */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    主要作业类型
+                    施工工艺类型 <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={workType}
                     onChange={e => setWorkType(e.target.value as any)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
                   >
                     <option value="合拢焊接">合拢焊接 (特种动火)</option>
-                    <option value="密闭舱室作业">密闭舱室作业 (受限空间)</option>
-                    <option value="高空涂装">高空涂装 (超高空作业)</option>
-                    <option value="管系装配">管系装配 (动力系统)</option>
-                    <option value="电气舾装">电气舾装 (通导/动力柜)</option>
-                    <option value="探伤质检">探伤质检 (无损探伤NDT)</option>
-                    <option value="通用作业">通用作业 (常态施工)</option>
+                    <option value="密闭舱室作业">密闭舱室作业 (有限空间)</option>
+                    <option value="高空涂装">高空涂装 (登高防坠)</option>
+                    <option value="管系装配">管系装配 (水压试漏)</option>
+                    <option value="电气舾装">电气舾装 (通电调试)</option>
+                    <option value="探伤质检">探伤质检 (射线探伤)</option>
+                    <option value="通用作业">通用作业 (常规施工)</option>
                   </select>
                 </div>
 
-                {/* 风险等级 */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    风险管控等级
+                    风险等级 <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={riskLevel}
                     onChange={e => setRiskLevel(e.target.value as any)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
                   >
-                    <option value="重大风险(红)">重大风险(红) - 一级管控</option>
-                    <option value="较大风险(橙)">较大风险(橙) - 二级管控</option>
-                    <option value="一般风险(黄)">一般风险(黄) - 三级管控</option>
-                    <option value="低风险(蓝)">低风险(蓝) - 四级常态</option>
+                    <option value="重大风险(红)">重大风险 (红 - 一级受控)</option>
+                    <option value="较大风险(橙)">较大风险 (橙 - 二级受控)</option>
+                    <option value="一般风险(黄)">一般风险 (黄 - 三级受控)</option>
+                    <option value="低风险(蓝)">低风险 (蓝 - 常规巡查)</option>
                   </select>
                 </div>
 
-                {/* 初始运行状态 */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    作业面状态
+                    初始运行状态
                   </label>
                   <select
                     value={status}
                     onChange={e => setStatus(e.target.value as any)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
                   >
                     <option value="active">作业中 (进行实时感知与定位)</option>
                     <option value="paused">暂停中 (设备维持监测/禁止入内)</option>
@@ -1157,16 +1269,23 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
             </div>
           )}
 
-          {/* TAB 2: 责任与定员 */}
-          {activeTab === 'personnel' && (
-            <div className="space-y-4">
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                  <ShieldCheck className="w-4 h-4 text-blue-600" />
-                  <span>责任安全员与施工班组</span>
+          {/* 需求 2：TAB 2: 【责任与安全要求】(合并责任与安全要求，删除定员上限、开工日期、完工日期与作业时段) */}
+          {activeTab === 'responsibilityAndSafety' && (
+            <div className="space-y-5 animate-in fade-in duration-150">
+              
+              {/* 1. 责任安全员与施工班组卡片 */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3.5 shadow-2xs">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+                    <ShieldCheck className="w-4 h-4 text-blue-600" />
+                    <span>现场责任体系 (安全员与施工班组)</span>
+                  </div>
+                  <span className="text-[11px] text-slate-500">
+                    设定作业面现场责任监管人与执行施工班组
+                  </span>
                 </div>
 
-                {/* 责任安全员 (支持设定多个安全员，模糊搜索 + 多选) */}
+                {/* 责任安全员多选组件 */}
                 <div>
                   <SafetyOfficerSelect
                     selectedOfficers={selectedOfficers}
@@ -1184,10 +1303,11 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* 施工班组与组长信息 (删除了定员上限人数、开工日期、完工日期与作业时段) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      施工责任班组
+                      施工责任班组 <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -1195,12 +1315,13 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                       onChange={e => setTeamName(e.target.value)}
                       placeholder="如 船体二分厂-绝热结构班"
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      required
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      班组长姓名
+                      班组长姓名 <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -1208,6 +1329,7 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                       onChange={e => setTeamLeader(e.target.value)}
                       placeholder="如 赵宏"
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      required
                     />
                   </div>
 
@@ -1226,359 +1348,24 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                 </div>
               </div>
 
-              {/* 定员上限与作业周期 */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    作业面定员上限 (人) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="100"
-                    value={capacityLimit}
-                    onChange={e => setCapacityLimit(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none font-bold text-slate-800"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    施工开工日期
-                  </label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={e => setStartDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    预计完工日期
-                  </label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={e => setEndDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  每日允许作业时段
-                </label>
-                <input
-                  type="text"
-                  value={dailyWorkHours}
-                  onChange={e => setDailyWorkHours(e.target.value)}
-                  placeholder="如 08:00 - 20:30"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: 关联设备 */}
-          {activeTab === 'devices' && (
-            <div className="space-y-4">
-              {/* 1. 主基站 (必须选择的设备，常驻展开) */}
-              <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-2xs space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              {/* 2. 现场安全防范要求 */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3.5 shadow-2xs">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
                   <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                    <Radio className="w-4 h-4 text-blue-600" />
-                    <span>主基站</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold border border-blue-200">
-                      必选项 <span className="text-red-500">*</span>
-                    </span>
+                    <ShieldAlert className="w-4 h-4 text-amber-600" />
+                    <span>现场安全防范与管控要求</span>
+                    {workfaceType === '有限空间' && (
+                      <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-semibold border border-amber-300">
+                        有限空间强制管控
+                      </span>
+                    )}
                   </div>
-
-                  <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-mono font-medium ${
-                    selectedBaseStationIds.length > 0 
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200' 
-                      : 'bg-red-50 text-red-600 border border-red-200 animate-pulse'
-                  }`}>
-                    {selectedBaseStationIds.length > 0 ? `已选 ${selectedBaseStationIds.length} 台` : '未选择 (必选)'}
+                  <span className="text-[11px] text-slate-500">
+                    勾选或新增作业面必须满足的现场安全技术规范
                   </span>
                 </div>
-                
-                {/* 候选列表：仅显示编号和名称 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 max-h-52 overflow-y-auto p-0.5">
-                  {CANDIDATE_BASE_STATIONS.map(bs => {
-                    const isChecked = selectedBaseStationIds.includes(bs.id);
-                    return (
-                      <div
-                        key={bs.id}
-                        onClick={() => {
-                          if (isChecked) {
-                            setSelectedBaseStationIds(selectedBaseStationIds.filter(id => id !== bs.id));
-                          } else {
-                            setSelectedBaseStationIds([...selectedBaseStationIds, bs.id]);
-                          }
-                        }}
-                        className={`p-2.5 rounded-lg border text-xs cursor-pointer flex items-center justify-between transition-all ${
-                          isChecked 
-                            ? 'bg-blue-50/90 border-blue-500 text-blue-900 shadow-2xs' 
-                            : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <div className={`w-4 h-4 rounded flex items-center justify-center border transition-colors ${
-                            isChecked ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 bg-white'
-                          }`}>
-                            {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-slate-500 text-[11px] font-medium">{bs.code}</span>
-                            <span className="font-medium text-slate-800">{bs.name}</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
 
-              {/* 2. 环境检测设备 (按需启用) */}
-              <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-2xs space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                  <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                    <Flame className="w-4 h-4 text-amber-500" />
-                    <span>环境检测设备</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">
-                      按需启用
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const next = !enableGasDetectors;
-                        setEnableGasDetectors(next);
-                        if (!next) setSelectedGasDetectorIds([]);
-                      }}
-                      className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
-                        enableGasDetectors 
-                          ? 'bg-amber-500 text-white shadow-2xs' 
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      <span className={`w-2 h-2 rounded-full ${enableGasDetectors ? 'bg-white' : 'bg-slate-400'}`} />
-                      <span>{enableGasDetectors ? '已开启' : '未开启 (点击开启)'}</span>
-                    </button>
-                    {enableGasDetectors && (
-                      <span className="text-[11px] text-amber-700 font-mono font-medium">
-                        已选 {selectedGasDetectorIds.length} 台
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* 候选列表：仅在开启时展示，只显示编号和名称 */}
-                {enableGasDetectors && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 max-h-48 overflow-y-auto p-0.5 animate-in fade-in duration-150">
-                    {CANDIDATE_GAS_DETECTORS.map(gd => {
-                      const isChecked = selectedGasDetectorIds.includes(gd.id);
-                      return (
-                        <div
-                          key={gd.id}
-                          onClick={() => {
-                            if (isChecked) {
-                              setSelectedGasDetectorIds(selectedGasDetectorIds.filter(id => id !== gd.id));
-                            } else {
-                              setSelectedGasDetectorIds([...selectedGasDetectorIds, gd.id]);
-                            }
-                          }}
-                          className={`p-2.5 rounded-lg border text-xs cursor-pointer flex items-center justify-between transition-all ${
-                            isChecked 
-                              ? 'bg-amber-50/90 border-amber-400 text-amber-900 shadow-2xs' 
-                              : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <div className={`w-4 h-4 rounded flex items-center justify-center border transition-colors ${
-                              isChecked ? 'bg-amber-600 border-amber-600 text-white' : 'border-slate-300 bg-white'
-                            }`}>
-                              {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono text-slate-500 text-[11px] font-medium">{gd.sn}</span>
-                              <span className="font-medium text-slate-800">{gd.name}</span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* 3. AI 监控球机 (按需启用) */}
-              <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-2xs space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                  <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                    <Video className="w-4 h-4 text-indigo-500" />
-                    <span>AI 监控球机</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">
-                      按需启用
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const next = !enableCameras;
-                        setEnableCameras(next);
-                        if (!next) setSelectedCameraIds([]);
-                      }}
-                      className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
-                        enableCameras 
-                          ? 'bg-indigo-600 text-white shadow-2xs' 
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      <span className={`w-2 h-2 rounded-full ${enableCameras ? 'bg-white' : 'bg-slate-400'}`} />
-                      <span>{enableCameras ? '已开启' : '未开启 (点击开启)'}</span>
-                    </button>
-                    {enableCameras && (
-                      <span className="text-[11px] text-indigo-700 font-mono font-medium">
-                        已选 {selectedCameraIds.length} 台
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* 候选列表：仅在开启时展示，只显示编号和名称 */}
-                {enableCameras && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 max-h-44 overflow-y-auto p-0.5 animate-in fade-in duration-150">
-                    {CANDIDATE_CAMERAS.map(cam => {
-                      const isChecked = selectedCameraIds.includes(cam.id);
-                      return (
-                        <div
-                          key={cam.id}
-                          onClick={() => {
-                            if (isChecked) {
-                              setSelectedCameraIds(selectedCameraIds.filter(id => id !== cam.id));
-                            } else {
-                              setSelectedCameraIds([...selectedCameraIds, cam.id]);
-                            }
-                          }}
-                          className={`p-2.5 rounded-lg border text-xs cursor-pointer flex items-center justify-between transition-all ${
-                            isChecked 
-                              ? 'bg-indigo-50/90 border-indigo-400 text-indigo-900 shadow-2xs' 
-                              : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <div className={`w-4 h-4 rounded flex items-center justify-center border transition-colors ${
-                              isChecked ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 bg-white'
-                            }`}>
-                              {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono text-slate-500 text-[11px] font-medium">{cam.id}</span>
-                              <span className="font-medium text-slate-800">{cam.name}</span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* 4. 防爆声光报警器 (按需启用) */}
-              <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-2xs space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                  <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                    <Bell className="w-4 h-4 text-rose-500" />
-                    <span>防爆声光报警器</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">
-                      按需启用
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const next = !enableAlarms;
-                        setEnableAlarms(next);
-                        if (!next) setSelectedAlarmIds([]);
-                      }}
-                      className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
-                        enableAlarms 
-                          ? 'bg-rose-600 text-white shadow-2xs' 
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      <span className={`w-2 h-2 rounded-full ${enableAlarms ? 'bg-white' : 'bg-slate-400'}`} />
-                      <span>{enableAlarms ? '已开启' : '未开启 (点击开启)'}</span>
-                    </button>
-                    {enableAlarms && (
-                      <span className="text-[11px] text-rose-700 font-mono font-medium">
-                        已选 {selectedAlarmIds.length} 台
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* 候选列表：仅在开启时展示，只显示编号和名称 */}
-                {enableAlarms && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 max-h-44 overflow-y-auto p-0.5 animate-in fade-in duration-150">
-                    {CANDIDATE_ALARMS.map(alm => {
-                      const isChecked = selectedAlarmIds.includes(alm.id);
-                      return (
-                        <div
-                          key={alm.id}
-                          onClick={() => {
-                            if (isChecked) {
-                              setSelectedAlarmIds(selectedAlarmIds.filter(id => id !== alm.id));
-                            } else {
-                              setSelectedAlarmIds([...selectedAlarmIds, alm.id]);
-                            }
-                          }}
-                          className={`p-2.5 rounded-lg border text-xs cursor-pointer flex items-center justify-between transition-all ${
-                            isChecked 
-                              ? 'bg-rose-50/90 border-rose-400 text-rose-900 shadow-2xs' 
-                              : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <div className={`w-4 h-4 rounded flex items-center justify-center border transition-colors ${
-                              isChecked ? 'bg-rose-600 border-rose-600 text-white' : 'border-slate-300 bg-white'
-                            }`}>
-                              {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono text-slate-500 text-[11px] font-medium">{alm.id}</span>
-                              <span className="font-medium text-slate-800">{alm.name}</span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 4: 安全要求 */}
-          {activeTab === 'safety' && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-2">
-                  现场安全防范要求
-                </label>
-
-                <div className="space-y-2 mb-3">
+                <div className="space-y-2">
                   {COMMON_SAFETY_MEASURES.map(measure => {
                     const isChecked = selectedMeasures.includes(measure);
                     return (
@@ -1597,25 +1384,25 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                             : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                         }`}
                       >
-                        <div className={`w-4 h-4 rounded flex items-center justify-center border ${
+                        <div className={`w-4 h-4 rounded flex items-center justify-center border shrink-0 ${
                           isChecked ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 bg-white'
                         }`}>
                           {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
                         </div>
-                        <span>{measure}</span>
+                        <span className="leading-relaxed">{measure}</span>
                       </div>
                     );
                   })}
                 </div>
 
                 {/* 添加自定义措施 */}
-                <div className="flex gap-2">
+                <div className="flex gap-2 pt-1">
                   <input
                     type="text"
                     value={customMeasureInput}
                     onChange={e => setCustomMeasureInput(e.target.value)}
-                    placeholder="输入其他特殊安全管控措施..."
-                    className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    placeholder="输入其他特殊安全管控措施 (如: 特殊防辐射铅板隔离 / 双路排风)..."
+                    className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     onKeyDown={e => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -1626,7 +1413,7 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                   <button
                     type="button"
                     onClick={handleAddCustomMeasure}
-                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
+                    className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-medium rounded-lg transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>添加</span>
@@ -1634,47 +1421,42 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                 </div>
               </div>
 
-              {/* 作业面详细施工工艺与备注 */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  施工工艺与备注说明
+              {/* 3. 施工工艺与备注说明 */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 shadow-2xs">
+                <label className="block text-xs font-bold text-slate-800 mb-1">
+                  施工工艺与技术要求备注说明
                 </label>
                 <textarea
                   value={description}
                   onChange={e => setDescription(e.target.value)}
-                  rows={4}
-                  placeholder="记录施工工法、审批票号、特殊注意事项等..."
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  rows={3}
+                  placeholder="记录施工作业工法要点、审批动火票号/入舱作业票号、安全监护特殊注意事项等..."
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
+
             </div>
           )}
 
           {/* 底部按钮栏 */}
           <div className="flex items-center justify-between pt-4 border-t border-slate-200">
             <div className="text-xs text-slate-500">
-              {activeTab !== 'basic' && (
+              {activeTab === 'responsibilityAndSafety' && (
                 <button
                   type="button"
-                  onClick={() => {
-                    if (activeTab === 'safety') setActiveTab('personnel');
-                    else if (activeTab === 'personnel') setActiveTab('basic');
-                  }}
+                  onClick={() => setActiveTab('basic')}
                   className="text-slate-600 hover:text-slate-900 font-medium mr-3 cursor-pointer"
                 >
-                  ← 上一步
+                  ← 上一步：基础信息
                 </button>
               )}
-              {activeTab !== 'safety' && (
+              {activeTab === 'basic' && (
                 <button
                   type="button"
-                  onClick={() => {
-                    if (activeTab === 'basic') setActiveTab('personnel');
-                    else if (activeTab === 'personnel') setActiveTab('safety');
-                  }}
+                  onClick={() => setActiveTab('responsibilityAndSafety')}
                   className="text-blue-600 hover:text-blue-800 font-medium cursor-pointer"
                 >
-                  下一步 →
+                  下一步：责任与安全要求 →
                 </button>
               )}
             </div>
@@ -1683,7 +1465,7 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+                className="px-4 py-2 text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
               >
                 取消
               </button>
@@ -1707,11 +1489,11 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
         areaType={areaDemarcationType}
         areaColor={areaDemarcationColor}
         areaShape={areaDemarcationShape}
-        projectName={belongingType === 'project' ? projectName : undefined}
+        projectName={belongingType === 'project' ? currentShipModel?.name : undefined}
         zoneName={currentYardZone.name}
         subAreaName={currentYardSubArea.name}
-        levelName={belongingType === 'project' ? (PROJECT_FLOOR_OPTIONS.find(l => l.id === modelLevel)?.name || '主甲板层') : undefined}
-        elevation={belongingType === 'project' ? (PROJECT_FLOOR_OPTIONS.find(l => l.id === modelLevel)?.elevation || elevation) : '+8.0m ~ +16.0m'}
+        levelName={belongingType === 'project' ? currentShipLayer?.name : undefined}
+        elevation={belongingType === 'project' ? (currentShipLayer?.elevationRange || elevation) : '+8.0m ~ +16.0m'}
         candidateBaseStations={CANDIDATE_BASE_STATIONS}
         initialPoints={fence.points}
       />

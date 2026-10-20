@@ -30,7 +30,8 @@ import {
   Printer,
   ChevronRight,
   ShieldCheck,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Ship
 } from 'lucide-react';
 import { WorkfaceRecord } from '@/src/data/workfaceData';
 import { MODEL_LAYER_OPTIONS } from '@/src/components/views/DeviceManagement';
@@ -116,7 +117,19 @@ export function WorkfaceDetailModal({
                 {workface.name}
               </h2>
 
-              {/* 归属类型徽标 */}
+              {/* 作业面类型徽标 (需求 4) */}
+              {workface.workfaceType === '有限空间' ? (
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 inline-flex items-center gap-1 shadow-2xs">
+                  <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
+                  <span>有限空间 (重点监管)</span>
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 inline-flex items-center gap-1">
+                  <span>通用作业面</span>
+                </span>
+              )}
+
+              {/* 需求 3：归属类型徽标 */}
               {workface.belongingType === 'yard' ? (
                 <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200 inline-flex items-center gap-1">
                   <Building2 className="w-3 h-3" />
@@ -124,8 +137,8 @@ export function WorkfaceDetailModal({
                 </span>
               ) : (
                 <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 border border-indigo-200 inline-flex items-center gap-1">
-                  <Layers className="w-3 h-3" />
-                  <span>造船项目</span>
+                  <Ship className="w-3 h-3" />
+                  <span>建造船模</span>
                 </span>
               )}
 
@@ -163,17 +176,22 @@ export function WorkfaceDetailModal({
               ) : (
                 <>
                   <span className="flex items-center gap-1">
-                    <Building2 className="w-3.5 h-3.5 text-indigo-500" />
-                    <span className="text-slate-800 font-medium">{workface.projectName}</span>
-                    {workface.shipCode && <span className="font-mono text-slate-500">({workface.shipCode})</span>}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{workface.dockingArea}</span>
+                    <Ship className="w-3.5 h-3.5 text-indigo-500" />
+                    <span className="text-slate-800 font-medium">{workface.shipModelName || workface.projectName}</span>
+                    {workface.shipModelType && (
+                      <span className="text-indigo-600 bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-200 text-[10px]">
+                        {workface.shipModelType}
+                      </span>
+                    )}
                   </span>
                   <span className="flex items-center gap-1">
                     <Layers className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{workface.modelLevelName} · {workface.elevation}</span>
+                    <span>分层位置：<strong className="text-slate-800">{workface.shipModelLayerName || workface.modelLevelName}</strong></span>
+                    {workface.elevation && (
+                      <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded font-mono text-[10px] ml-1">
+                        {workface.elevation}
+                      </span>
+                    )}
                   </span>
                 </>
               )}
@@ -228,22 +246,26 @@ export function WorkfaceDetailModal({
             </div>
             <div className="flex items-baseline gap-1.5">
               <span className={`text-xl font-bold font-mono ${
-                workface.currentPersonnelCount > workface.capacityLimit ? 'text-red-600' : 'text-slate-800'
+                workface.capacityLimit && workface.currentPersonnelCount > workface.capacityLimit ? 'text-red-600' : 'text-slate-800'
               }`}>
                 {workface.currentPersonnelCount}
               </span>
-              <span className="text-slate-400 text-xs">/ {workface.capacityLimit} 人上限</span>
+              {workface.capacityLimit ? (
+                <span className="text-slate-400 text-xs">/ {workface.capacityLimit} 人上限</span>
+              ) : (
+                <span className="text-slate-400 text-xs">人 (实时在线)</span>
+              )}
             </div>
             <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2 overflow-hidden">
               <div 
                 className={`h-full rounded-full ${
-                  workface.currentPersonnelCount > workface.capacityLimit 
+                  workface.capacityLimit && workface.currentPersonnelCount > workface.capacityLimit 
                     ? 'bg-red-500' 
-                    : workface.currentPersonnelCount / workface.capacityLimit > 0.8 
+                    : workface.capacityLimit && workface.currentPersonnelCount / workface.capacityLimit > 0.8 
                     ? 'bg-amber-500' 
                     : 'bg-blue-600'
                 }`}
-                style={{ width: `${Math.min(100, (workface.currentPersonnelCount / (workface.capacityLimit || 1)) * 100)}%` }}
+                style={{ width: `${Math.min(100, (workface.currentPersonnelCount / (workface.capacityLimit || 20)) * 100)}%` }}
               />
             </div>
           </div>
@@ -277,7 +299,7 @@ export function WorkfaceDetailModal({
               {workface.teamName}
             </div>
             <div className="text-[11px] text-slate-500 mt-1.5 truncate">
-              班长: {workface.teamLeader} ({workface.teamLeaderPhone})
+              班长: {workface.teamLeader} {workface.teamLeaderPhone && `(${workface.teamLeaderPhone})`}
             </div>
           </div>
 
@@ -288,10 +310,10 @@ export function WorkfaceDetailModal({
               <Clock className="w-4 h-4 text-indigo-500" />
             </div>
             <div className="font-bold text-slate-800 text-xs truncate">
-              {workface.dailyWorkHours}
+              {workface.dailyWorkHours || '全天按需动态作业'}
             </div>
             <div className="text-[11px] text-slate-400 mt-1.5 truncate">
-              {workface.startDate} ~ {workface.endDate}
+              {workface.startDate && workface.endDate ? `${workface.startDate} ~ ${workface.endDate}` : '长期作业管控单元'}
             </div>
           </div>
         </div>

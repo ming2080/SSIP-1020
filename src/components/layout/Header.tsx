@@ -100,18 +100,20 @@ export function Header({ title, currentUser, onLogout }: HeaderProps) {
           <span>移动端</span>
         </button>
 
-        {/* 指挥中心大屏全屏监控模式入口 */}
+        {/* 隐藏顶部大屏监控按钮 (对应页面与功能保留以备后期使用) */}
+        {/* 
         <button
           onClick={() => {
-            window.dispatchEvent(new CustomEvent('toggle_fullscreen_monitor'));
+            window.dispatchEvent(new CustomEvent('navigate_view', { detail: { view: 'workface_screen' } }));
           }}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 hover:from-slate-800 hover:to-blue-800 text-cyan-300 rounded-lg text-xs font-bold border border-cyan-800/80 shadow-sm transition-all cursor-pointer active:scale-95 group"
-          title="进入指挥中心大屏全屏监控模式 (实时轮播重点区域告警)"
+          title="进入作业面大屏安全监控系统 (src/yxkj-v5.html)"
         >
           <Tv className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform animate-pulse" />
           <span className="text-white">大屏监控</span>
           <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
         </button>
+        */}
 
         {/* 消息通知中心 */}
         <div className="relative" ref={notifMenuRef}>
