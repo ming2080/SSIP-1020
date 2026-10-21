@@ -299,7 +299,7 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
       setElevation(initialData.elevation || '+18.5m ~ +26.25m');
       setWorkType(initialData.workType);
       setRiskLevel(initialData.riskLevel);
-      setStatus(initialData.status);
+      setStatus(initialData.status === 'draft' ? 'active' : initialData.status);
 
       // 安全员解析与回填
       if (initialData.safetyOfficers && initialData.safetyOfficers.length > 0) {
@@ -852,7 +852,6 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                         <span>船厂厂区作业面</span>
                         {belongingType === 'yard' && <span className="w-2 h-2 rounded-full bg-blue-600" />}
                       </div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">东南造船基地平面图车间与工位</div>
                     </div>
                   </button>
 
@@ -876,7 +875,6 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                         <span>建造船模选择</span>
                         {belongingType === 'project' && <span className="w-2 h-2 rounded-full bg-blue-600" />}
                       </div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">关联船模管理船型与三维分层</div>
                     </div>
                   </button>
                 </div>
@@ -950,14 +948,6 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                             </option>
                           ))}
                         </select>
-                        {currentShipModel && (
-                          <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-slate-500 bg-white p-2 rounded border border-slate-200">
-                            <span className="font-semibold text-blue-700">尺寸规格:</span>
-                            <span>长 {currentShipModel.parameters.loa}m · 宽 {currentShipModel.parameters.beam}m · 型深 {currentShipModel.parameters.depth}m</span>
-                            <span className="text-slate-300">|</span>
-                            <span>{currentShipModel.lodLevel}</span>
-                          </div>
-                        )}
                       </div>
 
                       {/* 二级：加载对应船模型自身的分层选择 */}
@@ -984,12 +974,6 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                             </option>
                           ))}
                         </select>
-                        {currentShipLayer && (
-                          <div className="mt-1.5 text-[11px] text-slate-500 bg-white p-2 rounded border border-slate-200">
-                            <span className="font-semibold text-indigo-700">分层描述: </span>
-                            <span>{currentShipLayer.description} (空间标高 {currentShipLayer.elevationRange})</span>
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -1015,27 +999,8 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                   )}
                 </div>
 
-                {/* 划定表单设置行 */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {/* 划定类型 */}
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      <span className="text-red-500 mr-1">*</span>划定类型
-                    </label>
-                    <select
-                      value={areaDemarcationType}
-                      onChange={e => setAreaDemarcationType(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
-                    >
-                      <option value="作业区">作业区 (常规连续施工)</option>
-                      <option value="受限空间">受限空间 (密闭舱室作业)</option>
-                      <option value="特种动火区">特种动火区 (合拢动火焊接)</option>
-                      <option value="高空管控区">高空管控区 (高空防坠重点区)</option>
-                      <option value="吊装警戒区">吊装警戒区 (龙门吊防碰区域)</option>
-                      <option value="重点防护区">重点防护区 (高危管制)</option>
-                    </select>
-                  </div>
-
+                {/* 划定表单设置行 (已删除划定类型表单项) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* 划定形状 */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -1060,7 +1025,7 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                     <button
                       type="button"
                       onClick={() => setIs3DModalOpen(true)}
-                      className="w-full px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98] cursor-pointer"
+                      className="w-full px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium flex items-center justify-center gap-2 shadow-xs transition-all active:scale-[0.98] cursor-pointer"
                     >
                       <Box className="w-4 h-4" />
                       <span>{drawnCoordinatesText ? '进入三维空间重新框选' : '点此进入三维设置'}</span>
@@ -1069,18 +1034,12 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                 </div>
 
                 {/* 框选的坐标系信息反馈卡片 */}
-                <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-2 shadow-2xs">
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                    <div className="flex items-center gap-2 truncate">
-                      <span className="font-semibold text-slate-700 shrink-0">框选坐标系：</span>
-                      <span className="font-mono text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 font-medium truncate max-w-md" title={drawnCoordinatesText}>
-                        {drawnCoordinatesText || '[25.4, 25.8  58.2, 25.8  58.2, 68.4  25.4, 68.4]'}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 text-slate-500 font-mono text-[11px]">
-                      <span>标定面积: <strong>{fence.area || '3,630 ㎡'}</strong></span>
-                      <span>周长: <strong>{fence.perimeter || '302 m'}</strong></span>
-                    </div>
+                <div className="p-3 bg-white border border-slate-200 rounded-lg shadow-2xs">
+                  <div className="flex items-center gap-2 text-xs truncate">
+                    <span className="font-semibold text-slate-700 shrink-0">框选坐标系：</span>
+                    <span className="font-mono text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 font-medium truncate max-w-xl" title={drawnCoordinatesText}>
+                      {drawnCoordinatesText || '[25.4, 25.8  58.2, 25.8  58.2, 68.4  25.4, 68.4]'}
+                    </span>
                   </div>
                 </div>
 
@@ -1213,57 +1172,79 @@ export function WorkfaceFormModal({ isOpen, onClose, onSave, initialData }: Work
                 </div>
               </div>
 
-              {/* 作业类型、风险等级与运行状态行 */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    施工工艺类型 <span className="text-red-500">*</span>
+              {/* 需求 2：施工工艺类型先做隐藏、风险等级也先隐藏 (代码保留以备后期使用) */}
+              {/* 需求 3：初始运行状态改为三种：作业中、暂停中、已完工 */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <span className="text-red-500">*</span>
+                    <span>初始运行状态</span>
                   </label>
-                  <select
-                    value={workType}
-                    onChange={e => setWorkType(e.target.value as any)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
-                  >
-                    <option value="合拢焊接">合拢焊接 (特种动火)</option>
-                    <option value="密闭舱室作业">密闭舱室作业 (有限空间)</option>
-                    <option value="高空涂装">高空涂装 (登高防坠)</option>
-                    <option value="管系装配">管系装配 (水压试漏)</option>
-                    <option value="电气舾装">电气舾装 (通电调试)</option>
-                    <option value="探伤质检">探伤质检 (射线探伤)</option>
-                    <option value="通用作业">通用作业 (常规施工)</option>
-                  </select>
+                  <span className="text-[11px] text-slate-500">
+                    设定作业面建立后的实时管控与感知状态
+                  </span>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    风险等级 <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={riskLevel}
-                    onChange={e => setRiskLevel(e.target.value as any)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* 作业中 */}
+                  <button
+                    type="button"
+                    onClick={() => setStatus('active')}
+                    className={`px-3.5 py-2.5 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-2.5 ${
+                      status === 'active'
+                        ? 'border-emerald-500 bg-emerald-50/80 text-emerald-900 ring-2 ring-emerald-500/20 shadow-xs'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
                   >
-                    <option value="重大风险(红)">重大风险 (红 - 一级受控)</option>
-                    <option value="较大风险(橙)">较大风险 (橙 - 二级受控)</option>
-                    <option value="一般风险(黄)">一般风险 (黄 - 三级受控)</option>
-                    <option value="低风险(蓝)">低风险 (蓝 - 常规巡查)</option>
-                  </select>
-                </div>
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0 shadow-xs" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-bold flex items-center justify-between">
+                        <span>作业中</span>
+                        {status === 'active' && <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />}
+                      </div>
+                      <div className="text-[10px] text-slate-400 truncate mt-0.5">实时感知与定位追踪</div>
+                    </div>
+                  </button>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    初始运行状态
-                  </label>
-                  <select
-                    value={status}
-                    onChange={e => setStatus(e.target.value as any)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                  {/* 暂停中 */}
+                  <button
+                    type="button"
+                    onClick={() => setStatus('paused')}
+                    className={`px-3.5 py-2.5 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-2.5 ${
+                      status === 'paused'
+                        ? 'border-amber-500 bg-amber-50/80 text-amber-950 ring-2 ring-amber-500/20 shadow-xs'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
                   >
-                    <option value="active">作业中 (进行实时感知与定位)</option>
-                    <option value="paused">暂停中 (设备维持监测/禁止入内)</option>
-                    <option value="draft">待作业 (方案编制中)</option>
-                    <option value="completed">已完工 (已验收归档)</option>
-                  </select>
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0 shadow-xs" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-bold flex items-center justify-between">
+                        <span>暂停中</span>
+                        {status === 'paused' && <Check className="w-3.5 h-3.5 stroke-[3] text-amber-600" />}
+                      </div>
+                      <div className="text-[10px] text-slate-400 truncate mt-0.5">维持监测/禁止入内</div>
+                    </div>
+                  </button>
+
+                  {/* 已完工 */}
+                  <button
+                    type="button"
+                    onClick={() => setStatus('completed')}
+                    className={`px-3.5 py-2.5 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-2.5 ${
+                      status === 'completed'
+                        ? 'border-slate-600 bg-slate-100/90 text-slate-900 ring-2 ring-slate-500/20 shadow-xs'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-400 shrink-0 shadow-xs" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-bold flex items-center justify-between">
+                        <span>已完工</span>
+                        {status === 'completed' && <Check className="w-3.5 h-3.5 stroke-[3] text-slate-700" />}
+                      </div>
+                      <div className="text-[10px] text-slate-400 truncate mt-0.5">施工结束/验收归档</div>
+                    </div>
+                  </button>
                 </div>
               </div>
             </div>
