@@ -8,13 +8,13 @@ const serveYxkjPlugin = () => ({
   name: 'serve-yxkj-html',
   configureServer(server: any) {
     server.middlewares.use((req: any, res: any, next: any) => {
-      if (req.url && req.url.includes('yxkj-v')) {
-        const isV6 = req.url.includes('yxkj-v6.html');
-        const isV5 = req.url.includes('yxkj-v5.html');
-        if (isV6 || isV5) {
-          const fileName = isV6 ? 'yxkj-v6.html' : 'yxkj-v5.html';
+      if (req.url && req.url.includes('yxkj-')) {
+        const match = req.url.match(/yxkj-v\d+\.html/);
+        if (match) {
+          const fileName = match[0];
           const possiblePaths = [
             path.resolve(__dirname, 'public', fileName),
+            path.resolve(__dirname, 'public', 'src', fileName),
             path.resolve(__dirname, 'src', fileName),
           ];
           for (const p of possiblePaths) {
