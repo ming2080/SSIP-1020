@@ -114,7 +114,9 @@ export function SafetyOfficerSelect({
           >
             <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
             <span className="font-semibold">{officer.name}</span>
-            <span className="text-[10px] text-blue-500 font-mono">({officer.role || officer.department})</span>
+            <span className="text-[10px] text-blue-600 font-mono">[{officer.tagCode || officer.id}]</span>
+            <span className="text-[11px] text-blue-700">{officer.department}</span>
+            <span className="text-[10px] text-blue-600 font-mono">{officer.phone}</span>
             <button
               type="button"
               onClick={(e) => {
@@ -139,7 +141,7 @@ export function SafetyOfficerSelect({
               setIsOpen(true);
             }}
             onFocus={() => setIsOpen(true)}
-            placeholder={selectedOfficers.length === 0 ? "输入姓名、科室、工号或电话模糊检索..." : "继续添加安全员..."}
+            placeholder={selectedOfficers.length === 0 ? "检索安全员姓名、标签号、班组或电话..." : "继续添加安全员..."}
             className="w-full text-xs text-slate-800 placeholder:text-slate-400 bg-transparent focus:outline-none"
           />
         </div>
@@ -160,7 +162,7 @@ export function SafetyOfficerSelect({
       {isOpen && (
         <div className="absolute z-50 left-0 right-0 mt-1 bg-white rounded-xl border border-slate-200 shadow-xl overflow-hidden max-h-64 flex flex-col animate-in fade-in zoom-in-95 duration-100">
           <div className="p-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-[11px] text-slate-500">
-            <span>持证合格安全管理人员库 ({filteredOfficers.length} 位符合条件)</span>
+            <span>责任安全员人员库 ({filteredOfficers.length} 位符合条件)</span>
             {selectedOfficers.length > 0 && (
               <button
                 type="button"
@@ -196,28 +198,26 @@ export function SafetyOfficerSelect({
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-xs text-slate-800">{officer.name}</span>
-                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 border border-slate-200 font-medium">
-                            {officer.role}
+                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 border border-slate-200 font-mono">
+                            {officer.tagCode || officer.id}
                           </span>
                         </div>
-                        <div className="text-[11px] text-slate-400 flex items-center gap-2 mt-0.5 font-mono">
-                          <span>{officer.department}</span>
+                        <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
+                          <span>班组：{officer.department}</span>
                           <span>·</span>
-                          <span className="flex items-center gap-0.5">
-                            <Phone className="w-2.5 h-2.5" />
+                          <span className="flex items-center gap-0.5 font-mono">
+                            <Phone className="w-2.5 h-2.5 text-slate-400" />
                             {officer.phone}
                           </span>
-                          <span>·</span>
-                          <span>证书: {officer.certNumber}</span>
                         </div>
                       </div>
                     </div>
 
                     <span className="text-[11px] text-slate-400">
                       {isSelected ? (
-                        <span className="text-blue-600 font-medium">已勾选</span>
+                        <span className="text-blue-600 font-medium">已选择</span>
                       ) : (
-                        <span className="text-slate-400">点击添加</span>
+                        <span className="text-slate-400">点击选择</span>
                       )}
                     </span>
                   </div>

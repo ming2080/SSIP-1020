@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * 
  * 智慧船厂 - 作业面大屏视图
- * 对应源码路径: src/yxkj-v5.html
+ * 对应源码路径: src/yxkj-v7.html
  * 涵盖：有限空间与重点区域大屏安全监控系统、默认全屏显示、真实全屏切换、新窗口独立打开、返回控制台与配置台账联动
  */
 
@@ -77,6 +77,11 @@ export function WorkfaceScreenView({
     // 延迟 60ms 确保容器完全挂载渲染就绪
     timer = setTimeout(requestAutoFullscreen, 60);
 
+    // 1.2秒超时强制隐藏 loading，保障 iframe 顺畅呈现
+    const loadTimer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1200);
+
     // 3.5秒后自动淡出退出提示
     const hintTimer = setTimeout(() => {
       setShowExitHint(false);
@@ -84,6 +89,7 @@ export function WorkfaceScreenView({
 
     return () => {
       if (timer) clearTimeout(timer);
+      clearTimeout(loadTimer);
       clearTimeout(hintTimer);
     };
   }, []);
@@ -139,7 +145,7 @@ export function WorkfaceScreenView({
 
   // 新窗口独立打开
   const handleOpenNewTab = () => {
-    window.open('/yxkj-v5.html', '_blank');
+    window.open('/src/yxkj-v7.html', '_blank');
   };
 
   return (
@@ -235,7 +241,7 @@ export function WorkfaceScreenView({
             正在载入智慧船厂有限空间与重点区域大屏监控系统...
           </div>
           <div className="text-xs text-cyan-400/70 font-mono mt-1.5">
-            全屏 1920x1080 空间数字孪生监控大盘 · SOURCE: src/yxkj-v5.html
+            全屏 1920x1080 空间数字孪生监控大盘 · SOURCE: src/yxkj-v7.html
           </div>
         </div>
       )}
@@ -243,7 +249,7 @@ export function WorkfaceScreenView({
       {/* 大屏核心 iframe 渲染区：100% 满屏无缝嵌入 */}
       <iframe
         ref={iframeRef}
-        src="/yxkj-v5.html"
+        src="/src/yxkj-v7.html"
         onLoad={() => setIsLoading(false)}
         className="w-full h-full border-0 bg-[#00060f] flex-1"
         title="智慧船厂有限空间与重点区域安全监控系统"

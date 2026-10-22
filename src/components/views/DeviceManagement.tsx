@@ -100,6 +100,29 @@ export function getCoverageRadiusByAttenuation(coeffStrOrNum: string | number): 
   return Math.round(50 - (coeff * 49 / 31));
 }
 
+// 全厂作业面候选库 (选择“全厂通用设备”场景时关联，参考东南造船基地平面图与作业面管理)
+export interface YardWorkfaceOption {
+  id: string;
+  code: string;
+  name: string;
+  zone: string;
+  subArea: string;
+  safetyOfficer: string;
+  fenceCode: string;
+  defaultPosition?: { x: number; y: number; z: number };
+}
+
+export const YARD_WORKFACE_OPTIONS: YardWorkfaceOption[] = [
+  { id: 'WF-YARD-001', code: 'WF-SEC-01', name: '总组装焊平台一巨型分段拼对总组面', zone: '总装焊与分段建造区', subArea: '总组装焊平台一', safetyOfficer: '林海波', fenceCode: 'EF-SEC-01', defaultPosition: { x: 380.5, y: 0.02, z: -260.4 } },
+  { id: 'WF-YARD-002', code: 'WF-SEC-02', name: '5071㎡涂装车间密闭喷砂除锈特涂面', zone: '涂装与表面处理区', subArea: '涂装车间', safetyOfficer: '郑文杰', fenceCode: 'EF-SEC-02', defaultPosition: { x: 410.2, y: 2.50, z: -310.8 } },
+  { id: 'WF-YARD-003', code: 'WF-SEC-03', name: '128船台滑道搭载总装作业面', zone: '船台船坞与码头作业区', subArea: '128船台', safetyOfficer: '张立峰', fenceCode: 'EF-SEC-03', defaultPosition: { x: 290.0, y: 0.05, z: -180.0 } },
+  { id: 'WF-YARD-004', code: 'WF-SEC-04', name: '100船台大合拢搭载作业面', zone: '船台船坞与码头作业区', subArea: '100船台', safetyOfficer: '陈志强', fenceCode: 'EF-SEC-04', defaultPosition: { x: 275.4, y: 0.02, z: -150.2 } },
+  { id: 'WF-YARD-005', code: 'WF-SEC-05', name: '新舾装码头水上系泊调试作业面', zone: '船台船坞与码头作业区', subArea: '新舾装码头', safetyOfficer: '周卫国', fenceCode: 'EF-SEC-05', defaultPosition: { x: 190.8, y: 0.00, z: -95.6 } },
+  { id: 'WF-YARD-006', code: 'WF-SEC-06', name: '制造部内场数控激光切割与下料面', zone: '加工与制造车间区', subArea: '数控切割区', safetyOfficer: '李建军', fenceCode: 'EF-SEC-06', defaultPosition: { x: 450.6, y: 1.20, z: -350.0 } },
+  { id: 'WF-YARD-007', code: 'WF-SEC-07', name: '集配部管件冷拔加工及氩弧焊接面', zone: '加工与制造车间区', subArea: '管加工车间', safetyOfficer: '黄伟峰', fenceCode: 'EF-SEC-07', defaultPosition: { x: 420.0, y: 1.00, z: -320.0 } },
+  { id: 'WF-YARD-008', code: 'WF-SEC-08', name: '全厂公共区域通用监管作业面', zone: '综合厂区', subArea: '主干道路网', safetyOfficer: '赵大鹏', fenceCode: 'EF-SEC-08', defaultPosition: { x: 350.0, y: 0.00, z: -200.0 } }
+];
+
 // 1. 主基站类型
 export interface BaseStationDevice {
   id: string;
@@ -111,6 +134,8 @@ export interface BaseStationDevice {
   project: string;        // 所属项目或全厂通用
   modelLevel?: string;    // 模型分层 (deck | middle | bottom | engine | bridge)
   modelLevelName?: string;// 模型分层名称
+  workfaceId?: string;    // 关联作业面ID (全厂通用设备)
+  workfaceName?: string;  // 关联作业面名称
   status: '在线' | '离线'; // 基站状态
   recycleStatus: string;  // 基站回收状态（设备安装、已回收、维护中、待安装、临时撤场、拟拆除等）
   location: string;       // 安装位置
@@ -142,6 +167,8 @@ export interface GasDetectorDevice {
   project: string;         // 所属项目或全厂通用
   modelLevel?: string;    // 模型分层
   modelLevelName?: string;// 模型分层名称
+  workfaceId?: string;    // 关联作业面ID (全厂通用设备)
+  workfaceName?: string;  // 关联作业面名称
   location: string;        // 安装位置
   floor?: string;          // 安装楼层
   positionX?: number;
@@ -163,6 +190,8 @@ export interface AlarmDevice {
   project: string;         // 所属项目或全厂通用
   modelLevel?: string;    // 模型分层
   modelLevelName?: string;// 模型分层名称
+  workfaceId?: string;    // 关联作业面ID (全厂通用设备)
+  workfaceName?: string;  // 关联作业面名称
   location: string;        // 安装位置
   floor?: string;          // 安装楼层
   positionX?: number;
@@ -185,6 +214,8 @@ export interface CameraDevice {
   project: string;         // 所属项目或全厂通用
   modelLevel?: string;    // 模型分层
   modelLevelName?: string;// 模型分层名称
+  workfaceId?: string;    // 关联作业面ID (全厂通用设备)
+  workfaceName?: string;  // 关联作业面名称
   createdAt: string;       // 创建时间
   isStreaming: boolean;    // 推流状态 (true: 推流中, false: 停止推流)
   rtspUrl?: string;        // RTSP视频流
@@ -222,7 +253,7 @@ const initialExciters: ExciterDevice[] = [
     positionZ: -150.40,
     installationSite: '舱内',
     auxPositioning: '是',
-    electricFence: 'EX-ZONE-01',
+    electricFence: 'EF-LNG-CS01',
     lastUpdated: '2026-09-01 10:15:20',
     ipAddress: '192.168.10.151',
     macAddress: '22:6D:7E:CD:5B:E1',
@@ -238,6 +269,8 @@ const initialExciters: ExciterDevice[] = [
     project: '全厂通用设备',
     modelLevel: 'all',
     modelLevelName: '全厂公共区域',
+    workfaceId: 'WF-YARD-001',
+    workfaceName: '总组装焊平台一巨型分段拼对总组面',
     status: '在线',
     recycleStatus: '设备安装',
     location: '机舱中央集控室',
@@ -250,7 +283,7 @@ const initialExciters: ExciterDevice[] = [
     positionZ: -90.20,
     installationSite: '室内',
     auxPositioning: '是',
-    electricFence: 'EX-ZONE-02',
+    electricFence: 'EF-SEC-01',
     lastUpdated: '2026-09-01 11:00:00',
     ipAddress: '192.168.10.152',
     macAddress: '22:6D:7E:CD:5B:E2',
@@ -263,26 +296,28 @@ const initialBaseStations: BaseStationDevice[] = [
   {
     id: 'BS-01',
     seq: 1,
-    code: '测试',
-    name: '123',
-    associationType: 'project',
-    projectId: 'PRJ-2026-SE01',
-    project: '东南造船厂',
-    modelLevel: 'deck',
-    modelLevelName: '甲板层 (主甲板/露天作业区)',
+    code: 'BS-SEC-01',
+    name: '1#船台高精度定位主基站',
+    associationType: 'global',
+    projectId: '',
+    project: '全厂通用设备',
+    modelLevel: 'all',
+    modelLevelName: '全厂公共区域',
+    workfaceId: 'WF-YARD-001',
+    workfaceName: '总组装焊平台一巨型分段拼对总组面',
     status: '在线',
     recycleStatus: '设备安装',
-    location: '测试',
+    location: '1#船台合拢区',
     floor: '',
     signalLossTime: 5,
     attenuationCoeff: '0',
     coverageRange: '50',
-    positionX: 407.49,
+    positionX: 380.50,
     positionY: 0.02,
-    positionZ: -296.85,
+    positionZ: -260.40,
     installationSite: '室外',
     auxPositioning: '否',
-    electricFence: '517-9',
+    electricFence: 'EF-SEC-01',
     lastUpdated: '2026-08-29 21:19:43',
     ipAddress: '192.168.10.111',
     macAddress: '11:5D:6D:BC:4A:D7',
@@ -310,7 +345,7 @@ const initialBaseStations: BaseStationDevice[] = [
     positionZ: -180.20,
     installationSite: '舱内',
     auxPositioning: '是',
-    electricFence: '517-9',
+    electricFence: 'EF-LNG-CS02',
     lastUpdated: '2026-08-29 21:17:38',
     ipAddress: '192.168.10.107',
     macAddress: '11:5D:6D:BC:33:54',
@@ -330,10 +365,14 @@ const initialBaseStations: BaseStationDevice[] = [
     recycleStatus: '设备安装',
     location: '机电仓库',
     floor: '5',
-    signalLossTime: '',
-    attenuationCoeff: '',
-    coverageRange: '',
+    signalLossTime: 5,
+    attenuationCoeff: '0',
+    coverageRange: '50',
+    positionX: 240.50,
+    positionY: 4.00,
+    positionZ: -110.00,
     auxPositioning: '是',
+    electricFence: 'EF-BOX-CS02',
     lastUpdated: '2026-08-29 21:03:17',
     ipAddress: '192.168.10.105',
     macAddress: '11:5D:6D:BC:53:54',
@@ -349,15 +388,21 @@ const initialBaseStations: BaseStationDevice[] = [
     project: '全厂通用设备',
     modelLevel: 'all',
     modelLevelName: '全厂公共区域',
+    workfaceId: 'WF-YARD-005',
+    workfaceName: '新舾装码头水上系泊调试作业面',
     status: '离线',
     recycleStatus: '临时撤场',
     location: '登船口',
     floor: '5',
-    signalLossTime: '0',
+    signalLossTime: 0,
     attenuationCoeff: '0',
     coverageRange: '50m',
+    positionX: 190.80,
+    positionY: 0.00,
+    positionZ: -95.60,
     auxPositioning: '否',
-    lastUpdated: '',
+    electricFence: 'EF-SEC-05',
+    lastUpdated: '2026-08-29 21:05:00',
     ipAddress: '192.168.10.108',
     macAddress: '11:5D:6D:BC:57:54',
     firmwareVersion: 'v2.4.08'
@@ -376,10 +421,14 @@ const initialBaseStations: BaseStationDevice[] = [
     recycleStatus: '设备安装',
     location: '4号浮动码头路口',
     floor: '5',
-    signalLossTime: '19',
+    signalLossTime: 19,
     attenuationCoeff: '19',
     coverageRange: '23m',
+    positionX: 330.00,
+    positionY: 9.00,
+    positionZ: -160.00,
     auxPositioning: '是',
+    electricFence: 'EF-TANK-CS01',
     lastUpdated: '2026-08-29 21:09:37',
     ipAddress: '192.168.10.113',
     macAddress: '11:5D:6D:BC:4A:54',
@@ -393,14 +442,20 @@ const initialBaseStations: BaseStationDevice[] = [
     associationType: 'global',
     projectId: '',
     project: '全厂通用设备',
+    workfaceId: 'WF-YARD-008',
+    workfaceName: '全厂公共区域通用监管作业面',
     status: '在线',
     recycleStatus: '设备安装',
     location: '北区办公楼',
     floor: '5',
-    signalLossTime: '19',
+    signalLossTime: 19,
     attenuationCoeff: '19',
     coverageRange: '23m',
+    positionX: 350.00,
+    positionY: 0.00,
+    positionZ: -200.00,
     auxPositioning: '是',
+    electricFence: 'EF-SEC-08',
     lastUpdated: '2026-08-29 21:17:42',
     ipAddress: '192.168.10.115',
     macAddress: '11:5D:6D:BC:17:52',
@@ -420,10 +475,14 @@ const initialBaseStations: BaseStationDevice[] = [
     recycleStatus: '设备安装',
     location: '一号轨道路口',
     floor: '5',
-    signalLossTime: '19',
+    signalLossTime: 19,
     attenuationCoeff: '19',
     coverageRange: '23m',
+    positionX: 350.20,
+    positionY: 10.10,
+    positionZ: -150.40,
     auxPositioning: '是',
+    electricFence: 'EF-LNG-CS01',
     lastUpdated: '2026-08-29 21:21:33',
     ipAddress: '192.168.10.114',
     macAddress: '11:5D:6D:BC:56:54',
@@ -443,10 +502,14 @@ const initialBaseStations: BaseStationDevice[] = [
     recycleStatus: '设备安装',
     location: '露天专焊10T中',
     floor: '5',
-    signalLossTime: '19',
+    signalLossTime: 19,
     attenuationCoeff: '19',
     coverageRange: '23m',
+    positionX: 280.00,
+    positionY: 6.00,
+    positionZ: -120.00,
     auxPositioning: '是',
+    electricFence: 'EF-BULK-CS01',
     lastUpdated: '2026-08-29 21:20:01',
     ipAddress: '192.168.10.116',
     macAddress: '11:5D:6D:BC:54:54',
@@ -454,41 +517,41 @@ const initialBaseStations: BaseStationDevice[] = [
   }
 ];
 
-// 初始数据：气体探测器
+// 初始数据：气体探测器 (包含地图三维坐标与关联作业面/工程项目)
 const initialGasDetectors: GasDetectorDevice[] = [
-  { id: 'GD-01', seq: 1, createdAt: '2026-08-20 14:32:59', sn: '866833080749440', name: '866833080749440', associationType: 'project', projectId: 'PRJ-2026-LNG01', project: '17.4万m³ 薄膜型大型LNG船 1号舰', modelLevel: 'engine', modelLevelName: '机舱动力区 (主机/辅机与管系舱)', location: '517-9号船机舱', floor: '' },
-  { id: 'GD-02', seq: 2, createdAt: '2026-08-20 14:32:46', sn: '866833080749051', name: '866833080749051', associationType: 'project', projectId: 'PRJ-2026-LNG01', project: '17.4万m³ 薄膜型大型LNG船 1号舰', modelLevel: 'bottom', modelLevelName: '底舱层 (双层底/压载密闭舱)', location: '519-1机舱', floor: '' },
-  { id: 'GD-03', seq: 3, createdAt: '2026-08-20 14:32:32', sn: '866833080749630', name: '866833080749630', associationType: 'project', projectId: 'PRJ-2026-BOX12', project: '24,000 TEU 超大型集装箱船', modelLevel: 'engine', modelLevelName: '机舱动力区 (主机/辅机与管系舱)', location: '平船台机舱', floor: '' },
-  { id: 'GD-04', seq: 4, createdAt: '2026-08-20 14:32:17', sn: '866833080748954', name: '866833080748954', associationType: 'global', projectId: '', project: '全厂通用设备', location: '预处理车间', floor: '' },
-  { id: 'GD-05', seq: 5, createdAt: '2026-08-20 14:31:56', sn: '866833080749267', name: '866833080749267', associationType: 'project', projectId: 'PRJ-2026-TANK02', project: '30万吨 VLCC 超大型原油船', modelLevel: 'engine', modelLevelName: '机舱动力区 (主机/辅机与管系舱)', location: '628-7机舱', floor: '' },
-  { id: 'GD-06', seq: 6, createdAt: '2026-08-20 14:31:41', sn: '866833080749283', name: '866833080749283', associationType: 'project', projectId: 'PRJ-2026-TANK02', project: '30万吨 VLCC 超大型原油船', modelLevel: 'bottom', modelLevelName: '底舱层 (双层底/压载密闭舱)', location: '628-8机舱', floor: '' },
-  { id: 'GD-07', seq: 7, createdAt: '2026-08-20 14:31:26', sn: '866833080749689', name: '866833080749689', associationType: 'project', projectId: 'PRJ-2026-LNG01', project: '17.4万m³ 薄膜型大型LNG船 1号舰', modelLevel: 'middle', modelLevelName: '中舱层 (货舱上部/中层平台)', location: '716-10机舱', floor: '' },
-  { id: 'GD-08', seq: 8, createdAt: '2026-08-20 14:31:12', sn: '866833080909333', name: '866833080909333', associationType: 'global', projectId: '', project: '全厂通用设备', location: '涂装车间', floor: '' },
-  { id: 'GD-09', seq: 9, createdAt: '2026-08-20 14:30:58', sn: '866833080749341', name: '866833080749341', associationType: 'global', projectId: '', project: '全厂通用设备', location: '危化品仓库', floor: '' },
-  { id: 'GD-10', seq: 10, createdAt: '2026-08-20 14:30:42', sn: '866833080749317', name: '866833080749317', associationType: 'project', projectId: 'PRJ-2026-BULK04', project: '82,000 DWT 卡姆萨尔型散货船', modelLevel: 'engine', modelLevelName: '机舱动力区 (主机/辅机与管系舱)', location: '14500-3机舱', floor: '' }
+  { id: 'GD-01', seq: 1, createdAt: '2026-08-20 14:32:59', sn: '866833080749440', name: '机舱双燃料气体在线探头', associationType: 'project', projectId: 'PRJ-2026-LNG01', project: '17.4万m³ 薄膜型大型LNG船 1号舰', modelLevel: 'engine', modelLevelName: '机舱动力区 (主机/辅机与管系舱)', location: '517-9号船机舱', floor: '', positionX: 312.50, positionY: 12.80, positionZ: -180.20, electricFence: 'EF-LNG-CS02' },
+  { id: 'GD-02', seq: 2, createdAt: '2026-08-20 14:32:46', sn: '866833080749051', name: '1#液货舱防爆四合一气体监测仪', associationType: 'project', projectId: 'PRJ-2026-LNG01', project: '17.4万m³ 薄膜型大型LNG船 1号舰', modelLevel: 'bottom', modelLevelName: '底舱层 (双层底/压载密闭舱)', location: '1#液货舱底板', floor: '', positionX: 350.20, positionY: 10.10, positionZ: -150.40, electricFence: 'EF-LNG-CS01' },
+  { id: 'GD-03', seq: 3, createdAt: '2026-08-20 14:32:32', sn: '866833080749630', name: '10#箱位下部受限空间监测探头', associationType: 'project', projectId: 'PRJ-2026-BOX12', project: '24,000 TEU 超大型集装箱船', modelLevel: 'engine', modelLevelName: '机舱动力区 (主机/辅机与管系舱)', location: '平船台机舱', floor: '', positionX: 260.00, positionY: 3.50, positionZ: -140.00, electricFence: 'EF-BOX-CS01' },
+  { id: 'GD-04', seq: 4, createdAt: '2026-08-20 14:32:17', sn: '866833080748954', name: '制造内场激光切割氧气浓度仪', associationType: 'global', projectId: '', project: '全厂通用设备', workfaceId: 'WF-YARD-006', workfaceName: '制造部内场数控激光切割与下料面', location: '预处理车间', floor: '', positionX: 450.60, positionY: 1.20, positionZ: -350.00, electricFence: 'EF-SEC-06' },
+  { id: 'GD-05', seq: 5, createdAt: '2026-08-20 14:31:56', sn: '866833080749267', name: '货油舱洗舱深井可燃气体探头', associationType: 'project', projectId: 'PRJ-2026-TANK02', project: '30万吨 VLCC 超大型原油船', modelLevel: 'engine', modelLevelName: '机舱动力区 (主机/辅机与管系舱)', location: '628-7机舱', floor: '', positionX: 330.00, positionY: 9.00, positionZ: -160.00, electricFence: 'EF-TANK-CS01' },
+  { id: 'GD-06', seq: 6, createdAt: '2026-08-20 14:31:41', sn: '866833080749283', name: '双层底边压载舱氧含量探头', associationType: 'project', projectId: 'PRJ-2026-TANK02', project: '30万吨 VLCC 超大型原油船', modelLevel: 'bottom', modelLevelName: '底舱层 (双层底/压载密闭舱)', location: '628-8机舱', floor: '', positionX: 310.00, positionY: 2.00, positionZ: -130.00, electricFence: 'EF-TANK-CS02' },
+  { id: 'GD-07', seq: 7, createdAt: '2026-08-20 14:31:26', sn: '866833080749689', name: '艏楼压载泵舱防爆监测仪', associationType: 'project', projectId: 'PRJ-2026-LNG01', project: '17.4万m³ 薄膜型大型LNG船 1号舰', modelLevel: 'middle', modelLevelName: '中舱层 (货舱上部/中层平台)', location: '716-10机舱', floor: '', positionX: 395.00, positionY: 18.50, positionZ: -280.00, electricFence: 'EF-LNG-CS03' },
+  { id: 'GD-08', seq: 8, createdAt: '2026-08-20 14:31:12', sn: '866833080909333', name: '涂装车间VOC与可燃气体检测仪', associationType: 'global', projectId: '', project: '全厂通用设备', workfaceId: 'WF-YARD-002', workfaceName: '5071㎡涂装车间密闭喷砂除锈特涂面', location: '涂装车间', floor: '', positionX: 410.20, positionY: 2.50, positionZ: -310.80, electricFence: 'EF-SEC-02' },
+  { id: 'GD-09', seq: 9, createdAt: '2026-08-20 14:30:58', sn: '866833080749341', name: '危化品库特种气体泄漏巡检仪', associationType: 'global', projectId: '', project: '全厂通用设备', workfaceId: 'WF-YARD-008', workfaceName: '全厂公共区域通用监管作业面', location: '危化品仓库', floor: '', positionX: 350.00, positionY: 0.00, positionZ: -200.00, electricFence: 'EF-SEC-08' },
+  { id: 'GD-10', seq: 10, createdAt: '2026-08-20 14:30:42', sn: '866833080749317', name: '散货船大舱舷侧隔舱氧量探头', associationType: 'project', projectId: 'PRJ-2026-BULK04', project: '82,000 DWT 卡姆萨尔型散货船', modelLevel: 'engine', modelLevelName: '机舱动力区 (主机/辅机与管系舱)', location: '14500-3机舱', floor: '', positionX: 280.00, positionY: 6.00, positionZ: -120.00, electricFence: 'EF-BULK-CS01' }
 ];
 
-// 初始数据：声光报警器
+// 初始数据：声光报警器 (包含地图三维坐标与关联作业面/工程项目)
 const initialAlarms: AlarmDevice[] = [
-  { id: 'AL-01', seq: 1, createdAt: '2026-08-20 14:35:57', sn: '867655086345884', name: '867655086345884', associationType: 'project', projectId: 'PRJ-2026-LNG01', project: '17.4万m³ 薄膜型大型LNG船 1号舰', modelLevel: 'engine', modelLevelName: '机舱动力区', location: '145-3机舱', floor: '' },
-  { id: 'AL-02', seq: 2, createdAt: '2026-08-20 14:35:29', sn: '867655086341883', name: '867655086341883', associationType: 'project', projectId: 'PRJ-2026-LNG01', project: '17.4万m³ 薄膜型大型LNG船 1号舰', modelLevel: 'middle', modelLevelName: '中舱层', location: '519-1机舱', floor: '' },
-  { id: 'AL-03', seq: 3, createdAt: '2026-08-20 14:35:17', sn: '867655086341560', name: '867655086341560', associationType: 'project', projectId: 'PRJ-2026-TANK02', project: '30万吨 VLCC 超大型原油船', modelLevel: 'engine', modelLevelName: '机舱动力区', location: '628-7机舱', floor: '' },
-  { id: 'AL-04', seq: 4, createdAt: '2026-08-20 14:35:05', sn: '867655085879206', name: '867655085879206', associationType: 'global', projectId: '', project: '全厂通用设备', location: '气瓶集中存放区', floor: '' },
-  { id: 'AL-05', seq: 5, createdAt: '2026-08-20 14:34:51', sn: '867655086346148', name: '867655086346148', associationType: 'global', projectId: '', project: '全厂通用设备', location: '配电中心', floor: '' },
-  { id: 'AL-06', seq: 6, createdAt: '2026-08-20 14:34:40', sn: '867655086344929', name: '867655086344929', associationType: 'project', projectId: 'PRJ-2026-BOX12', project: '24,000 TEU 超大型集装箱船', modelLevel: 'deck', modelLevelName: '甲板层', location: '716-10机舱', floor: '' },
-  { id: 'AL-07', seq: 7, createdAt: '2026-08-20 14:34:27', sn: '867655085878844', name: '867655085878844', associationType: 'project', projectId: 'PRJ-2026-TANK02', project: '30万吨 VLCC 超大型原油船', modelLevel: 'bottom', modelLevelName: '底舱层', location: '628-8机舱', floor: '' },
-  { id: 'AL-08', seq: 8, createdAt: '2026-08-20 14:34:14', sn: '867655086346221', name: '867655086346221', associationType: 'project', projectId: 'PRJ-2026-PSV01', project: '75M 动力定位平台供应船 (DP-2)', modelLevel: 'bridge', modelLevelName: '驾驶台', location: '平船台机舱', floor: '' },
-  { id: 'AL-09', seq: 9, createdAt: '2026-08-20 14:33:59', sn: '867655086347864', name: '867655086347864', associationType: 'project', projectId: 'PRJ-2026-LNG01', project: '17.4万m³ 薄膜型大型LNG船 1号舰', modelLevel: 'deck', modelLevelName: '甲板层', location: '517-9号船机舱', floor: '' },
-  { id: 'AL-10', seq: 10, createdAt: '2026-08-19 14:49:25', sn: '867655086345926', name: '867655086345926', associationType: 'global', projectId: '', project: '全厂通用设备', location: '变电站房', floor: '' }
+  { id: 'AL-01', seq: 1, createdAt: '2026-08-20 14:35:57', sn: '867655086345884', name: '机舱出入口缺氧联动防爆报警器', associationType: 'project', projectId: 'PRJ-2026-LNG01', project: '17.4万m³ 薄膜型大型LNG船 1号舰', modelLevel: 'engine', modelLevelName: '机舱动力区', location: '145-3机舱', floor: '', positionX: 312.50, positionY: 12.80, positionZ: -180.20, electricFence: 'EF-LNG-CS02' },
+  { id: 'AL-02', seq: 2, createdAt: '2026-08-20 14:35:29', sn: '867655086341883', name: '1#舱口受限空间警戒广播器', associationType: 'project', projectId: 'PRJ-2026-LNG01', project: '17.4万m³ 薄膜型大型LNG船 1号舰', modelLevel: 'middle', modelLevelName: '中舱层', location: '519-1机舱', floor: '', positionX: 350.20, positionY: 10.10, positionZ: -150.40, electricFence: 'EF-LNG-CS01' },
+  { id: 'AL-03', seq: 3, createdAt: '2026-08-20 14:35:17', sn: '867655086341560', name: '洗舱深井动火警戒声光联动器', associationType: 'project', projectId: 'PRJ-2026-TANK02', project: '30万吨 VLCC 超大型原油船', modelLevel: 'engine', modelLevelName: '机舱动力区', location: '628-7机舱', floor: '', positionX: 330.00, positionY: 9.00, positionZ: -160.00, electricFence: 'EF-TANK-CS01' },
+  { id: 'AL-04', seq: 4, createdAt: '2026-08-20 14:35:05', sn: '867655085879206', name: '集配部管件焊接高分贝警报器', associationType: 'global', projectId: '', project: '全厂通用设备', workfaceId: 'WF-YARD-007', workfaceName: '集配部管件冷拔加工及氩弧焊接面', location: '气瓶集中存放区', floor: '', positionX: 420.00, positionY: 1.00, positionZ: -320.00, electricFence: 'EF-SEC-07' },
+  { id: 'AL-05', seq: 5, createdAt: '2026-08-20 14:34:51', sn: '867655086346148', name: '总组平台一吊运防碰声光器', associationType: 'global', projectId: '', project: '全厂通用设备', workfaceId: 'WF-YARD-001', workfaceName: '总组装焊平台一巨型分段拼对总组面', location: '总组装焊平台一', floor: '', positionX: 380.50, positionY: 0.02, positionZ: -260.40, electricFence: 'EF-SEC-01' },
+  { id: 'AL-06', seq: 6, createdAt: '2026-08-20 14:34:40', sn: '867655086344929', name: '集装箱导轨高空坠落声光告警器', associationType: 'project', projectId: 'PRJ-2026-BOX12', project: '24,000 TEU 超大型集装箱船', modelLevel: 'deck', modelLevelName: '甲板层', location: '716-10机舱', floor: '', positionX: 260.00, positionY: 3.50, positionZ: -140.00, electricFence: 'EF-BOX-CS01' },
+  { id: 'AL-07', seq: 7, createdAt: '2026-08-20 14:34:27', sn: '867655085878844', name: '双层底边舱狭窄作业撤离喇叭', associationType: 'project', projectId: 'PRJ-2026-TANK02', project: '30万吨 VLCC 超大型原油船', modelLevel: 'bottom', modelLevelName: '底舱层', location: '628-8机舱', floor: '', positionX: 310.00, positionY: 2.00, positionZ: -130.00, electricFence: 'EF-TANK-CS02' },
+  { id: 'AL-08', seq: 8, createdAt: '2026-08-20 14:34:14', sn: '867655086346221', name: '128船台滑道搭载警戒声光器', associationType: 'global', projectId: '', project: '全厂通用设备', workfaceId: 'WF-YARD-003', workfaceName: '128船台滑道搭载总装作业面', location: '128船台滑道', floor: '', positionX: 290.00, positionY: 0.05, positionZ: -180.00, electricFence: 'EF-SEC-03' },
+  { id: 'AL-09', seq: 9, createdAt: '2026-08-20 14:33:59', sn: '867655086347864', name: '新舾装码头水上动火警戒器', associationType: 'global', projectId: '', project: '全厂通用设备', workfaceId: 'WF-YARD-005', workfaceName: '新舾装码头水上系泊调试作业面', location: '新舾装码头', floor: '', positionX: 190.80, positionY: 0.00, positionZ: -95.60, electricFence: 'EF-SEC-05' },
+  { id: 'AL-10', seq: 10, createdAt: '2026-08-19 14:49:25', sn: '867655086345926', name: '涂装防爆车间溶剂超标联动器', associationType: 'global', projectId: '', project: '全厂通用设备', workfaceId: 'WF-YARD-002', workfaceName: '5071㎡涂装车间密闭喷砂除锈特涂面', location: '涂装车间', floor: '', positionX: 410.20, positionY: 2.50, positionZ: -310.80, electricFence: 'EF-SEC-02' }
 ];
 
-// 初始数据：摄像头
+// 初始数据：摄像头 (包含地图三维坐标与关联作业面/工程项目)
 const initialCameras: CameraDevice[] = [
-  { id: 'CAM-01', seq: 1, code: 'test-003', name: '香烟识别摄像头', modelCategory: '--', apiUrl: 'http://192.168.205.110:7571', associationType: 'global', projectId: '', project: '全厂通用设备', createdAt: '2026-06-10 16:49:35', isStreaming: true, rtspUrl: 'rtsp://192.168.205.110:554/live/smoke_01' },
-  { id: 'CAM-02', seq: 2, code: 'test1006', name: '安全帽识别摄像头', modelCategory: '--', apiUrl: 'http://192.168.205.110:7570', associationType: 'project', projectId: 'PRJ-2026-LNG01', project: '17.4万m³ 薄膜型大型LNG船 1号舰', modelLevel: 'deck', modelLevelName: '甲板层', createdAt: '2026-05-13 13:47:20', isStreaming: true, rtspUrl: 'rtsp://192.168.205.110:554/live/helmet_01' },
-  { id: 'CAM-03', seq: 3, code: 'test1005', name: '手机识别摄像头', modelCategory: '--', apiUrl: 'http://192.168.205.110:7572', associationType: 'global', projectId: '', project: '全厂通用设备', createdAt: '2026-05-13 13:47:04', isStreaming: true, rtspUrl: 'rtsp://192.168.205.110:554/live/phone_01' },
-  { id: 'CAM-04', seq: 4, code: 'test1008', name: '反光衣未穿戴识别摄像头', modelCategory: '未穿戴防护检测', apiUrl: 'http://192.168.205.110:7573', associationType: 'project', projectId: 'PRJ-2026-BOX12', project: '24,000 TEU 超大型集装箱船', modelLevel: 'middle', modelLevelName: '中舱层', createdAt: '2026-05-10 11:20:15', isStreaming: true, rtspUrl: 'rtsp://192.168.205.110:554/live/vest_01' },
-  { id: 'CAM-05', seq: 5, code: 'test1009', name: '烟火违章识别摄像头', modelCategory: '火灾烟雾识别', apiUrl: 'http://192.168.205.110:7574', associationType: 'project', projectId: 'PRJ-2026-TANK02', project: '30万吨 VLCC 超大型原油船', modelLevel: 'bottom', modelLevelName: '底舱层', createdAt: '2026-04-28 09:30:00', isStreaming: false, rtspUrl: 'rtsp://192.168.205.110:554/live/fire_01' }
+  { id: 'CAM-01', seq: 1, code: 'CAM-SEC-01', name: '总组平台一AI防爆全景球机', modelCategory: '违章吸烟与火灾检测', apiUrl: 'http://192.168.205.110:7571', associationType: 'global', projectId: '', project: '全厂通用设备', workfaceId: 'WF-YARD-001', workfaceName: '总组装焊平台一巨型分段拼对总组面', createdAt: '2026-06-10 16:49:35', isStreaming: true, rtspUrl: 'rtsp://192.168.205.110:554/live/smoke_01', positionX: 380.50, positionY: 0.02, positionZ: -260.40, electricFence: 'EF-SEC-01' },
+  { id: 'CAM-02', seq: 2, code: 'CAM-LNG-02', name: '1#液货舱绝热合拢高点监控球机', modelCategory: '安全帽/劳保穿戴识别', apiUrl: 'http://192.168.205.110:7570', associationType: 'project', projectId: 'PRJ-2026-LNG01', project: '17.4万m³ 薄膜型大型LNG船 1号舰', modelLevel: 'middle', modelLevelName: '中舱层', createdAt: '2026-05-13 13:47:20', isStreaming: true, rtspUrl: 'rtsp://192.168.205.110:554/live/helmet_01', positionX: 350.20, positionY: 10.10, positionZ: -150.40, electricFence: 'EF-LNG-CS01' },
+  { id: 'CAM-03', seq: 3, code: 'CAM-SEC-03', name: '128船台滑道搭载高清监控枪机', modelCategory: '手机违规使用抓拍', apiUrl: 'http://192.168.205.110:7572', associationType: 'global', projectId: '', project: '全厂通用设备', workfaceId: 'WF-YARD-003', workfaceName: '128船台滑道搭载总装作业面', createdAt: '2026-05-13 13:47:04', isStreaming: true, rtspUrl: 'rtsp://192.168.205.110:554/live/phone_01', positionX: 290.00, positionY: 0.05, positionZ: -180.00, electricFence: 'EF-SEC-03' },
+  { id: 'CAM-04', seq: 4, code: 'CAM-BOX-04', name: '10#箱位下部受限空间红外布控球', modelCategory: '未穿戴防护检测', apiUrl: 'http://192.168.205.110:7573', associationType: 'project', projectId: 'PRJ-2026-BOX12', project: '24,000 TEU 超大型集装箱船', modelLevel: 'bottom', modelLevelName: '底舱层', createdAt: '2026-05-10 11:20:15', isStreaming: true, rtspUrl: 'rtsp://192.168.205.110:554/live/vest_01', positionX: 260.00, positionY: 3.50, positionZ: -140.00, electricFence: 'EF-BOX-CS01' },
+  { id: 'CAM-05', seq: 5, code: 'CAM-PAINT-05', name: '涂装车间密闭防爆烟火识别摄像机', modelCategory: '火灾烟雾识别', apiUrl: 'http://192.168.205.110:7574', associationType: 'global', projectId: '', project: '全厂通用设备', workfaceId: 'WF-YARD-002', workfaceName: '5071㎡涂装车间密闭喷砂除锈特涂面', createdAt: '2026-04-28 09:30:00', isStreaming: false, rtspUrl: 'rtsp://192.168.205.110:554/live/fire_01', positionX: 410.20, positionY: 2.50, positionZ: -310.80, electricFence: 'EF-SEC-02' }
 ];
 
 export function DeviceManagement() {
@@ -647,84 +710,68 @@ export function DeviceManagement() {
     const defaultAssociation = 'project';
     const defaultProjId = MOCK_PROJECTS[0].id;
     const defaultProjName = MOCK_PROJECTS[0].name;
+    const defaultWf = YARD_WORKFACE_OPTIONS[0];
+
+    const commonBase = {
+      associationType: defaultAssociation,
+      projectId: defaultProjId,
+      project: defaultProjName,
+      modelLevel: 'middle',
+      modelLevelName: MODEL_LAYER_OPTIONS[1].fullName,
+      workfaceId: defaultWf.id,
+      workfaceName: defaultWf.name,
+      positionX: 350.20,
+      positionY: 10.10,
+      positionZ: -150.40,
+      electricFence: 'EF-SEC-01',
+      installationSite: '舱内'
+    };
 
     if (activeTab === 'main_station' || activeTab === 'exciter') {
       setFormFields({
-        code: activeTab === 'exciter' ? 'EX-TEST-01' : '测试',
-        name: activeTab === 'exciter' ? '1#液货舱激励器' : '123',
-        associationType: defaultAssociation,
-        projectId: defaultProjId,
-        project: defaultProjName,
-        modelLevel: 'deck',
-        modelLevelName: MODEL_LAYER_OPTIONS[0].fullName,
+        ...commonBase,
+        code: activeTab === 'exciter' ? `EX-DEV-${Date.now().toString().slice(-4)}` : `BS-DEV-${Date.now().toString().slice(-4)}`,
+        name: activeTab === 'exciter' ? '1#液货舱激励器' : '1#液货舱主基站',
         status: '在线',
-        location: '测试',
-        floor: '',
+        location: '1#液货舱左舷',
+        floor: '2',
         recycleStatus: '设备安装',
         signalLossTime: 5,
         attenuationCoeff: '0',
         coverageRange: '50',
-        positionX: 407.49,
-        positionY: 0.02,
-        positionZ: -296.85,
-        installationSite: '室外',
-        auxPositioning: '否',
-        electricFence: '517-9'
+        auxPositioning: '是'
       });
     } else if (activeTab === 'gas_detector') {
       const randomSn = '866833080' + Math.floor(100050 + Math.random() * 899900);
       setFormFields({
+        ...commonBase,
         createdAt: timeStr,
         sn: randomSn,
-        name: randomSn,
-        associationType: defaultAssociation,
-        projectId: defaultProjId,
-        project: defaultProjName,
-        modelLevel: 'deck',
-        modelLevelName: MODEL_LAYER_OPTIONS[0].fullName,
-        location: '517-9号船机舱',
-        floor: '',
-        positionX: 312.50,
-        positionY: 12.80,
-        positionZ: -180.20,
-        installationSite: '舱内'
+        name: '液货舱四合一在线环境监测探头',
+        location: '1#液货舱合拢面底部',
+        floor: '2'
       });
     } else if (activeTab === 'alarm') {
       const randomSn = '867655086' + Math.floor(100050 + Math.random() * 899900);
       setFormFields({
+        ...commonBase,
         createdAt: timeStr,
         sn: randomSn,
-        name: randomSn,
-        associationType: defaultAssociation,
-        projectId: defaultProjId,
-        project: defaultProjName,
-        modelLevel: 'deck',
-        modelLevelName: MODEL_LAYER_OPTIONS[0].fullName,
-        location: '145-3机舱',
-        floor: '',
-        positionX: 185.00,
-        positionY: 6.50,
-        positionZ: -45.00,
-        installationSite: '舱内'
+        name: '应急预警防爆声光器',
+        location: '1#液货舱进出卡口',
+        floor: '2'
       });
     } else if (activeTab === 'camera') {
       setFormFields({
-        code: `test${1000 + cameras.length + 1}`,
-        name: '未穿戴安全帽识别摄像头',
-        modelCategory: '--',
+        ...commonBase,
+        code: `CAM-AI-${1000 + cameras.length + 1}`,
+        name: '人员出入AI识别布控球',
+        modelCategory: '安全帽/劳保穿戴识别',
         apiUrl: `http://192.168.205.110:${7570 + cameras.length}`,
-        associationType: defaultAssociation,
-        projectId: defaultProjId,
-        project: defaultProjName,
-        modelLevel: 'deck',
-        modelLevelName: MODEL_LAYER_OPTIONS[0].fullName,
         createdAt: timeStr,
         isStreaming: true,
         rtspUrl: `rtsp://192.168.205.110:554/live/cam_${cameras.length + 1}`,
-        positionX: 407.49,
-        positionY: 0.02,
-        positionZ: -296.85,
-        installationSite: '室外'
+        location: '1#液货舱舱口平台'
       });
     }
     setModalMode('create');
@@ -743,8 +790,10 @@ export function DeviceManagement() {
       associationType: isGlobal ? 'global' : 'project',
       projectId: isGlobal ? '' : targetPrjId,
       project: targetPrjName,
-      modelLevel: item.modelLevel || 'deck',
-      modelLevelName: item.modelLevelName || getLayerOption(item.modelLevel)?.fullName || MODEL_LAYER_OPTIONS[0].fullName,
+      modelLevel: item.modelLevel || 'middle',
+      modelLevelName: item.modelLevelName || getLayerOption(item.modelLevel)?.fullName || MODEL_LAYER_OPTIONS[1].fullName,
+      workfaceId: item.workfaceId || (isGlobal ? YARD_WORKFACE_OPTIONS[0].id : undefined),
+      workfaceName: item.workfaceName || (isGlobal ? YARD_WORKFACE_OPTIONS[0].name : undefined),
       code: item.code ?? '',
       name: item.name ?? '',
       location: item.location ?? '',
@@ -753,12 +802,12 @@ export function DeviceManagement() {
       signalLossTime: item.signalLossTime ?? 5,
       attenuationCoeff: item.attenuationCoeff ?? '0',
       coverageRange: item.coverageRange ?? '50',
-      positionX: item.positionX ?? 407.49,
-      positionY: item.positionY ?? 0.02,
-      positionZ: item.positionZ ?? -296.85,
-      installationSite: item.installationSite ?? '室外',
+      positionX: item.positionX ?? 350.20,
+      positionY: item.positionY ?? 10.10,
+      positionZ: item.positionZ ?? -150.40,
+      installationSite: item.installationSite ?? '舱内',
       auxPositioning: item.auxPositioning ?? '否',
-      electricFence: item.electricFence ?? '517-9',
+      electricFence: item.electricFence || (isGlobal ? 'EF-SEC-01' : 'EF-LNG-01'),
       sn: item.sn ?? '',
       modelCategory: item.modelCategory ?? '--',
       apiUrl: item.apiUrl ?? '',
@@ -786,7 +835,7 @@ export function DeviceManagement() {
       isNaN(Number(formFields.positionX)) || isNaN(Number(formFields.positionY)) || isNaN(Number(formFields.positionZ));
 
     if (isCoordsEmpty) {
-      setFormError('⚠️ 关联造船工程项目或船型分层变更后坐标已清空，需要重新采集坐标信息！请点击“地图添加/更新坐标”在地图上进行定位采集。');
+      setFormError('⚠️ 关联造船工程项目或船型分层变更后坐标已清空，需要重新采集坐标信息！请点击“地图添加/更新关联 (坐标)”在地图上进行定位采集。');
       return;
     }
     
@@ -799,7 +848,14 @@ export function DeviceManagement() {
     let finalModelLevel = 'all';
     let finalModelLevelName = '全厂公共区域';
 
-    if (!isGlobal) {
+    let finalWorkfaceId: string | undefined = undefined;
+    let finalWorkfaceName: string | undefined = undefined;
+
+    if (isGlobal) {
+      const matchedWf = YARD_WORKFACE_OPTIONS.find(w => w.id === formFields.workfaceId) || YARD_WORKFACE_OPTIONS[0];
+      finalWorkfaceId = matchedWf.id;
+      finalWorkfaceName = matchedWf.name;
+    } else {
       const selectedPrj = MOCK_PROJECTS.find(p => p.id === formFields.projectId) || 
                           MOCK_PROJECTS.find(p => p.name === formFields.project) || 
                           MOCK_PROJECTS[0];
@@ -810,6 +866,8 @@ export function DeviceManagement() {
       finalModelLevel = layerOpt.id;
       finalModelLevelName = layerOpt.fullName;
     }
+
+    const finalElectricFence = formFields.electricFence || (isGlobal ? 'EF-SEC-01' : 'EF-PRJ-01');
 
     if (activeTab === 'main_station' || activeTab === 'exciter') {
       const setList = activeTab === 'main_station' ? setBaseStations : setExciters;
@@ -826,6 +884,8 @@ export function DeviceManagement() {
           project: finalProjectName,
           modelLevel: finalModelLevel,
           modelLevelName: finalModelLevelName,
+          workfaceId: finalWorkfaceId,
+          workfaceName: finalWorkfaceName,
           status: formFields.status || '在线',
           recycleStatus: formFields.recycleStatus || '设备安装',
           location: formFields.location || '测试',
@@ -833,12 +893,12 @@ export function DeviceManagement() {
           signalLossTime: formFields.signalLossTime ?? 5,
           attenuationCoeff: formFields.attenuationCoeff ?? '0',
           coverageRange: formFields.coverageRange ?? '50',
-          positionX: Number(formFields.positionX ?? 407.49),
-          positionY: Number(formFields.positionY ?? 0.02),
-          positionZ: Number(formFields.positionZ ?? -296.85),
-          installationSite: formFields.installationSite || '室外',
+          positionX: Number(formFields.positionX ?? 350.20),
+          positionY: Number(formFields.positionY ?? 10.10),
+          positionZ: Number(formFields.positionZ ?? -150.40),
+          installationSite: formFields.installationSite || '舱内',
           auxPositioning: formFields.auxPositioning || '否',
-          electricFence: formFields.electricFence || '517-9',
+          electricFence: finalElectricFence,
           lastUpdated: new Date().toISOString().replace('T', ' ').substring(0, 19),
           ipAddress: `192.168.10.${100 + listData.length}`,
           macAddress: `11:5D:6D:BC:${Math.floor(10+Math.random()*89)}:${Math.floor(10+Math.random()*89)}`,
@@ -854,11 +914,13 @@ export function DeviceManagement() {
           project: finalProjectName,
           modelLevel: finalModelLevel,
           modelLevelName: finalModelLevelName,
-          positionX: Number(formFields.positionX ?? 407.49),
-          positionY: Number(formFields.positionY ?? 0.02),
-          positionZ: Number(formFields.positionZ ?? -296.85),
-          installationSite: formFields.installationSite || '室外',
-          electricFence: formFields.electricFence || '517-9'
+          workfaceId: finalWorkfaceId,
+          workfaceName: finalWorkfaceName,
+          positionX: Number(formFields.positionX ?? 350.20),
+          positionY: Number(formFields.positionY ?? 10.10),
+          positionZ: Number(formFields.positionZ ?? -150.40),
+          installationSite: formFields.installationSite || '舱内',
+          electricFence: finalElectricFence
         } : d));
       }
     } else if (activeTab === 'gas_detector') {
@@ -874,8 +936,15 @@ export function DeviceManagement() {
           project: finalProjectName,
           modelLevel: finalModelLevel,
           modelLevelName: finalModelLevelName,
+          workfaceId: finalWorkfaceId,
+          workfaceName: finalWorkfaceName,
           location: formFields.location || '',
-          floor: formFields.floor || ''
+          floor: formFields.floor || '',
+          positionX: Number(formFields.positionX ?? 350.20),
+          positionY: Number(formFields.positionY ?? 10.10),
+          positionZ: Number(formFields.positionZ ?? -150.40),
+          installationSite: formFields.installationSite || '舱内',
+          electricFence: finalElectricFence
         };
         setGasDetectors([newItem, ...gasDetectors]);
       } else if (modalMode === 'edit' && selectedDevice) {
@@ -886,7 +955,13 @@ export function DeviceManagement() {
           projectId: finalProjectId,
           project: finalProjectName,
           modelLevel: finalModelLevel,
-          modelLevelName: finalModelLevelName
+          modelLevelName: finalModelLevelName,
+          workfaceId: finalWorkfaceId,
+          workfaceName: finalWorkfaceName,
+          positionX: Number(formFields.positionX ?? 350.20),
+          positionY: Number(formFields.positionY ?? 10.10),
+          positionZ: Number(formFields.positionZ ?? -150.40),
+          electricFence: finalElectricFence
         } : d));
       }
     } else if (activeTab === 'alarm') {
@@ -902,8 +977,15 @@ export function DeviceManagement() {
           project: finalProjectName,
           modelLevel: finalModelLevel,
           modelLevelName: finalModelLevelName,
+          workfaceId: finalWorkfaceId,
+          workfaceName: finalWorkfaceName,
           location: formFields.location || '',
-          floor: formFields.floor || ''
+          floor: formFields.floor || '',
+          positionX: Number(formFields.positionX ?? 350.20),
+          positionY: Number(formFields.positionY ?? 10.10),
+          positionZ: Number(formFields.positionZ ?? -150.40),
+          installationSite: formFields.installationSite || '舱内',
+          electricFence: finalElectricFence
         };
         setAlarms([newItem, ...alarms]);
       } else if (modalMode === 'edit' && selectedDevice) {
@@ -914,7 +996,13 @@ export function DeviceManagement() {
           projectId: finalProjectId,
           project: finalProjectName,
           modelLevel: finalModelLevel,
-          modelLevelName: finalModelLevelName
+          modelLevelName: finalModelLevelName,
+          workfaceId: finalWorkfaceId,
+          workfaceName: finalWorkfaceName,
+          positionX: Number(formFields.positionX ?? 350.20),
+          positionY: Number(formFields.positionY ?? 10.10),
+          positionZ: Number(formFields.positionZ ?? -150.40),
+          electricFence: finalElectricFence
         } : d));
       }
     } else if (activeTab === 'camera') {
@@ -931,9 +1019,16 @@ export function DeviceManagement() {
           project: finalProjectName,
           modelLevel: finalModelLevel,
           modelLevelName: finalModelLevelName,
+          workfaceId: finalWorkfaceId,
+          workfaceName: finalWorkfaceName,
           createdAt: formFields.createdAt || new Date().toISOString().replace('T', ' ').substring(0, 19),
           isStreaming: formFields.isStreaming !== undefined ? formFields.isStreaming : true,
-          rtspUrl: formFields.rtspUrl || ''
+          rtspUrl: formFields.rtspUrl || '',
+          positionX: Number(formFields.positionX ?? 350.20),
+          positionY: Number(formFields.positionY ?? 10.10),
+          positionZ: Number(formFields.positionZ ?? -150.40),
+          installationSite: formFields.installationSite || '舱内',
+          electricFence: finalElectricFence
         };
         setCameras([newItem, ...cameras]);
       } else if (modalMode === 'edit' && selectedDevice) {
@@ -944,7 +1039,13 @@ export function DeviceManagement() {
           projectId: finalProjectId,
           project: finalProjectName,
           modelLevel: finalModelLevel,
-          modelLevelName: finalModelLevelName
+          modelLevelName: finalModelLevelName,
+          workfaceId: finalWorkfaceId,
+          workfaceName: finalWorkfaceName,
+          positionX: Number(formFields.positionX ?? 350.20),
+          positionY: Number(formFields.positionY ?? 10.10),
+          positionZ: Number(formFields.positionZ ?? -150.40),
+          electricFence: finalElectricFence
         } : d));
       }
     }
@@ -971,35 +1072,45 @@ export function DeviceManagement() {
     setSelectedDevice(null);
   };
 
-  // 表格单元格渲染器 1：厂区通用 / 关联项目
+  // 表格单元格渲染器 1：厂区通用 / 关联项目，联动显示作业面徽标
   const renderProjectCell = (device: {
     associationType?: 'global' | 'project';
     projectId?: string;
     project: string;
+    workfaceName?: string;
   }) => {
     const isGlobal = device.associationType === 'global' || device.project === '全厂通用设备';
     if (isGlobal) {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-purple-50 text-purple-700 border border-purple-200">
-          厂区通用
-        </span>
+        <div className="flex flex-col items-center gap-1">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+            🏢 全厂通用
+          </span>
+          {device.workfaceName && (
+            <span className="text-[10px] text-blue-700 bg-blue-50/90 px-1.5 py-0.2 rounded border border-blue-200 truncate max-w-[170px]" title={`关联作业面: ${device.workfaceName}`}>
+              面: {device.workfaceName}
+            </span>
+          )}
+        </div>
       );
     }
 
     const fullName = `${device.projectId ? '[' + device.projectId + '] ' : ''}${device.project}`;
 
     return (
-      <div 
-        className="flex items-center justify-center gap-1.5 max-w-[180px] mx-auto overflow-hidden cursor-default" 
-        title={fullName}
-      >
-        <Ship className="w-3.5 h-3.5 text-sky-600 shrink-0" />
-        {device.projectId && (
-          <span className="font-mono text-sky-700 font-bold text-[10px] bg-sky-100/80 px-1 py-0.2 rounded shrink-0">
-            {device.projectId}
-          </span>
-        )}
-        <span className="truncate text-slate-800 font-medium text-xs">{device.project}</span>
+      <div className="flex flex-col items-center gap-1 max-w-[190px] mx-auto">
+        <div 
+          className="flex items-center justify-center gap-1.5 max-w-[180px] mx-auto overflow-hidden cursor-default" 
+          title={fullName}
+        >
+          <Ship className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+          {device.projectId && (
+            <span className="font-mono text-sky-700 font-bold text-[10px] bg-sky-100/80 px-1 py-0.2 rounded shrink-0">
+              {device.projectId}
+            </span>
+          )}
+          <span className="truncate text-slate-800 font-medium text-xs">{device.project}</span>
+        </div>
       </div>
     );
   };
@@ -1430,8 +1541,12 @@ export function DeviceManagement() {
                       </td>
                       <td className="py-2.5 px-4 text-center text-slate-800 whitespace-nowrap border-r border-slate-50">{device.location}</td>
                       <td className="py-2.5 px-4 text-center whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-2.5">
-                          <button onClick={() => handleOpenDetail(device)} className="text-sky-600 hover:text-sky-800 font-medium hover:underline text-[11px] cursor-pointer">查看</button>
+                        <div className="flex items-center justify-center gap-2">
+                          <button onClick={() => setMapViewDevice(device)} className="text-emerald-600 hover:text-emerald-800 font-bold hover:underline text-[11px] cursor-pointer inline-flex items-center gap-0.5">
+                            <MapPin className="w-3 h-3 text-emerald-600" />
+                            <span>查看</span>
+                          </button>
+                          <button onClick={() => handleOpenDetail(device)} className="text-slate-600 hover:text-slate-800 font-medium hover:underline text-[11px] cursor-pointer">详情</button>
                           <button onClick={() => handleOpenEdit(device)} className="text-sky-600 hover:text-sky-800 font-medium hover:underline text-[11px] cursor-pointer">编辑</button>
                           <button onClick={() => setDeleteTargetId(device.id)} className="text-rose-500 hover:text-rose-700 font-medium hover:underline text-[11px] cursor-pointer">删除</button>
                         </div>
@@ -1478,8 +1593,12 @@ export function DeviceManagement() {
                       </td>
                       <td className="py-2.5 px-4 text-center text-slate-800 whitespace-nowrap border-r border-slate-50">{device.location}</td>
                       <td className="py-2.5 px-4 text-center whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-2.5">
-                          <button onClick={() => handleOpenDetail(device)} className="text-sky-600 hover:text-sky-800 font-medium hover:underline text-[11px] cursor-pointer">查看</button>
+                        <div className="flex items-center justify-center gap-2">
+                          <button onClick={() => setMapViewDevice(device)} className="text-emerald-600 hover:text-emerald-800 font-bold hover:underline text-[11px] cursor-pointer inline-flex items-center gap-0.5">
+                            <MapPin className="w-3 h-3 text-emerald-600" />
+                            <span>查看</span>
+                          </button>
+                          <button onClick={() => handleOpenDetail(device)} className="text-slate-600 hover:text-slate-800 font-medium hover:underline text-[11px] cursor-pointer">详情</button>
                           <button onClick={() => handleOpenEdit(device)} className="text-sky-600 hover:text-sky-800 font-medium hover:underline text-[11px] cursor-pointer">编辑</button>
                           <button onClick={() => setDeleteTargetId(device.id)} className="text-rose-500 hover:text-rose-700 font-medium hover:underline text-[11px] cursor-pointer">删除</button>
                         </div>
@@ -1617,6 +1736,7 @@ export function DeviceManagement() {
                       name="associationType"
                       checked={formFields.associationType === 'global'}
                       onChange={() => {
+                        const defaultWf = YARD_WORKFACE_OPTIONS[0];
                         setFormFields({ 
                           ...formFields, 
                           associationType: 'global', 
@@ -1624,15 +1744,20 @@ export function DeviceManagement() {
                           project: '全厂通用设备',
                           modelLevel: 'all',
                           modelLevelName: '全厂公共区域',
+                          workfaceId: formFields.workfaceId || defaultWf.id,
+                          workfaceName: formFields.workfaceName || defaultWf.name,
+                          confinedSpaceId: undefined,
+                          confinedSpaceName: undefined,
+                          electricFence: YARD_WORKFACE_OPTIONS.find(w => w.id === (formFields.workfaceId || defaultWf.id))?.fenceCode || defaultWf.fenceCode,
                           positionX: null,
                           positionY: null,
                           positionZ: null
                         });
                         setFormError(null);
                       }}
-                      className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                      className="w-4 h-4 text-purple-600 focus:ring-purple-500 cursor-pointer"
                     />
-                    <span className="text-xs font-semibold text-purple-700">🏢 全厂通用设备（不绑定特定船卡项目）</span>
+                    <span className="text-xs font-semibold text-purple-700">🏢 全厂通用设备（选择全厂通用作业面与电子围栏）</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -1640,33 +1765,89 @@ export function DeviceManagement() {
                       name="associationType"
                       checked={formFields.associationType === 'project'}
                       onChange={() => {
+                        const defaultPrj = MOCK_PROJECTS[0];
                         setFormFields({ 
                           ...formFields, 
                           associationType: 'project', 
-                          projectId: MOCK_PROJECTS[0].id, 
-                          project: MOCK_PROJECTS[0].name,
-                          modelLevel: formFields.modelLevel || 'deck',
-                          modelLevelName: formFields.modelLevelName || MODEL_LAYER_OPTIONS[0].fullName,
+                          projectId: formFields.projectId || defaultPrj.id, 
+                          project: (formFields.project && formFields.project !== '全厂通用设备') ? formFields.project : defaultPrj.name,
+                          modelLevel: (formFields.modelLevel && formFields.modelLevel !== 'all') ? formFields.modelLevel : 'deck',
+                          modelLevelName: (formFields.modelLevelName && formFields.modelLevelName !== '全厂公共区域') ? formFields.modelLevelName : MODEL_LAYER_OPTIONS[0].fullName,
+                          workfaceId: undefined,
+                          workfaceName: undefined,
+                          electricFence: 'EF-PRJ-01',
                           positionX: null,
                           positionY: null,
                           positionZ: null
                         });
                         setFormError(null);
                       }}
-                      className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                      className="w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer"
                     />
                     <span className="text-xs font-semibold text-sky-700">🚢 关联造船工程项目与船型分层</span>
                   </label>
                 </div>
               </div>
 
-              {/* [关联造船项目及船型分层卡片] */}
+              {/* [模式一：关联全厂通用作业面卡片 - 参考电子围栏联动] */}
+              {formFields.associationType === 'global' && (
+                <div className="bg-purple-50/40 p-3.5 rounded-xl border border-purple-200/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                      <Building2 className="w-4 h-4 text-purple-600" />
+                      关联全厂通用作业面（参考电子围栏联动）
+                    </span>
+                    <span className="text-[10px] text-purple-700 font-mono bg-purple-100/90 px-2 py-0.5 rounded border border-purple-200">
+                      电子围栏自动绑定机制
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1 text-[11px]">
+                      选择全厂作业面 <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      value={formFields.workfaceId || YARD_WORKFACE_OPTIONS[0].id}
+                      onChange={(e) => {
+                        const selectedWf = YARD_WORKFACE_OPTIONS.find(w => w.id === e.target.value);
+                        if (selectedWf) {
+                          setFormFields({
+                            ...formFields,
+                            workfaceId: selectedWf.id,
+                            workfaceName: selectedWf.name,
+                            electricFence: selectedWf.fenceCode,
+                            location: formFields.location || selectedWf.subArea,
+                            positionX: null,
+                            positionY: null,
+                            positionZ: null
+                          });
+                          setFormError(null);
+                        }
+                      }}
+                      className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:border-purple-500 bg-white font-sans cursor-pointer shadow-2xs"
+                    >
+                      {YARD_WORKFACE_OPTIONS.map(wf => (
+                        <option key={wf.id} value={wf.id}>
+                          🏢 [{wf.code}] {wf.name} (工位: {wf.subArea} | 围栏: {wf.fenceCode})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+
+                </div>
+              )}
+
+              {/* [模式二：关联造船项目与船型分层卡片 - 参考电子围栏联动] */}
               {formFields.associationType === 'project' && (
                 <div className="bg-sky-50/40 p-3.5 rounded-xl border border-sky-200/80 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
                       <Ship className="w-4 h-4 text-blue-600" />
-                      关联造船工程项目与船型分层
+                      关联造船工程项目与船型分层（参考电子围栏联动）
+                    </span>
+                    <span className="text-[10px] text-sky-700 font-mono bg-sky-100/90 px-2 py-0.5 rounded border border-sky-200">
+                      造船工程视角
                     </span>
                   </div>
 
@@ -1685,6 +1866,7 @@ export function DeviceManagement() {
                               ...formFields,
                               projectId: selectedPrj.id,
                               project: selectedPrj.name,
+                              electricFence: 'EF-PRJ-01',
                               positionX: null,
                               positionY: null,
                               positionZ: null
@@ -1732,38 +1914,11 @@ export function DeviceManagement() {
                     </div>
                   </div>
 
-                  {/* 实时模型分层预览说明 */}
-                  {(() => {
-                    const activePrj = MOCK_PROJECTS.find(p => p.id === formFields.projectId) || MOCK_PROJECTS[0];
-                    const activeLayer = MODEL_LAYER_OPTIONS.find(l => l.id === formFields.modelLevel) || MODEL_LAYER_OPTIONS[0];
-                    return (
-                      <div className="bg-white p-2.5 rounded-lg border border-sky-200/90 shadow-2xs space-y-1.5">
-                        <div className="flex items-center justify-between text-[11px]">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-mono font-bold bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded text-[10px]">
-                              {activePrj.id}
-                            </span>
-                            <span className="font-bold text-slate-800">{activePrj.name}</span>
-                          </div>
-                          <span className="text-slate-500">工程阶段: <strong className="text-blue-700">{activePrj.phase}</strong></span>
-                        </div>
 
-                        <div className="flex items-center justify-between text-[11px] pt-1 border-t border-slate-100">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-slate-500">模型分层绑定:</span>
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.2 rounded text-[10px] font-bold border ${activeLayer.badgeBg} ${activeLayer.badgeText} ${activeLayer.badgeBorder}`}>
-                              <Layers className="w-3 h-3" />
-                              {activeLayer.fullName}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
                 </div>
               )}
 
-              {/* [模态表单 1] 主基站特定全量属性（包含15项要素与地图坐标可视化拾取） */}
+              {/* [模态表单 1] 主基站 / 激励器 特定属性 */}
               {(activeTab === 'main_station' || activeTab === 'exciter') && (
                 <div className="space-y-3.5">
                   <div className="grid grid-cols-2 gap-3.5">
@@ -1811,7 +1966,7 @@ export function DeviceManagement() {
                           setFormFields({
                             ...formFields,
                             location: newLoc,
-                            electricFence: newLoc ? `${newLoc}-围栏` : '517-9'
+                            electricFence: formFields.electricFence || (newLoc ? `${newLoc}-围栏` : '517-9')
                           });
                         }}
                         placeholder="请输入安装具体位置，如: 测试"
@@ -1918,197 +2073,286 @@ export function DeviceManagement() {
                       </div>
                     </div>
 
-                    {/* 11. 电子围栏关联 (根据安装位置固定，不可编辑) */}
-                    <div className="col-span-2">
-                      <label className="block text-slate-700 font-semibold mb-1 flex items-center justify-between">
-                        <span>电子围栏关联</span>
-                        <span className="text-[11px] font-normal text-slate-400">（根据设备安装位置固定，不可编辑）</span>
-                      </label>
-                      <input
-                        type="text"
-                        readOnly
-                        disabled
-                        value={formFields.electricFence || (formFields.location ? `${formFields.location}-围栏` : '517-9')}
-                        placeholder="根据安装位置固定"
-                        className="w-full px-2.5 py-1.5 border border-slate-200 bg-slate-100 rounded text-xs text-slate-500 font-mono cursor-not-allowed select-none"
-                      />
-                    </div>
-                  </div>
 
-                  {/* 12. 可视化定位设备的安装位置 (X, Y, Z 轴) 及地图拾取按钮 */}
-                  <div className="p-3 bg-gradient-to-br from-slate-900 to-cyan-950 rounded-xl text-white border border-cyan-800/80 shadow-md space-y-2">
-                    <div className="flex items-center justify-between">
-                      {/* 可视化地图拾取触发按钮 (置于左侧) */}
-                      <button
-                        type="button"
-                        onClick={() => setIsMapPickerOpen(true)}
-                        className="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded text-[11px] font-bold transition-all shadow-md flex items-center gap-1 cursor-pointer"
-                      >
-                        <MapPin className="w-3.5 h-3.5 text-cyan-200" />
-                        <span>🗺️ 点击地图添加/更新坐标</span>
-                      </button>
-                      {(formFields.positionX === null || formFields.positionX === undefined) && (
-                        <span className="text-amber-400 font-semibold text-[11px] animate-pulse flex items-center gap-1">
-                          <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
-                          <span>关联项目/分层变更，请重新在地图采集坐标</span>
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2 text-xs font-mono">
-                      <div>
-                        <label className="block text-slate-400 text-[10px] mb-0.5">安装位置X轴</label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={formFields.positionX ?? ''}
-                          onChange={(e) => {
-                            const val = e.target.value === '' ? null : Number(e.target.value);
-                            setFormFields({ ...formFields, positionX: val });
-                            if (val !== null) setFormError(null);
-                          }}
-                          placeholder="未采集"
-                          className="w-full px-2 py-1 bg-slate-950 border border-slate-700 rounded text-cyan-300 font-bold focus:outline-none focus:border-cyan-400 placeholder:text-slate-600"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-slate-400 text-[10px] mb-0.5">安装位置Y轴</label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={formFields.positionY ?? ''}
-                          onChange={(e) => {
-                            const val = e.target.value === '' ? null : Number(e.target.value);
-                            setFormFields({ ...formFields, positionY: val });
-                            if (val !== null) setFormError(null);
-                          }}
-                          placeholder="未采集"
-                          className="w-full px-2 py-1 bg-slate-950 border border-slate-700 rounded text-cyan-300 font-bold focus:outline-none focus:border-cyan-400 placeholder:text-slate-600"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-slate-400 text-[10px] mb-0.5">安装位置Z轴</label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={formFields.positionZ ?? ''}
-                          onChange={(e) => {
-                            const val = e.target.value === '' ? null : Number(e.target.value);
-                            setFormFields({ ...formFields, positionZ: val });
-                            if (val !== null) setFormError(null);
-                          }}
-                          placeholder="未采集"
-                          className="w-full px-2 py-1 bg-slate-950 border border-slate-700 rounded text-cyan-300 font-bold focus:outline-none focus:border-cyan-400 placeholder:text-slate-600"
-                        />
-                      </div>
-                    </div>
                   </div>
                 </div>
               )}
 
               {/* [模态表单 2] 气体探测器特定属性 */}
               {activeTab === 'gas_detector' && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-slate-600 font-medium mb-1">设备SN编号 <span className="text-rose-500">*</span></label>
-                    <input
-                      type="text"
-                      required
-                      value={formFields.sn || ''}
-                      onChange={(e) => setFormFields({ ...formFields, sn: e.target.value, name: e.target.value })}
-                      placeholder="如: 866833080749440"
-                      className="w-full px-3 py-1.5 border border-slate-300 rounded focus:outline-none focus:border-blue-500 font-mono text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-600 font-medium mb-1">安装位置</label>
-                    <input
-                      type="text"
-                      value={formFields.location || ''}
-                      onChange={(e) => setFormFields({ ...formFields, location: e.target.value })}
-                      placeholder="如: 517-9号船机舱"
-                      className="w-full px-3 py-1.5 border border-slate-300 rounded focus:outline-none focus:border-blue-500 text-xs"
-                    />
+                <div className="space-y-3.5">
+                  <div className="grid grid-cols-2 gap-3.5">
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1">
+                        设备SN编号 <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formFields.sn || ''}
+                        onChange={(e) => setFormFields({ ...formFields, sn: e.target.value, name: formFields.name || `气体探测器-${e.target.value}` })}
+                        placeholder="如: 866833080749440"
+                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500 font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1">
+                        设备名称 <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formFields.name || ''}
+                        onChange={(e) => setFormFields({ ...formFields, name: e.target.value })}
+                        placeholder="如: 1#液货舱四合一气体探测器"
+                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1">
+                        安装具体位置 <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formFields.location || ''}
+                        onChange={(e) => setFormFields({ ...formFields, location: e.target.value })}
+                        placeholder="如: 1#液货舱下部隔板"
+                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1">安装场所</label>
+                      <select
+                        value={formFields.installationSite || '舱内'}
+                        onChange={(e) => setFormFields({ ...formFields, installationSite: e.target.value })}
+                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500 bg-white cursor-pointer"
+                      >
+                        <option value="舱内">舱内 (密闭/受限空间)</option>
+                        <option value="室外">室外 (露天甲板/船台)</option>
+                        <option value="室内">室内 (车间/泵房)</option>
+                        <option value="码头">码头 (系泊舾装作业区)</option>
+                      </select>
+                    </div>
+
                   </div>
                 </div>
               )}
 
               {/* [模态表单 3] 声光报警器特定属性 */}
               {activeTab === 'alarm' && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-slate-600 font-medium mb-1">设备SN编号 <span className="text-rose-500">*</span></label>
-                    <input
-                      type="text"
-                      required
-                      value={formFields.sn || ''}
-                      onChange={(e) => setFormFields({ ...formFields, sn: e.target.value, name: e.target.value })}
-                      placeholder="如: 867655086345884"
-                      className="w-full px-3 py-1.5 border border-slate-300 rounded focus:outline-none focus:border-blue-500 font-mono text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-600 font-medium mb-1">安装位置</label>
-                    <input
-                      type="text"
-                      value={formFields.location || ''}
-                      onChange={(e) => setFormFields({ ...formFields, location: e.target.value })}
-                      placeholder="如: 145-3机舱"
-                      className="w-full px-3 py-1.5 border border-slate-300 rounded focus:outline-none focus:border-blue-500 text-xs"
-                    />
+                <div className="space-y-3.5">
+                  <div className="grid grid-cols-2 gap-3.5">
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1">
+                        设备SN编号 <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formFields.sn || ''}
+                        onChange={(e) => setFormFields({ ...formFields, sn: e.target.value, name: formFields.name || `声光报警器-${e.target.value}` })}
+                        placeholder="如: 867655086345884"
+                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500 font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1">
+                        设备名称 <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formFields.name || ''}
+                        onChange={(e) => setFormFields({ ...formFields, name: e.target.value })}
+                        placeholder="如: 机舱应急声光告警器"
+                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1">
+                        安装具体位置 <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formFields.location || ''}
+                        onChange={(e) => setFormFields({ ...formFields, location: e.target.value })}
+                        placeholder="如: 机舱二层辅机平台"
+                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1">安装场所</label>
+                      <select
+                        value={formFields.installationSite || '舱内'}
+                        onChange={(e) => setFormFields({ ...formFields, installationSite: e.target.value })}
+                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500 bg-white cursor-pointer"
+                      >
+                        <option value="舱内">舱内 (密闭动力舱)</option>
+                        <option value="室外">室外 (主甲板/船台)</option>
+                        <option value="室内">室内 (车间/集控室)</option>
+                        <option value="码头">码头 (舾装泊位)</option>
+                      </select>
+                    </div>
+
                   </div>
                 </div>
               )}
 
               {/* [模态表单 4] 摄像头特定属性 */}
               {activeTab === 'camera' && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-slate-600 font-medium mb-1">设备编码 <span className="text-rose-500">*</span></label>
-                    <input
-                      type="text"
-                      required
-                      value={formFields.code || ''}
-                      onChange={(e) => setFormFields({ ...formFields, code: e.target.value })}
-                      placeholder="如: test-003"
-                      className="w-full px-3 py-1.5 border border-slate-300 rounded focus:outline-none focus:border-blue-500 font-mono text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-600 font-medium mb-1">设备名称 <span className="text-rose-500">*</span></label>
-                    <input
-                      type="text"
-                      required
-                      value={formFields.name || ''}
-                      onChange={(e) => setFormFields({ ...formFields, name: e.target.value })}
-                      placeholder="如: 香烟识别摄像头"
-                      className="w-full px-3 py-1.5 border border-slate-300 rounded focus:outline-none focus:border-blue-500 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-600 font-medium mb-1">AI模型类别</label>
-                    <input
-                      type="text"
-                      value={formFields.modelCategory || ''}
-                      onChange={(e) => setFormFields({ ...formFields, modelCategory: e.target.value })}
-                      placeholder="如: 未穿戴防护检测"
-                      className="w-full px-3 py-1.5 border border-slate-300 rounded focus:outline-none focus:border-blue-500 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-600 font-medium mb-1">API接口URL</label>
-                    <input
-                      type="text"
-                      value={formFields.apiUrl || ''}
-                      onChange={(e) => setFormFields({ ...formFields, apiUrl: e.target.value })}
-                      placeholder="如: http://192.168.205.110:7571"
-                      className="w-full px-3 py-1.5 border border-slate-300 rounded focus:outline-none focus:border-blue-500 font-mono text-xs"
-                    />
+                <div className="space-y-3.5">
+                  <div className="grid grid-cols-2 gap-3.5">
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1">
+                        设备编码 <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formFields.code || ''}
+                        onChange={(e) => setFormFields({ ...formFields, code: e.target.value })}
+                        placeholder="如: test-003"
+                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500 font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1">
+                        设备名称 <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formFields.name || ''}
+                        onChange={(e) => setFormFields({ ...formFields, name: e.target.value })}
+                        placeholder="如: 香烟识别摄像头"
+                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1">AI模型类别</label>
+                      <input
+                        type="text"
+                        value={formFields.modelCategory || ''}
+                        onChange={(e) => setFormFields({ ...formFields, modelCategory: e.target.value })}
+                        placeholder="如: 未穿戴防护检测 / 吸烟识别"
+                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1">安装具体位置</label>
+                      <input
+                        type="text"
+                        value={formFields.location || ''}
+                        onChange={(e) => setFormFields({ ...formFields, location: e.target.value })}
+                        placeholder="如: 1#液货舱人孔口"
+                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-slate-700 font-semibold mb-1">API接口URL</label>
+                      <input
+                        type="text"
+                        value={formFields.apiUrl || ''}
+                        onChange={(e) => setFormFields({ ...formFields, apiUrl: e.target.value })}
+                        placeholder="如: http://192.168.205.110:7571"
+                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500 font-mono"
+                      />
+                    </div>
+
                   </div>
                 </div>
               )}
+
+              {/* [统一地图三维空间定位与地图关联拾取卡片] */}
+              <div className="p-3.5 bg-gradient-to-br from-slate-900 to-cyan-950 rounded-xl text-white border border-cyan-800/80 shadow-md space-y-2.5">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsMapPickerOpen(true)}
+                    className="px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded text-[11px] font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer ring-1 ring-cyan-400/50 hover:ring-cyan-300"
+                  >
+                    <MapPin className="w-3.5 h-3.5 text-cyan-200" />
+                    <span>🗺️ 点击地图添加/更新关联 (坐标)</span>
+                  </button>
+
+                  {(formFields.positionX !== null && formFields.positionX !== undefined) && (
+                    <span className="text-emerald-300 text-[11px] font-medium flex items-center gap-1.5 bg-emerald-950/80 px-2.5 py-1 rounded-md border border-emerald-700/60">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                      <span>已关联定位坐标信息</span>
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-3 gap-2.5 text-xs font-mono">
+                  <div>
+                    <label className="block text-slate-400 text-[10px] mb-0.5">安装位置X轴 (m)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formFields.positionX ?? ''}
+                      onChange={(e) => {
+                        const val = e.target.value === '' ? null : Number(e.target.value);
+                        setFormFields({ ...formFields, positionX: val });
+                        if (val !== null) setFormError(null);
+                      }}
+                      placeholder="未采集"
+                      className="w-full px-2.5 py-1 bg-slate-950 border border-slate-700 rounded text-cyan-300 font-bold focus:outline-none focus:border-cyan-400 placeholder:text-slate-600 text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 text-[10px] mb-0.5">安装位置Y轴 (m)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formFields.positionY ?? ''}
+                      onChange={(e) => {
+                        const val = e.target.value === '' ? null : Number(e.target.value);
+                        setFormFields({ ...formFields, positionY: val });
+                        if (val !== null) setFormError(null);
+                      }}
+                      placeholder="未采集"
+                      className="w-full px-2.5 py-1 bg-slate-950 border border-slate-700 rounded text-cyan-300 font-bold focus:outline-none focus:border-cyan-400 placeholder:text-slate-600 text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 text-[10px] mb-0.5">安装位置Z轴 (m)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formFields.positionZ ?? ''}
+                      onChange={(e) => {
+                        const val = e.target.value === '' ? null : Number(e.target.value);
+                        setFormFields({ ...formFields, positionZ: val });
+                        if (val !== null) setFormError(null);
+                      }}
+                      placeholder="未采集"
+                      className="w-full px-2.5 py-1 bg-slate-950 border border-slate-700 rounded text-cyan-300 font-bold focus:outline-none focus:border-cyan-400 placeholder:text-slate-600 text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* 点击地图添加/返回后展示关联的作业面/工程项目与电子围栏信息 (纯信息展示) */}
+                <div className="pt-2 border-t border-cyan-900/60 grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex items-center gap-1.5 bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800">
+                    <span className="text-slate-400 text-[11px] shrink-0">关联作业面/工程:</span>
+                    <span className="font-bold text-amber-300 text-[11px] truncate">
+                      {formFields.associationType === 'global' ? (formFields.workfaceName || '全厂通用作业面') : (formFields.project || '造船工程项目')}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800">
+                    <span className="text-slate-400 text-[11px] shrink-0">关联电子围栏:</span>
+                    <span className="font-mono font-bold text-emerald-400 text-[11px] truncate">
+                      🛡️ {formFields.electricFence || (formFields.associationType === 'global' ? 'EF-SEC-01' : 'EF-PRJ-01')}
+                    </span>
+                  </div>
+                </div>
+
+
+              </div>
 
               {formError && (
                 <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200">
@@ -2185,12 +2429,12 @@ export function DeviceManagement() {
                 </div>
               </div>
 
-              {/* 造船工程项目与船型分层卡片 */}
+              {/* 造船工程项目与空间关联卡片 */}
               <div className="p-3 bg-gradient-to-br from-slate-50 to-blue-50/30 rounded-lg border border-slate-200/90 space-y-2 text-xs">
                 <div className="flex items-center justify-between pb-1.5 border-b border-slate-200/60">
                   <span className="font-bold text-slate-800 flex items-center gap-1.5">
-                    <Ship className="w-4 h-4 text-blue-600" />
-                    关联造船工程项目与船型分层
+                    {selectedDevice.associationType === 'global' ? <Building2 className="w-4 h-4 text-purple-600" /> : <Ship className="w-4 h-4 text-blue-600" />}
+                    {selectedDevice.associationType === 'global' ? '全厂通用场景与作业面绑定' : '造船工程项目与船型分层绑定'}
                   </span>
                   {selectedDevice.associationType === 'global' || selectedDevice.project === '全厂通用设备' ? (
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700">
@@ -2203,7 +2447,20 @@ export function DeviceManagement() {
                   )}
                 </div>
 
-                {selectedDevice.associationType === 'project' && selectedDevice.project !== '全厂通用设备' ? (
+                {selectedDevice.associationType === 'global' || selectedDevice.project === '全厂通用设备' ? (
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500">关联全厂作业面：</span>
+                      <span className="font-bold text-purple-800">{selectedDevice.workfaceName || '全厂通用作业面'}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500">联动电子围栏：</span>
+                      <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                        🛡️ {selectedDevice.electricFence || 'EF-SEC-01'}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-slate-500">工程项目编码及名称：</span>
@@ -2229,12 +2486,29 @@ export function DeviceManagement() {
                         );
                       })()}
                     </div>
-                  </div>
-                ) : (
-                  <div className="text-slate-600 font-medium py-1">
-                    🏢 全厂通用设备，无特定造船工程项目关联，可在全厂各大车间、码头与公共区域统一使用与定位。
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500">关联有限空间：</span>
+                      <span className="font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                        🔒 {selectedDevice.confinedSpaceName || '标准工程舱室'}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500">联动电子围栏：</span>
+                      <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                        🛡️ {selectedDevice.electricFence || 'EF-LNG-CS01'}
+                      </span>
+                    </div>
                   </div>
                 )}
+
+                <div className="pt-1.5 border-t border-slate-200/60 flex justify-between items-center font-mono text-[11px]">
+                  <span className="text-slate-500 font-sans">物理三维坐标：</span>
+                  <span className="text-cyan-700 font-bold bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">
+                    X: {selectedDevice.positionX ?? 350.2}, Y: {selectedDevice.positionY ?? 10.1}, Z: {selectedDevice.positionZ ?? -150.4}
+                  </span>
+                </div>
               </div>
 
               {/* 其他补充参数 */}
@@ -2430,14 +2704,29 @@ export function DeviceManagement() {
 
             {/* 拾取控制及信息栏 */}
             <div className="px-6 py-2.5 bg-slate-900/90 border-b border-slate-800 flex flex-wrap items-center justify-between gap-4 text-xs shrink-0">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center flex-wrap gap-4">
                 <div className="flex items-center gap-1.5">
                   <span className="text-slate-400">关联场景模式:</span>
-                  <span className={`font-bold px-2.5 py-1 rounded border ${formFields.associationType === 'global' ? 'bg-emerald-950 text-emerald-300 border-emerald-800' : 'bg-cyan-950 text-cyan-300 border-cyan-800'}`}>
+                  <span className={`font-bold px-2.5 py-1 rounded border ${formFields.associationType === 'global' ? 'bg-purple-950 text-purple-300 border-purple-800' : 'bg-cyan-950 text-cyan-300 border-cyan-800'}`}>
                     {formFields.associationType === 'global' ? '🏢 全厂场景 (厂区平面图)' : '🚢 造船工程项目 (船型3D/2D模型)'}
                   </span>
                 </div>
-                {formFields.associationType === 'project' && (
+                {formFields.associationType === 'global' ? (
+                  <>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-slate-400">关联作业面:</span>
+                      <span className="font-bold text-purple-300 bg-slate-950 px-2.5 py-1 rounded border border-purple-900">
+                        {formFields.workfaceName || YARD_WORKFACE_OPTIONS[0].name}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-slate-400">联动电子围栏:</span>
+                      <span className="font-mono font-bold text-emerald-400 bg-slate-950 px-2.5 py-1 rounded border border-emerald-900">
+                        🛡️ {formFields.electricFence || 'EF-SEC-01'}
+                      </span>
+                    </div>
+                  </>
+                ) : (
                   <>
                     <div className="flex items-center gap-1.5">
                       <span className="text-slate-400">绑定造船工程:</span>
@@ -2446,9 +2735,15 @@ export function DeviceManagement() {
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-slate-400">BIM模型分层:</span>
+                      <span className="text-slate-400">BIM分层:</span>
                       <span className="font-bold text-amber-300 bg-slate-950 px-2.5 py-1 rounded border border-slate-800">
                         {formFields.modelLevelName || '甲板层'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-slate-400">联动电子围栏:</span>
+                      <span className="font-mono font-bold text-emerald-400 bg-slate-950 px-2.5 py-1 rounded border border-emerald-900">
+                        🛡️ {formFields.electricFence || 'EF-LNG-CS01'}
                       </span>
                     </div>
                   </>
@@ -2675,8 +2970,13 @@ export function DeviceManagement() {
                   <div className="w-8 h-8 rounded-full bg-cyan-500 border-2 border-white flex items-center justify-center shadow-[0_0_20px_#06b6d4]">
                     <MapPin className="w-4 h-4 text-white" />
                   </div>
-                  <div className="mt-1.5 bg-slate-900/90 text-cyan-300 border border-cyan-500/60 text-xs font-mono font-bold px-2.5 py-1 rounded-lg shadow-2xl whitespace-nowrap">
-                    X: {formFields.positionX ?? 407.49}, Y: {formFields.positionY ?? 0.02}, Z: {formFields.positionZ ?? -296.85}
+                  <div className="mt-1.5 bg-slate-900/95 text-cyan-300 border border-cyan-500/70 text-xs font-mono font-bold px-3 py-1.5 rounded-lg shadow-2xl whitespace-nowrap flex flex-col items-center gap-0.5">
+                    <div>X: {formFields.positionX ?? 407.49}, Y: {formFields.positionY ?? 0.02}, Z: {formFields.positionZ ?? -296.85}</div>
+                    <div className="text-[10px] text-amber-300 font-sans font-medium flex items-center gap-1.5">
+                      <span>{formFields.associationType === 'global' ? `🏢 ${formFields.workfaceName || '全厂通用作业面'}` : `🚢 ${formFields.project || '造船工程项目'}`}</span>
+                      <span className="text-slate-500">|</span>
+                      <span className="text-emerald-400 font-mono">🛡️ {formFields.electricFence || (formFields.associationType === 'global' ? 'EF-SEC-01' : 'EF-PRJ-01')}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2751,11 +3051,25 @@ export function DeviceManagement() {
 
                 {/* 视角与场景类型标识卡片 */}
                 <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
-                  <div className="bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-sky-500/40 text-xs font-mono text-cyan-300 shadow-xl flex items-center gap-2">
+                  <div className="bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-sky-500/40 text-xs font-mono text-cyan-300 shadow-xl flex items-center gap-2 flex-wrap">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                    <span>🌐 绑定场景: <strong className="text-white">{mapViewDevice.project || '全厂通用设备'}</strong></span>
+                    <span>🌐 模式: <strong className="text-white">{mapViewDevice.associationType === 'global' ? '全厂通用场景' : '造船项目场景'}</strong></span>
                     <span className="text-slate-600">|</span>
-                    <span>模型分层: <strong className="text-amber-300">{mapViewDevice.modelLevelName || '全厂公共区域'}</strong></span>
+                    {mapViewDevice.associationType === 'global' ? (
+                      <>
+                        <span>作业面: <strong className="text-purple-300">{mapViewDevice.workfaceName || '全厂通用作业面'}</strong></span>
+                        <span className="text-slate-600">|</span>
+                        <span>围栏: <strong className="text-emerald-400 font-mono">🛡️ {mapViewDevice.electricFence || 'EF-SEC-01'}</strong></span>
+                      </>
+                    ) : (
+                      <>
+                        <span>分层: <strong className="text-amber-300">{mapViewDevice.modelLevelName || '甲板层'}</strong></span>
+                        <span className="text-slate-600">|</span>
+                        <span>有限空间: <strong className="text-rose-300">{mapViewDevice.confinedSpaceName || '受限密闭舱室'}</strong></span>
+                        <span className="text-slate-600">|</span>
+                        <span>围栏: <strong className="text-emerald-400 font-mono">🛡️ {mapViewDevice.electricFence || 'EF-LNG-CS01'}</strong></span>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -2890,9 +3204,29 @@ export function DeviceManagement() {
                     <span className="text-sky-400 font-bold block">{mapViewDevice.project || '全厂通用设备'}</span>
                   </div>
 
-                  <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800 space-y-1 font-mono">
-                    <span className="text-slate-500 text-[10px] block">3D BIM 模型分层</span>
-                    <span className="text-amber-300 font-bold block">{mapViewDevice.modelLevelName || '甲板层'}</span>
+                  {mapViewDevice.associationType === 'global' ? (
+                    <div className="p-2.5 bg-slate-950 rounded-lg border border-purple-900/60 space-y-1">
+                      <span className="text-slate-500 text-[10px] block">关联全厂作业面</span>
+                      <span className="text-purple-300 font-bold block">{mapViewDevice.workfaceName || '全厂通用作业面'}</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800 space-y-1 font-mono">
+                        <span className="text-slate-500 text-[10px] block">3D BIM 模型分层</span>
+                        <span className="text-amber-300 font-bold block">{mapViewDevice.modelLevelName || '甲板层'}</span>
+                      </div>
+                      <div className="p-2.5 bg-slate-950 rounded-lg border border-rose-900/60 space-y-1">
+                        <span className="text-slate-500 text-[10px] block">关联有限空间 (受限舱室)</span>
+                        <span className="text-rose-300 font-bold block">{mapViewDevice.confinedSpaceName || '标准工程舱室'}</span>
+                      </div>
+                    </>
+                  )}
+
+                  <div className="p-2.5 bg-slate-950 rounded-lg border border-cyan-900/60 space-y-1 font-mono text-cyan-300">
+                    <span className="text-slate-500 text-[10px] block">三维空间坐标 (X / Y / Z)</span>
+                    <span className="font-bold text-xs">
+                      X: {mapViewDevice.positionX ?? 350.2}, Y: {mapViewDevice.positionY ?? 10.1}, Z: {mapViewDevice.positionZ ?? -150.4}
+                    </span>
                   </div>
 
                   <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800 space-y-1.5">
@@ -2910,8 +3244,8 @@ export function DeviceManagement() {
                       <strong className="text-white">{mapViewDevice.signalLossTime ?? 5} 分钟</strong>
                     </div>
                     <div className="flex justify-between text-slate-400">
-                      <span>电子围栏:</span>
-                      <strong className="text-cyan-300 font-mono">{mapViewDevice.electricFence || '517-9'}</strong>
+                      <span>联动电子围栏:</span>
+                      <strong className="text-cyan-300 font-mono">{mapViewDevice.electricFence || (mapViewDevice.associationType === 'global' ? 'EF-SEC-01' : 'EF-LNG-CS01')}</strong>
                     </div>
                   </div>
                 </div>

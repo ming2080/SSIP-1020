@@ -79,12 +79,16 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // 弹窗状态
+  // 弹窗与确认删除状态
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formInitialData, setFormInitialData] = useState<WorkfaceRecord | null>(null);
   
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedForDetail, setSelectedForDetail] = useState<WorkfaceRecord | null>(null);
+
+  // 删除确认弹窗状态
+  const [deletingWorkface, setDeletingWorkface] = useState<WorkfaceRecord | null>(null);
+  const [isBatchDeleting, setIsBatchDeleting] = useState(false);
 
   // Toast 提示
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -115,7 +119,7 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
     showToast('筛选条件已重置');
   };
 
-  // 过滤后的数据
+  // 过滤后的数据 (包含船厂厂区与船舶建造项目)
   const filteredWorkfaces = useMemo(() => {
     return workfaces.filter(wf => {
       // 关键字搜索
@@ -126,10 +130,10 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
         const matchType = wf.workfaceType?.toLowerCase().includes(keyword);
         const matchOfficer = wf.safetyOfficer.toLowerCase().includes(keyword);
         const matchTeam = wf.teamName.toLowerCase().includes(keyword);
-        const matchProject = wf.projectName?.toLowerCase().includes(keyword) || wf.shipModelName?.toLowerCase().includes(keyword);
         const matchYardZone = wf.yardZoneName?.toLowerCase().includes(keyword);
         const matchYardSub = wf.yardSubAreaName?.toLowerCase().includes(keyword);
-        if (!matchCode && !matchName && !matchType && !matchOfficer && !matchTeam && !matchProject && !matchYardZone && !matchYardSub) {
+        const matchProject = wf.projectName?.toLowerCase().includes(keyword) || wf.shipModelName?.toLowerCase().includes(keyword);
+        if (!matchCode && !matchName && !matchType && !matchOfficer && !matchTeam && !matchYardZone && !matchYardSub && !matchProject) {
           return false;
         }
       }
@@ -142,7 +146,7 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
         }
       }
 
-      // 归属区域类型筛选 (厂区 / 船模)
+      // 归属区域类型筛选 (船厂厂区 / 船舶建造项目)
       if (filterBelonging !== 'ALL' && wf.belongingType !== filterBelonging) {
         return false;
       }
@@ -152,8 +156,13 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
         return false;
       }
 
-      // 项目筛选
-      if (filterProject !== 'ALL' && wf.projectId !== filterProject) {
+      // 船舶工程筛选
+      if (filterProject !== 'ALL' && wf.projectId !== filterProject && wf.shipModelId !== filterProject) {
+        return false;
+      }
+
+      // 船体分层筛选
+      if (filterModelLevel !== 'ALL' && wf.modelLevel !== filterModelLevel && wf.shipModelLayerId !== filterModelLevel) {
         return false;
       }
 
@@ -168,18 +177,16 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
       }
 
       // 状态筛选
-      if (filterStatus !== 'ALL' && wf.status !== filterStatus) {
-        return false;
-      }
-
-      // 模型分层筛选
-      if (filterModelLevel !== 'ALL' && wf.modelLevel !== filterModelLevel) {
-        return false;
+      if (filterStatus !== 'ALL') {
+        const norm = wf.status === 'active' || wf.status === '作业中' ? '作业中' : (wf.status === 'forbidden' || wf.status === 'restricted' || wf.status === '禁入中' ? '禁入中' : '空闲中');
+        if (norm !== filterStatus) {
+          return false;
+        }
       }
 
       return true;
     });
-  }, [workfaces, searchTerm, filterBelonging, filterYardZone, filterProject, filterWorkType, filterRiskLevel, filterStatus, filterModelLevel]);
+  }, [workfaces, searchTerm, filterWorkfaceType, filterBelonging, filterYardZone, filterProject, filterModelLevel, filterWorkType, filterRiskLevel, filterStatus]);
 
   // 统计概览计算
   const stats = useMemo(() => {
@@ -218,47 +225,62 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
     );
   };
 
-  // 单条启停
-  const handleToggleStatus = (wf: WorkfaceRecord) => {
-    const nextStatus = wf.status === 'active' ? 'paused' : 'active';
+  // 归一化状态判断
+  const getNormalizedStatus = (status: string) => {
+    if (status === 'active' || status === '作业中') return '作业中';
+    if (status === 'forbidden' || status === 'restricted' || status === '禁入中') return '禁入中';
+    return '空闲中';
+  };
+
+  // 状态修改 (下拉框直接触发)
+  const handleUpdateStatus = (wf: WorkfaceRecord, newStatus: '作业中' | '空闲中' | '禁入中') => {
+    const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
     const updated = workfaces.map(item => {
       if (item.id === wf.id) {
         return {
           ...item,
-          status: nextStatus,
-          updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19)
+          status: newStatus as any,
+          updatedAt: nowStr
         };
       }
       return item;
     });
     updateWorkfaceList(updated);
-    showToast(`作业面【${wf.name}】已${nextStatus === 'active' ? '激活启用' : '暂停作业'}`);
+    showToast(`作业面【${wf.name}】状态已调整为【${newStatus}】`);
     
-    // 同步详情弹窗
     if (selectedForDetail && selectedForDetail.id === wf.id) {
-      setSelectedForDetail(prev => prev ? { ...prev, status: nextStatus } : null);
+      setSelectedForDetail(prev => prev ? { ...prev, status: newStatus as any, updatedAt: nowStr } : null);
     }
   };
 
-  // 删除单条
-  const handleDeleteOne = (id: string, name: string) => {
-    if (confirm(`确定要删除作业面【${name}】吗？删除后将解除关联的基站与定位映射关系。`)) {
-      const updated = workfaces.filter(w => w.id !== id);
-      updateWorkfaceList(updated);
-      setSelectedIds(prev => prev.filter(item => item !== id));
-      showToast(`作业面【${name}】已成功删除`);
-    }
+  // 单条删除触发与确认
+  const handleRequestDelete = (wf: WorkfaceRecord) => {
+    setDeletingWorkface(wf);
   };
 
-  // 批量删除
-  const handleBatchDelete = () => {
+  const handleConfirmDelete = () => {
+    if (!deletingWorkface) return;
+    const targetId = deletingWorkface.id;
+    const targetName = deletingWorkface.name;
+    const updated = workfaces.filter(w => w.id !== targetId);
+    updateWorkfaceList(updated);
+    setSelectedIds(prev => prev.filter(item => item !== targetId));
+    setDeletingWorkface(null);
+    showToast(`作业面【${targetName}】已成功删除`);
+  };
+
+  // 批量删除触发与确认
+  const handleRequestBatchDelete = () => {
     if (selectedIds.length === 0) return;
-    if (confirm(`确定要批量删除选中的 ${selectedIds.length} 个作业面吗？`)) {
-      const updated = workfaces.filter(w => !selectedIds.includes(w.id));
-      updateWorkfaceList(updated);
-      setSelectedIds([]);
-      showToast(`已批量删除 ${selectedIds.length} 个作业面`);
-    }
+    setIsBatchDeleting(true);
+  };
+
+  const handleConfirmBatchDelete = () => {
+    const updated = workfaces.filter(w => !selectedIds.includes(w.id));
+    updateWorkfaceList(updated);
+    showToast(`已批量删除 ${selectedIds.length} 个作业面`);
+    setSelectedIds([]);
+    setIsBatchDeleting(false);
   };
 
   // 批量激活
@@ -364,19 +386,17 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
     }
   };
 
-  // 状态徽标样式
+  // 状态徽标样式 (作业中 / 空闲中 / 禁入中)
   const getStatusBadgeCls = (status: string) => {
-    switch (status) {
-      case 'active':
+    const norm = getNormalizedStatus(status);
+    switch (norm) {
+      case '作业中':
         return { label: '作业中', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' };
-      case 'paused':
-        return { label: '暂停中', cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' };
-      case 'completed':
-        return { label: '已完工', cls: 'bg-slate-100 text-slate-600 border-slate-200', dot: 'bg-slate-400' };
-      case 'draft':
-        return { label: '待作业', cls: 'bg-sky-50 text-sky-700 border-sky-200', dot: 'bg-sky-500' };
+      case '禁入中':
+        return { label: '禁入中', cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' };
+      case '空闲中':
       default:
-        return { label: status, cls: 'bg-slate-50 text-slate-700 border-slate-200', dot: 'bg-slate-400' };
+        return { label: '空闲中', cls: 'bg-slate-100 text-slate-700 border-slate-200', dot: 'bg-slate-400' };
     }
   };
 
@@ -389,60 +409,6 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
           <span>{toastMessage}</span>
         </div>
       )}
-
-      {/* 顶部概览统计卡片栏 (将现场作业总人数移到作业面总数后，移除重大/较大风险面) */}
-      <div className="p-4 pb-2 bg-white border-b border-slate-200 shrink-0">
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {/* 1. 总作业面 */}
-          <div className="p-3 bg-slate-50/80 rounded-xl border border-slate-200 flex items-center justify-between shadow-2xs">
-            <div>
-              <div className="text-xs text-slate-500 font-medium">作业面总数</div>
-              <div className="text-xl font-bold font-mono text-slate-800 mt-1">{stats.total}</div>
-              <div className="text-[10px] text-slate-400 mt-0.5">全厂三维作业空间单元</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Layers className="w-5 h-5" />
-            </div>
-          </div>
-
-          {/* 2. 现场作业总人数 (紧随作业面总数后) */}
-          <div className="p-3 bg-amber-50/40 rounded-xl border border-amber-100 flex items-center justify-between shadow-2xs">
-            <div>
-              <div className="text-xs text-amber-800 font-medium">现场作业总人数</div>
-              <div className="text-xl font-bold font-mono text-amber-700 mt-1">{stats.totalWorkers}</div>
-              <div className="text-[10px] text-amber-700/80 mt-0.5">实名标签在线打卡</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-amber-100/70 text-amber-700 flex items-center justify-center">
-              <Users className="w-5 h-5" />
-            </div>
-          </div>
-
-          {/* 3. 进行中作业面 */}
-          <div className="p-3 bg-emerald-50/40 rounded-xl border border-emerald-100 flex items-center justify-between shadow-2xs">
-            <div>
-              <div className="text-xs text-emerald-700 font-medium">当前作业中</div>
-              <div className="text-xl font-bold font-mono text-emerald-700 mt-1">{stats.active}</div>
-              <div className="text-[10px] text-emerald-600/80 mt-0.5">实时定位与防脱岗监控</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-emerald-100/70 text-emerald-700 flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-          </div>
-
-          {/* 4. 关联智能设备 */}
-          <div className="p-3 bg-indigo-50/40 rounded-xl border border-indigo-100 flex items-center justify-between shadow-2xs">
-            <div>
-              <div className="text-xs text-indigo-700 font-medium">覆盖感知设备数</div>
-              <div className="text-xl font-bold font-mono text-indigo-700 mt-1">{stats.totalDevices}</div>
-              <div className="text-[10px] text-indigo-600/80 mt-0.5">基站/气体/AI球机/声光</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-indigo-100/70 text-indigo-700 flex items-center justify-center">
-              <Cpu className="w-5 h-5" />
-            </div>
-          </div>
-        </div>
-      </div>
-
 
       {/* 综合操作与筛选工具栏 */}
       <div className="p-4 bg-white border-b border-slate-200 shrink-0 space-y-3">
@@ -459,7 +425,7 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                placeholder="搜索作业面名称、编号、安全员..."
+                placeholder="搜索作业面名称"
                 className="w-full pl-9 pr-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50/50"
               />
             </div>
@@ -478,7 +444,7 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
               <option value="有限空间">🛡️ 有限空间 (密闭舱室)</option>
             </select>
 
-            {/* 需求 3：归属类型筛选 (厂区 / 建造船模) */}
+            {/* 归属类型筛选 (船厂厂区 / 船舶建造项目) */}
             <select
               value={filterBelonging}
               onChange={e => {
@@ -491,7 +457,7 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
             >
               <option value="ALL">全部归属区域</option>
               <option value="yard">🏢 船厂厂区</option>
-              <option value="project">🚢 建造船模</option>
+              <option value="project">🚢 船舶建造项目</option>
             </select>
 
             {/* 联动筛选 A: 厂区功能分区 (平面图区域) */}
@@ -545,55 +511,19 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
               </select>
             )}
 
-            {/* 作业类型筛选 */}
-            <select
-              value={filterWorkType}
-              onChange={e => {
-                setFilterWorkType(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="ALL">全部作业类型</option>
-              <option value="合拢焊接">合拢焊接</option>
-              <option value="密闭舱室作业">密闭舱室作业</option>
-              <option value="高空涂装">高空涂装</option>
-              <option value="管系装配">管系装配</option>
-              <option value="电气舾装">电气舾装</option>
-              <option value="探伤质检">探伤质检</option>
-              <option value="通用作业">通用作业</option>
-            </select>
-
-            {/* 风险等级筛选 */}
-            <select
-              value={filterRiskLevel}
-              onChange={e => {
-                setFilterRiskLevel(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="ALL">全部风险等级</option>
-              <option value="重大风险(红)">重大风险(红)</option>
-              <option value="较大风险(橙)">较大风险(橙)</option>
-              <option value="一般风险(黄)">一般风险(黄)</option>
-              <option value="低风险(蓝)">低风险(蓝)</option>
-            </select>
-
-            {/* 运行状态筛选 */}
+            {/* 状态筛选 (作业中/空闲中/禁入中) */}
             <select
               value={filterStatus}
               onChange={e => {
                 setFilterStatus(e.target.value);
                 setCurrentPage(1);
               }}
-              className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
             >
               <option value="ALL">全部状态</option>
-              <option value="active">作业中</option>
-              <option value="paused">暂停中</option>
-              <option value="draft">待作业</option>
-              <option value="completed">已完工</option>
+              <option value="作业中">🟢 作业中</option>
+              <option value="空闲中">🔵 空闲中</option>
+              <option value="禁入中">🔴 禁入中</option>
             </select>
 
             {/* 重置按钮 */}
@@ -610,37 +540,17 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
 
           {/* 右侧主操作按钮 */}
           <div className="flex items-center gap-2">
-            {onNavigateToScreen && (
-              <button
-                type="button"
-                onClick={() => {
-                  try {
-                    if (!document.fullscreenElement) {
-                      document.documentElement.requestFullscreen?.().catch(() => {});
-                    }
-                  } catch (_) {}
-                  onNavigateToScreen();
-                }}
-                className="px-3 py-1.5 border border-cyan-300 text-cyan-800 bg-cyan-50/80 hover:bg-cyan-100 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
-                title="进入作业面大屏全景监控系统"
-              >
-                <Tv className="w-3.5 h-3.5 text-cyan-600" />
-                <span>作业面大屏</span>
-              </button>
-            )}
-
-            {onNavigateToMonitor && (
-              <button
-                type="button"
-                onClick={onNavigateToMonitor}
-                className="px-3 py-1.5 border border-indigo-200 text-indigo-700 bg-indigo-50/80 hover:bg-indigo-100 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
-                title="进入作业面空间监控与多维人员/环境分析大盘"
-              >
-                <BarChart3 className="w-3.5 h-3.5 text-indigo-600" />
-                <span>监控分析</span>
-              </button>
-            )}
-
+            <button
+              type="button"
+              onClick={() => {
+                window.open('/src/yxkj-v7.html', '_blank');
+              }}
+              className="px-3 py-1.5 bg-gradient-to-r from-slate-900 to-indigo-950 text-cyan-300 hover:text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border border-cyan-800 shadow-xs cursor-pointer"
+              title="打开作业面大屏安全监控系统 (src/yxkj-v7.html)"
+            >
+              <Tv className="w-3.5 h-3.5 text-cyan-400" />
+              <span>作业面大屏 (v7)</span>
+            </button>
             <button
               type="button"
               onClick={handleOpenCreate}
@@ -663,22 +573,8 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={handleBatchActivate}
-                className="px-2.5 py-1 bg-white border border-emerald-300 text-emerald-700 hover:bg-emerald-50 rounded text-xs transition-colors"
-              >
-                批量激活
-              </button>
-              <button
-                type="button"
-                onClick={handleBatchPause}
-                className="px-2.5 py-1 bg-white border border-amber-300 text-amber-700 hover:bg-amber-50 rounded text-xs transition-colors"
-              >
-                批量暂停
-              </button>
-              <button
-                type="button"
-                onClick={handleBatchDelete}
-                className="px-2.5 py-1 bg-white border border-red-300 text-red-600 hover:bg-red-50 rounded text-xs transition-colors"
+                onClick={handleRequestBatchDelete}
+                className="px-2.5 py-1 bg-white border border-red-300 text-red-600 hover:bg-red-50 rounded text-xs transition-colors cursor-pointer"
               >
                 批量删除
               </button>
@@ -707,13 +603,9 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                 <th className="py-2.5 px-3 whitespace-nowrap">所属工程 / 区域</th>
                 <th className="py-2.5 px-3 whitespace-nowrap">具体工位 / 楼层</th>
                 <th className="py-2.5 px-3 whitespace-nowrap text-center">作业类型</th>
-                <th className="py-2.5 px-3 whitespace-nowrap text-center">风险等级</th>
-                <th className="py-2.5 px-3 whitespace-nowrap text-center">感知设备</th>
                 <th className="py-2.5 px-3 whitespace-nowrap">责任安全员</th>
-                <th className="py-2.5 px-3 whitespace-nowrap">施工班组</th>
-                <th className="py-2.5 px-3 whitespace-nowrap text-center">在场/定员</th>
                 <th className="py-2.5 px-3 whitespace-nowrap text-center">状态</th>
-                <th className="py-2.5 px-3 whitespace-nowrap text-center sticky right-0 bg-slate-50/95 shadow-[-4px_0_8px_rgba(0,0,0,0.02)] min-w-[140px]">
+                <th className="py-2.5 px-3 whitespace-nowrap text-center sticky right-0 bg-slate-50/95 shadow-[-4px_0_8px_rgba(0,0,0,0.02)] min-w-[120px]">
                   操作
                 </th>
               </tr>
@@ -724,8 +616,6 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                 paginatedList.map(wf => {
                   const isSelected = selectedIds.includes(wf.id);
                   const statusObj = getStatusBadgeCls(wf.status);
-                  const isOverCapacity = wf.currentPersonnelCount > wf.capacityLimit;
-                  const totalSensors = (wf.boundBaseStations?.length || 0) + (wf.boundGasDetectors?.length || 0) + (wf.boundCameras?.length || 0);
 
                   return (
                     <tr 
@@ -747,39 +637,27 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                         {wf.code}
                       </td>
 
-                      {/* 作业面名称与类型标签 */}
+                      {/* 作业面名称 */}
                       <td className="py-2.5 px-3">
-                        <div className="flex items-center gap-1.5">
-                          {wf.workfaceType === '有限空间' ? (
-                            <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-0.5" title="受限空间/密闭舱室作业面">
-                              <ShieldAlert className="w-2.5 h-2.5 text-amber-600" />
-                              <span>有限空间</span>
-                            </span>
-                          ) : (
-                            <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200" title="通用常规作业面">
-                              通用
-                            </span>
-                          )}
-                          <button 
-                            type="button"
-                            onClick={() => handleOpenDetail(wf)}
-                            className="font-medium text-slate-900 hover:text-blue-600 cursor-pointer transition-colors text-left truncate max-w-[180px] block"
-                            title={wf.name}
-                          >
-                            {wf.name}
-                          </button>
-                        </div>
+                        <button 
+                          type="button"
+                          onClick={() => handleOpenDetail(wf)}
+                          className="font-medium text-slate-900 hover:text-blue-600 cursor-pointer transition-colors text-left truncate max-w-[200px] block"
+                          title={wf.name}
+                        >
+                          {wf.name}
+                        </button>
                       </td>
 
                       {/* 归属类型 */}
                       <td className="py-2.5 px-3 text-center whitespace-nowrap">
                         {wf.belongingType === 'yard' ? (
                           <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                            厂区
+                            船厂厂区
                           </span>
                         ) : (
                           <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
-                            船模
+                            船舶建造项目
                           </span>
                         )}
                       </td>
@@ -810,32 +688,20 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                         )}
                       </td>
 
-                      {/* 作业类型 - 紧凑工种标签 */}
+                      {/* 作业类型 - 根据归属类型显示：“厂区”显示为“作业面”，“船模”显示为“有限空间” */}
                       <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                          {wf.workType}
-                        </span>
+                        {wf.belongingType === 'yard' ? (
+                          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                            作业面
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-300">
+                            有限空间
+                          </span>
+                        )}
                       </td>
 
-                      {/* 风险等级 - 醒目等级标签 */}
-                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        <span className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${getRiskBadgeCls(wf.riskLevel)}`}>
-                          {wf.riskLevel}
-                        </span>
-                      </td>
-
-                      {/* 感知设备 - 提炼核心总台数，悬浮提示明细 */}
-                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        <span 
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-50 text-slate-700 text-xs font-mono border border-slate-200 cursor-help"
-                          title={`关联设备: 主基站 ${wf.boundBaseStations?.length || 0} 台 | 环境检测 ${wf.boundGasDetectors?.length || 0} 台 | AI球机 ${wf.boundCameras?.length || 0} 台 | 声光 ${wf.boundAlarms?.length || 0} 台`}
-                        >
-                          <Cpu className="w-3 h-3 text-slate-400" />
-                          <span>{totalSensors} 台</span>
-                        </span>
-                      </td>
-
-                      {/* 责任安全员 - 仅保留安全员姓名，电话悬停可查 */}
+                      {/* 责任安全员 */}
                       <td 
                         className="py-2.5 px-3 whitespace-nowrap text-slate-800 font-medium"
                         title={`联系电话: ${wf.safetyOfficerPhone}`}
@@ -843,30 +709,7 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                         {wf.safetyOfficer}
                       </td>
 
-                      {/* 施工班组 - 仅保留核心班组名 */}
-                      <td 
-                        className="py-2.5 px-3 whitespace-nowrap text-slate-700 truncate max-w-[140px]" 
-                        title={`施工班组: ${wf.teamName} (班长: ${wf.teamLeader})`}
-                      >
-                        {wf.teamName}
-                      </td>
-
-                      {/* 在场人数 / 定员 */}
-                      <td className="py-2.5 px-3 text-center whitespace-nowrap font-mono">
-                        <span className={`font-semibold ${isOverCapacity ? 'text-red-600 font-bold' : 'text-slate-800'}`}>
-                          {wf.currentPersonnelCount}
-                        </span>
-                        {wf.capacityLimit ? (
-                          <span className="text-slate-400"> / {wf.capacityLimit}人</span>
-                        ) : (
-                          <span className="text-slate-400"> 人</span>
-                        )}
-                        {isOverCapacity && (
-                          <span className="ml-1 text-[10px] text-red-500 font-sans font-medium">(超员)</span>
-                        )}
-                      </td>
-
-                      {/* 状态 - 精炼状态徽标 */}
+                      {/* 状态 */}
                       <td className="py-2.5 px-3 text-center whitespace-nowrap">
                         <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium border inline-flex items-center gap-1.5 ${statusObj.cls}`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${statusObj.dot}`} />
@@ -874,38 +717,44 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                         </span>
                       </td>
 
-                      {/* 操作列 - 紧凑清晰动作组 */}
+                      {/* 操作列 */}
                       <td className="py-2.5 px-3 text-center whitespace-nowrap sticky right-0 bg-white group-hover:bg-slate-50/80 shadow-[-4px_0_8px_rgba(0,0,0,0.02)]">
                         <div className="flex items-center justify-center gap-2 text-xs">
+                          {/* 最左侧：状态变更下拉 */}
+                          <select
+                            value=""
+                            onChange={e => {
+                              if (e.target.value) {
+                                handleUpdateStatus(wf, e.target.value as '作业中' | '空闲中' | '禁入中');
+                              }
+                            }}
+                            className="px-2 py-0.5 rounded border border-blue-200 text-xs font-medium bg-blue-50/80 hover:bg-blue-100 text-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer transition-colors shadow-2xs"
+                            title="点击变更作业面状态"
+                          >
+                            <option value="" disabled hidden>状态变更</option>
+                            <option value="作业中" className="text-emerald-600 font-semibold bg-white">作业中</option>
+                            <option value="空闲中" className="text-slate-600 font-semibold bg-white">空闲中</option>
+                            <option value="禁入中" className="text-red-600 font-semibold bg-white">禁入中</option>
+                          </select>
+
                           <button
                             type="button"
                             onClick={() => handleOpenDetail(wf)}
-                            className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                            className="text-blue-600 hover:text-blue-800 font-medium transition-colors cursor-pointer"
                           >
                             详情
                           </button>
                           <button
                             type="button"
                             onClick={() => handleOpenEdit(wf)}
-                            className="text-slate-600 hover:text-slate-900 font-medium transition-colors"
+                            className="text-slate-600 hover:text-slate-900 font-medium transition-colors cursor-pointer"
                           >
                             编辑
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleToggleStatus(wf)}
-                            className={`font-medium transition-colors ${
-                              wf.status === 'active' 
-                                ? 'text-amber-600 hover:text-amber-800' 
-                                : 'text-emerald-600 hover:text-emerald-800'
-                            }`}
-                          >
-                            {wf.status === 'active' ? '暂停' : '激活'}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteOne(wf.id, wf.name)}
-                            className="text-slate-400 hover:text-red-600 transition-colors"
+                            onClick={() => handleRequestDelete(wf)}
+                            className="text-red-600 hover:text-red-800 font-medium transition-colors cursor-pointer"
                             title="删除作业面"
                           >
                             删除
@@ -917,7 +766,7 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                 })
               ) : (
                 <tr>
-                  <td colSpan={14} className="py-12 text-center text-slate-400 text-xs">
+                  <td colSpan={10} className="py-12 text-center text-slate-400 text-xs">
                     没有找到符合条件的作业面记录
                   </td>
                 </tr>
@@ -989,9 +838,79 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
           setIsDetailOpen(false);
           handleOpenEdit(wf);
         }}
-        onToggleStatus={handleToggleStatus}
-        onNavigateToTracking={onNavigateToTracking}
       />
+
+      {/* 单条删除确认弹窗 */}
+      {deletingWorkface && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-md w-full p-6 space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-sm font-bold text-slate-900">确认删除作业面？</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  您即将删除作业面 <strong className="text-slate-900 font-semibold">【{deletingWorkface.name}】</strong>（编号：<span className="font-mono text-blue-600">{deletingWorkface.code}</span>）。删除后该记录将不可恢复，并同时解除关联的感知设备映射关系。
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setDeletingWorkface(null)}
+                className="px-3.5 py-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-medium transition-colors cursor-pointer"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="px-4 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-medium transition-colors shadow-xs cursor-pointer"
+              >
+                确认删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 批量删除确认弹窗 */}
+      {isBatchDeleting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-md w-full p-6 space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-sm font-bold text-slate-900">确认批量删除选中的作业面？</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  您即将批量删除选中的 <strong className="text-red-600 font-bold">{selectedIds.length}</strong> 项作业面记录。删除后记录将彻底清除，请确认是否继续操作。
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsBatchDeleting(false)}
+                className="px-3.5 py-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-medium transition-colors cursor-pointer"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmBatchDelete}
+                className="px-4 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-medium transition-colors shadow-xs cursor-pointer"
+              >
+                确认删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

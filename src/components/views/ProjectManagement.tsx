@@ -30,6 +30,7 @@ import {
 import { CreateProjectModal, CreatedProjectData, SHIP_TYPE_OPTIONS, SHIPYARD_AREA_OPTIONS } from './CreateProjectModal';
 import { ProjectVersionsModal } from './ProjectVersionsModal';
 import { ProjectDetailModal } from './ProjectDetailModal';
+import { ProjectConfinedSpaceModal } from './ProjectConfinedSpaceModal';
 
 // 导入 8 款船型的 3D 数字孪生模型高清渲染图作为船模缩略图
 import lngModelBg from '@/src/assets/images/lng_ship_model_1787972569670.jpg';
@@ -208,6 +209,7 @@ export function ProjectManagement() {
   const [editingProject, setEditingProject] = useState<CreatedProjectData | null>(null);
   const [detailProject, setDetailProject] = useState<CreatedProjectData | null>(null);
   const [versionsProjectId, setVersionsProjectId] = useState<string | null>(null);
+  const [confinedSpaceProject, setConfinedSpaceProject] = useState<CreatedProjectData | null>(null);
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
 
   // 顶部搜索过滤条件
@@ -605,7 +607,7 @@ export function ProjectManagement() {
                 <th className="px-4 py-3 font-semibold whitespace-nowrap">施工状态</th>
                 <th className="px-4 py-3 font-semibold whitespace-nowrap">当前版本 / 阶段</th>
                 <th className="px-4 py-3 font-semibold whitespace-nowrap">负责人</th>
-                <th className="px-4 py-3 font-semibold text-center whitespace-nowrap min-w-[220px] w-56">操作</th>
+                <th className="px-4 py-3 font-semibold text-center whitespace-nowrap min-w-[320px] w-80">操作</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-[12px]">
@@ -674,12 +676,20 @@ export function ProjectManagement() {
                     <div className="text-xs text-slate-800 font-semibold">{project.manager}</div>
                   </td>
 
-                  {/* 9. 操作列（排列顺序：版本、详情、编辑、删除） */}
+                  {/* 9. 操作列（排列顺序：有限空间、版本、详情、编辑、删除） */}
                   <td className="px-4 py-3.5 text-center whitespace-nowrap align-middle">
                     <div className="inline-flex items-center justify-center gap-1.5 flex-nowrap">
                       <button 
+                        onClick={() => setConfinedSpaceProject(project)}
+                        className="px-2.5 py-1 text-xs text-cyan-700 hover:text-cyan-900 bg-cyan-50/80 hover:bg-cyan-100 border border-cyan-200/80 rounded-md transition-colors font-medium inline-flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer shadow-2xs"
+                        title="配置该项目关联的有限空间及安全责任人"
+                      >
+                        <Box className="w-3.5 h-3.5 shrink-0 text-cyan-600" />
+                        <span className="whitespace-nowrap font-bold">有限空间</span>
+                      </button>
+                      <button 
                         onClick={() => setVersionsProjectId(project.id)}
-                        className="px-2.5 py-1 text-xs text-indigo-700 hover:text-indigo-900 bg-indigo-50/70 hover:bg-indigo-100 border border-indigo-200/60 rounded-md transition-colors font-medium inline-flex items-center gap-1 whitespace-nowrap shrink-0"
+                        className="px-2.5 py-1 text-xs text-indigo-700 hover:text-indigo-900 bg-indigo-50/70 hover:bg-indigo-100 border border-indigo-200/60 rounded-md transition-colors font-medium inline-flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer"
                         title="查看版本与阶段"
                       >
                         <GitBranch className="w-3.5 h-3.5 shrink-0" />
@@ -687,7 +697,7 @@ export function ProjectManagement() {
                       </button>
                       <button 
                         onClick={() => setDetailProject(project)}
-                        className="px-2.5 py-1 text-xs text-blue-600 hover:text-blue-800 bg-blue-50/70 hover:bg-blue-100 border border-blue-200/60 rounded-md transition-colors font-medium inline-flex items-center gap-1 whitespace-nowrap shrink-0"
+                        className="px-2.5 py-1 text-xs text-blue-600 hover:text-blue-800 bg-blue-50/70 hover:bg-blue-100 border border-blue-200/60 rounded-md transition-colors font-medium inline-flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer"
                         title="查看项目详情"
                       >
                         <Eye className="w-3.5 h-3.5 shrink-0" />
@@ -698,7 +708,7 @@ export function ProjectManagement() {
                           setEditingProject(project);
                           setIsCreateModalOpen(true);
                         }}
-                        className="px-2.5 py-1 text-xs text-amber-700 hover:text-amber-900 bg-amber-50/70 hover:bg-amber-100 border border-amber-200/60 rounded-md transition-colors font-medium inline-flex items-center gap-1 whitespace-nowrap shrink-0"
+                        className="px-2.5 py-1 text-xs text-amber-700 hover:text-amber-900 bg-amber-50/70 hover:bg-amber-100 border border-amber-200/60 rounded-md transition-colors font-medium inline-flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer"
                         title="编辑项目信息"
                       >
                         <Edit3 className="w-3.5 h-3.5 shrink-0" />
@@ -706,7 +716,7 @@ export function ProjectManagement() {
                       </button>
                       <button 
                         onClick={() => setDeletingProjectId(project.id)}
-                        className="p-1.5 text-xs text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200/60 rounded-md transition-colors shrink-0"
+                        className="p-1.5 text-xs text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200/60 rounded-md transition-colors shrink-0 cursor-pointer"
                         title="删除项目"
                       >
                         <Trash2 className="w-3.5 h-3.5 shrink-0" />
@@ -822,18 +832,25 @@ export function ProjectManagement() {
                 </div>
               </div>
 
-              {/* 5. 卡片底部操作按钮组（排列顺序：版本、详情、编辑、删除） */}
+              {/* 5. 卡片底部操作按钮组（排列顺序：有限空间、版本、详情、编辑、删除） */}
               <div className="pt-2 border-t border-slate-100 flex items-center gap-1.5 flex-nowrap">
                 <button 
+                  onClick={() => setConfinedSpaceProject(project)}
+                  className="flex-1 py-1.5 text-xs text-cyan-700 bg-cyan-50/80 border border-cyan-200/70 rounded-lg hover:bg-cyan-100 transition-colors font-medium flex items-center justify-center gap-0.5 whitespace-nowrap cursor-pointer shadow-2xs"
+                  title="配置有限空间及安全责任人"
+                >
+                  <Box className="w-3 h-3 shrink-0 text-cyan-600" /> <span className="whitespace-nowrap text-[11px] font-bold">有限空间</span>
+                </button>
+                <button 
                   onClick={() => setVersionsProjectId(project.id)}
-                  className="flex-1 py-1.5 text-xs text-indigo-700 bg-indigo-50/70 border border-indigo-200/70 rounded-lg hover:bg-indigo-100 transition-colors font-medium flex items-center justify-center gap-1 whitespace-nowrap"
+                  className="flex-1 py-1.5 text-xs text-indigo-700 bg-indigo-50/70 border border-indigo-200/70 rounded-lg hover:bg-indigo-100 transition-colors font-medium flex items-center justify-center gap-0.5 whitespace-nowrap cursor-pointer"
                   title="版本/阶段管理"
                 >
                   <GitBranch className="w-3 h-3 shrink-0" /> <span className="whitespace-nowrap text-[11px]">版本</span>
                 </button>
                 <button 
                   onClick={() => setDetailProject(project)}
-                  className="flex-1 py-1.5 text-xs text-blue-600 bg-blue-50/70 border border-blue-200/70 rounded-lg hover:bg-blue-100 transition-colors font-medium flex items-center justify-center gap-1 whitespace-nowrap"
+                  className="flex-1 py-1.5 text-xs text-blue-600 bg-blue-50/70 border border-blue-200/70 rounded-lg hover:bg-blue-100 transition-colors font-medium flex items-center justify-center gap-0.5 whitespace-nowrap cursor-pointer"
                 >
                   <Eye className="w-3 h-3 shrink-0" /> <span className="whitespace-nowrap text-[11px]">详情</span>
                 </button>
@@ -842,13 +859,13 @@ export function ProjectManagement() {
                     setEditingProject(project);
                     setIsCreateModalOpen(true);
                   }}
-                  className="flex-1 py-1.5 text-xs text-amber-700 bg-amber-50/70 border border-amber-200/70 rounded-lg hover:bg-amber-100 transition-colors font-medium flex items-center justify-center gap-1 whitespace-nowrap"
+                  className="flex-1 py-1.5 text-xs text-amber-700 bg-amber-50/70 border border-amber-200/70 rounded-lg hover:bg-amber-100 transition-colors font-medium flex items-center justify-center gap-0.5 whitespace-nowrap cursor-pointer"
                 >
                   <Edit3 className="w-3 h-3 shrink-0" /> <span className="whitespace-nowrap text-[11px]">编辑</span>
                 </button>
                 <button 
                   onClick={() => setDeletingProjectId(project.id)}
-                  className="p-1.5 text-xs text-slate-400 hover:text-rose-600 bg-slate-50 hover:bg-rose-50 border border-slate-200/60 hover:border-rose-200/60 rounded-lg transition-colors shrink-0"
+                  className="p-1.5 text-xs text-slate-400 hover:text-rose-600 bg-slate-50 hover:bg-rose-50 border border-slate-200/60 hover:border-rose-200/60 rounded-lg transition-colors shrink-0 cursor-pointer"
                   title="删除项目"
                 >
                   <Trash2 className="w-3 h-3 shrink-0" />
@@ -963,6 +980,21 @@ export function ProjectManagement() {
           }
         }}
       />
+
+      {/* 船舶项目关联有限空间安全员配置模态框 */}
+      {confinedSpaceProject && (
+        <ProjectConfinedSpaceModal
+          isOpen={true}
+          project={confinedSpaceProject}
+          onClose={() => setConfinedSpaceProject(null)}
+          onSuccess={(msg) => {
+            setSuccessBanner(msg);
+            setTimeout(() => {
+              setSuccessBanner(null);
+            }, 5000);
+          }}
+        />
+      )}
     </div>
   );
 }

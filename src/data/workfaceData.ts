@@ -223,19 +223,20 @@ export interface SafetyOfficerItem {
   department: string;
   role: string;
   certNumber: string;
+  tagCode?: string;
 }
 
 export const SHIPYARD_SAFETY_OFFICERS: SafetyOfficerItem[] = [
-  { id: 'SO-01', name: '周卫国', phone: '13812345601', department: '安全环保部', role: '注册安全工程师', certNumber: 'SA-2024-001' },
-  { id: 'SO-02', name: '李建军', phone: '13912345602', department: '造船一部安监科', role: '专职安全员', certNumber: 'SA-2024-015' },
-  { id: 'SO-03', name: '王振华', phone: '13712345603', department: '涂装防腐车间', role: '现场安质监护员', certNumber: 'SA-2025-008' },
-  { id: 'SO-04', name: '陈志强', phone: '13612345604', department: '制造部安全科', role: '一级动火监护员', certNumber: 'SA-2023-042' },
-  { id: 'SO-05', name: '张海波', phone: '13512345605', department: '集配部安质科', role: '受限空间监护员', certNumber: 'SA-2024-089' },
-  { id: 'SO-06', name: '刘晓明', phone: '13812345606', department: '造船二部安监科', role: '注册安全工程师', certNumber: 'SA-2024-031' },
-  { id: 'SO-07', name: '黄伟峰', phone: '13912345607', department: '安全环保部', role: '高空防坠监护员', certNumber: 'SA-2025-012' },
-  { id: 'SO-08', name: '赵大鹏', phone: '13712345608', department: '船坞船台管委会', role: '特种设备专职安全员', certNumber: 'SA-2024-077' },
-  { id: 'SO-09', name: '孙敏华', phone: '13612345609', department: '造船一部安监科', role: '现场安监员', certNumber: 'SA-2025-034' },
-  { id: 'SO-10', name: '吴承志', phone: '13512345610', department: '品质保卫部', role: '无损探伤辐射防护员', certNumber: 'SA-2023-018' }
+  { id: 'SO-01', name: '周卫国', phone: '13812345601', department: '安全环保班组', role: '注册安全工程师', certNumber: 'SA-2024-001', tagCode: 'TAG-SO-01' },
+  { id: 'SO-02', name: '李建军', phone: '13912345602', department: '造船一部安监组', role: '专职安全员', certNumber: 'SA-2024-015', tagCode: 'TAG-SO-02' },
+  { id: 'SO-03', name: '王振华', phone: '13712345603', department: '涂装防腐班组', role: '现场安质监护员', certNumber: 'SA-2025-008', tagCode: 'TAG-SO-03' },
+  { id: 'SO-04', name: '陈志强', phone: '13612345604', department: '制造部安全组', role: '一级动火监护员', certNumber: 'SA-2023-042', tagCode: 'TAG-SO-04' },
+  { id: 'SO-05', name: '张海波', phone: '13512345605', department: '集配部安质组', role: '受限空间监护员', certNumber: 'SA-2024-089', tagCode: 'TAG-SO-05' },
+  { id: 'SO-06', name: '刘晓明', phone: '13812345606', department: '造船二部安监组', role: '注册安全工程师', certNumber: 'SA-2024-031', tagCode: 'TAG-SO-06' },
+  { id: 'SO-07', name: '黄伟峰', phone: '13912345607', department: '安全环保班组', role: '高空防坠监护员', certNumber: 'SA-2025-012', tagCode: 'TAG-SO-07' },
+  { id: 'SO-08', name: '赵大鹏', phone: '13712345608', department: '船坞管委会组', role: '特种设备专职安全员', certNumber: 'SA-2024-077', tagCode: 'TAG-SO-08' },
+  { id: 'SO-09', name: '孙敏华', phone: '13612345609', department: '造船一部安监组', role: '现场安监员', certNumber: 'SA-2025-034', tagCode: 'TAG-SO-09' },
+  { id: 'SO-10', name: '吴承志', phone: '13512345610', department: '品质保卫组', role: '无损探伤防护员', certNumber: 'SA-2023-018', tagCode: 'TAG-SO-10' }
 ];
 
 export interface WorkfaceRecord {
@@ -270,6 +271,7 @@ export interface WorkfaceRecord {
   modelLevel?: 'deck' | 'middle' | 'bottom' | 'engine' | 'bridge' | string; // 二级楼层/分层位置ID
   modelLevelName?: string;        // 二级楼层/分层位置名称
   elevation?: string;             // 标高范围 (如 +8.0m ~ +18.5m)
+  volume?: string;                // 容积 (m³)，如 "1280" 或 "850"
   
   // 作业面区域划定数据
   areaDefinition?: WorkfaceAreaDefinition;
@@ -308,7 +310,7 @@ export interface WorkfaceRecord {
   updatedAt: string;
 }
 
-const STORAGE_KEY = 'smart_shipyard_workfaces_v2';
+const STORAGE_KEY = 'smart_shipyard_workfaces_v3';
 
 export const INITIAL_WORKFACES: WorkfaceRecord[] = [
   // === 厂区作业面 (依据东南造船基地平面图区域解析) ===
@@ -457,7 +459,11 @@ export const INITIAL_WORKFACES: WorkfaceRecord[] = [
     id: 'WF-2026-001',
     code: 'WF-LNG-01',
     name: '1#液货舱绝热合拢作业面',
+    workfaceType: '有限空间',
     belongingType: 'project',
+    shipModelId: 'M-001',
+    shipModelName: '17.4万m³ 薄膜型大型LNG船',
+    shipModelType: 'LNG液化天然气船',
     projectId: 'PRJ-2026-LNG01',
     projectName: '17.4万m³ 薄膜型大型LNG船 1号舰',
     shipCode: 'HULL-LNG-174',
@@ -517,7 +523,11 @@ export const INITIAL_WORKFACES: WorkfaceRecord[] = [
     id: 'WF-2026-002',
     code: 'WF-BOX-02',
     name: '10#箱位导轨架垂直吊装作业面',
+    workfaceType: '有限空间',
     belongingType: 'project',
+    shipModelId: 'M-002',
+    shipModelName: '24,000 TEU 超大型集装箱船',
+    shipModelType: '超大型集装箱船',
     projectId: 'PRJ-2026-BOX12',
     projectName: '24,000 TEU 超大型集装箱船',
     shipCode: 'HULL-BOX-240',
@@ -570,7 +580,11 @@ export const INITIAL_WORKFACES: WorkfaceRecord[] = [
     id: 'WF-2026-003',
     code: 'WF-LNG-03',
     name: '艉部主推进机舱管系装配面',
+    workfaceType: '有限空间',
     belongingType: 'project',
+    shipModelId: 'M-001',
+    shipModelName: '17.4万m³ 薄膜型大型LNG船',
+    shipModelType: 'LNG液化天然气船',
     projectId: 'PRJ-2026-LNG01',
     projectName: '17.4万m³ 薄膜型大型LNG船 1号舰',
     shipCode: 'HULL-LNG-174',
@@ -626,7 +640,11 @@ export const INITIAL_WORKFACES: WorkfaceRecord[] = [
     id: 'WF-2026-004',
     code: 'WF-PCTC-04',
     name: '艉部滚装跳板液压铰链安装面',
+    workfaceType: '有限空间',
     belongingType: 'project',
+    shipModelId: 'M-003',
+    shipModelName: '30万吨 VLCC 超大型原油船',
+    shipModelType: '超大型油轮 (VLCC)',
     projectId: 'PRJ-2026-PCTC05',
     projectName: '7,000 车位双燃料 PCTC 滚装船',
     shipCode: 'HULL-PCTC-700',
@@ -676,7 +694,11 @@ export const INITIAL_WORKFACES: WorkfaceRecord[] = [
     id: 'WF-2026-005',
     code: 'WF-BULK-05',
     name: '1#货舱双层底压载密闭舱探伤面',
+    workfaceType: '有限空间',
     belongingType: 'project',
+    shipModelId: 'M-004',
+    shipModelName: '82,000 DWT 卡姆萨尔型散货船',
+    shipModelType: '卡姆萨尔型散货船',
     projectId: 'PRJ-2026-BULK08',
     projectName: '82,000 DWT 卡姆萨尔型散货船',
     shipCode: 'HULL-BULK-082',
@@ -723,7 +745,11 @@ export const INITIAL_WORKFACES: WorkfaceRecord[] = [
     id: 'WF-2026-006',
     code: 'WF-WIND-06',
     name: '3#桩腿50m高空升降平台合拢作业面',
+    workfaceType: '有限空间',
     belongingType: 'project',
+    shipModelId: 'M-006',
+    shipModelName: '69.8M 海上风电运维工作船',
+    shipModelType: '风电运维船 (SOV)',
     projectId: 'PRJ-2026-WIND03',
     projectName: '海上风电自升式安装平台',
     shipCode: 'HULL-WIND-03',
@@ -774,7 +800,11 @@ export const INITIAL_WORKFACES: WorkfaceRecord[] = [
     id: 'WF-2026-007',
     code: 'WF-SUP-07',
     name: '上层建筑综合生活区电气舾装面',
+    workfaceType: '有限空间',
     belongingType: 'project',
+    shipModelId: 'M-007',
+    shipModelName: '37米 多用途海洋工程支持船',
+    shipModelType: '多用途支持船 (AHTS)',
     projectId: 'PRJ-2026-SUP02',
     projectName: '海洋石油大马力深水三用工作船 (AHTS)',
     shipCode: 'HULL-AHTS-02',
@@ -815,7 +845,11 @@ export const INITIAL_WORKFACES: WorkfaceRecord[] = [
     id: 'WF-2026-008',
     code: 'WF-LNG-08',
     name: '艏楼压载水泵房与锚绞机作业面',
+    workfaceType: '有限空间',
     belongingType: 'project',
+    shipModelId: 'M-001',
+    shipModelName: '17.4万m³ 薄膜型大型LNG船',
+    shipModelType: 'LNG液化天然气船',
     projectId: 'PRJ-2026-LNG01',
     projectName: '17.4万m³ 薄膜型大型LNG船 1号舰',
     shipCode: 'HULL-LNG-174',
@@ -851,6 +885,221 @@ export const INITIAL_WORKFACES: WorkfaceRecord[] = [
     description: '艏楼甲板锚链筒对中、绞盘液压马达固定安装工程，现已完成验收。',
     createdAt: '2026-08-01 08:00:00',
     updatedAt: '2026-09-25 17:30:00'
+  },
+  {
+    id: 'WF-2026-009',
+    code: 'WF-LNG-09',
+    name: '2#液货舱次屏蔽层薄膜氩弧焊作业面',
+    workfaceType: '有限空间',
+    belongingType: 'project',
+    shipModelId: 'M-001',
+    shipModelName: '17.4万m³ 薄膜型大型LNG船',
+    shipModelType: 'LNG液化天然气船',
+    projectId: 'PRJ-2026-LNG01',
+    projectName: '17.4万m³ 薄膜型大型LNG船 1号舰',
+    shipCode: 'HULL-LNG-174',
+    dockingArea: '东南造船厂 1号造船台',
+    modelLevel: 'middle',
+    modelLevelName: '中舱货油/货舱层',
+    elevation: '+8.0m ~ +18.5m (绝热箱主合拢区)',
+    volume: '1450',
+    workType: '合拢焊接',
+    riskLevel: '重大风险(红)',
+    status: 'active',
+    safetyOfficer: '周卫国',
+    safetyOfficerPhone: '13812345601',
+    teamName: '船体二分厂-薄膜特种焊接组',
+    teamLeader: '张建军',
+    teamLeaderPhone: '13988776655',
+    capacityLimit: 10,
+    currentPersonnelCount: 6,
+    currentPersonnel: [
+      { id: 'P51', name: '张建军', role: '薄膜焊班长', team: '薄膜特种焊接组', tagId: 'TAG-UWB-951', entryTime: '08:00', stayDuration: '3小时00分', heartRate: 82, battery: 90, status: 'normal' },
+      { id: 'P52', name: '李强', role: '殷瓦钢特种焊工', team: '薄膜特种焊接组', tagId: 'TAG-UWB-952', entryTime: '08:10', stayDuration: '2小时50分', heartRate: 86, battery: 85, status: 'normal' },
+      { id: 'P53', name: '周卫国', role: '当班安全员', team: '安监部', tagId: 'TAG-UWB-953', entryTime: '08:05', stayDuration: '2小时55分', heartRate: 75, battery: 97, status: 'normal' },
+    ],
+    boundBaseStations: [
+      { id: 'BS-LNG-04', name: '2#液货舱作业面主基站', code: 'LNG-BS-W04', type: '定位基站', status: 'online', ip: '192.168.10.25', coverage: '35m半径' },
+    ],
+    boundGasDetectors: [
+      { id: 'GAS-07', sn: 'GAS-LNG-201', name: '2#舱防爆四合一气体检测仪', status: 'online', readings: { o2: '20.9%', ch4: '0% LEL', co: '3 ppm', h2s: '0.0 ppm' }, lastUpdate: '刚刚' }
+    ],
+    boundCameras: [
+      { id: 'CAM-08', name: '2#货舱AI防爆监控球机', type: '防爆云台球机', status: 'online', rtspUrl: 'rtsp://192.168.10.208:554/live/stream1', currentChannel: 'CH-08' }
+    ],
+    boundAlarms: [
+      { id: 'ALM-DEV-07', name: '2#舱口防爆声光报警器', type: '防爆声光报警器', status: 'online', lastTestTime: '2026-09-29 10:00' }
+    ],
+    startDate: '2026-09-15',
+    endDate: '2026-12-10',
+    dailyWorkHours: '08:00 - 20:00',
+    safetyMeasures: [
+      '殷瓦钢焊接全过程保持氦气检漏与正压送风',
+      '作业人员佩戴本安型定位手环与防毒面具',
+      '舱外设专职看火人与应急救援绳索'
+    ],
+    description: '负责2#液货舱0.7mm薄膜次屏蔽层密封性手弧与自动氩弧焊接装配工程。',
+    createdAt: '2026-09-15 08:30:00',
+    updatedAt: '2026-09-30 09:00:00'
+  },
+  {
+    id: 'WF-2026-010',
+    code: 'WF-BOX-10',
+    name: '主推进主机缸盖与高压燃气管路装配面',
+    workfaceType: '有限空间',
+    belongingType: 'project',
+    shipModelId: 'M-002',
+    shipModelName: '24,000 TEU 超大型集装箱船',
+    shipModelType: '超大型集装箱船',
+    projectId: 'PRJ-2026-BOX12',
+    projectName: '24,000 TEU 超大型集装箱船',
+    shipCode: 'HULL-BOX-240',
+    dockingArea: '马尾造船厂 6号船台（平船台）',
+    modelLevel: 'engine',
+    modelLevelName: '机舱区',
+    elevation: '-2.0m ~ +12.0m (WinGD双燃料主机上部)',
+    volume: '2100',
+    workType: '管系装配',
+    riskLevel: '较大风险(橙)',
+    status: 'active',
+    safetyOfficer: '李建明',
+    safetyOfficerPhone: '13812345602',
+    teamName: '机电分厂-轮机安装一班',
+    teamLeader: '宋海波',
+    teamLeaderPhone: '13911225566',
+    capacityLimit: 12,
+    currentPersonnelCount: 5,
+    currentPersonnel: [
+      { id: 'P61', name: '宋海波', role: '轮机安装班长', team: '轮机安装一班', tagId: 'TAG-UWB-961', entryTime: '08:00', stayDuration: '3小时00分', heartRate: 79, battery: 92, status: 'normal' },
+      { id: 'P62', name: '王伟', role: '高压管路装配工', team: '轮机安装一班', tagId: 'TAG-UWB-962', entryTime: '08:15', stayDuration: '2小时45分', heartRate: 83, battery: 88, status: 'normal' },
+    ],
+    boundBaseStations: [
+      { id: 'BS-BOX-02', name: '主机平台UWB主基站', code: 'DEV-BS-10', type: '定位基站', status: 'online', ip: '192.168.10.32', coverage: '30m半径' }
+    ],
+    boundGasDetectors: [
+      { id: 'GAS-08', sn: 'GAS-BOX-202', name: '主机舱高位气体检测仪', status: 'online', readings: { o2: '20.8%', ch4: '0% LEL', co: '4 ppm', h2s: '0.0 ppm' }, lastUpdate: '1分钟前' }
+    ],
+    boundCameras: [
+      { id: 'CAM-09', name: '主机上部平台枪机', type: 'AI抓拍枪机', status: 'online', rtspUrl: 'rtsp://192.168.10.209:554/live/stream1', currentChannel: 'CH-09' }
+    ],
+    boundAlarms: [],
+    startDate: '2026-09-20',
+    endDate: '2026-11-15',
+    dailyWorkHours: '08:00 - 18:00',
+    safetyMeasures: [
+      '高压燃气管路双壁管法兰扭矩拉伸器校验',
+      '主机吊运缸盖期间下方禁入',
+      '现场设置干粉灭火器及通风设备'
+    ],
+    description: 'WinGD 11X92DF 双燃料主机11个缸盖吊装就位与高压LNG燃气喷射管汇合拢装配。',
+    createdAt: '2026-09-20 08:00:00',
+    updatedAt: '2026-09-30 08:30:00'
+  },
+  {
+    id: 'WF-2026-011',
+    code: 'WF-VLCC-11',
+    name: '货油泵舱防爆泵组与管汇试压作业面',
+    workfaceType: '有限空间',
+    belongingType: 'project',
+    shipModelId: 'M-003',
+    shipModelName: '30万吨 VLCC 超大型原油船',
+    shipModelType: '超大型油轮 (VLCC)',
+    projectId: 'PRJ-2026-TANK02',
+    projectName: '30万吨 VLCC 超大型原油船',
+    shipCode: 'HULL-VLCC-300',
+    dockingArea: '冠海造船厂 3号干船坞',
+    modelLevel: 'bottom',
+    modelLevelName: '底舱层',
+    elevation: '0.0m ~ +8.0m (货油泵舱底部密闭区)',
+    volume: '1850',
+    workType: '管系装配',
+    riskLevel: '重大风险(红)',
+    status: 'active',
+    safetyOfficer: '陈明',
+    safetyOfficerPhone: '13812345608',
+    teamName: '管道分厂-高压管试压队',
+    teamLeader: '刘国强',
+    teamLeaderPhone: '13922334488',
+    capacityLimit: 8,
+    currentPersonnelCount: 4,
+    currentPersonnel: [
+      { id: 'P71', name: '刘国强', role: '试压队长', team: '高压管试压队', tagId: 'TAG-UWB-971', entryTime: '08:30', stayDuration: '2小时30分', heartRate: 80, battery: 91, status: 'normal' },
+      { id: 'P72', name: '陈明', role: '泵舱安全监护员', team: '安监部', tagId: 'TAG-UWB-972', entryTime: '08:25', stayDuration: '2小时35分', heartRate: 76, battery: 95, status: 'normal' },
+    ],
+    boundBaseStations: [
+      { id: 'BS-VLCC-01', name: '货油泵舱定位基站', code: 'DEV-BS-11', type: '定位基站', status: 'online', ip: '192.168.10.41', coverage: '25m半径' }
+    ],
+    boundGasDetectors: [
+      { id: 'GAS-09', sn: 'GAS-VLCC-301', name: '泵舱VOC及可燃气在线分析仪', status: 'online', readings: { o2: '20.9%', ch4: '0% LEL', co: '2 ppm', h2s: '0.0 ppm' }, lastUpdate: '刚刚' }
+    ],
+    boundCameras: [
+      { id: 'CAM-10', name: '货油泵舱防爆布控球机', type: '防爆布控球', status: 'online', rtspUrl: 'rtsp://192.168.10.210:554/live/stream1', currentChannel: 'CH-10' }
+    ],
+    boundAlarms: [
+      { id: 'ALM-DEV-08', name: '泵舱高压试压警戒声光器', type: '防爆声光报警器', status: 'online', lastTestTime: '2026-09-28 15:30' }
+    ],
+    startDate: '2026-09-22',
+    endDate: '2026-11-20',
+    dailyWorkHours: '08:00 - 18:30',
+    safetyMeasures: [
+      '泵舱受限密闭空间进入前轴流排风30分钟',
+      '水压试压保压2.5MPa期间划定隔离警戒线',
+      '全程连续监测VOC与硫化氢气体'
+    ],
+    description: '30万吨VLCC货油泵舱大型防爆螺杆泵组安装、2.5MPa货油总管水压强度与气密性试验。',
+    createdAt: '2026-09-22 08:30:00',
+    updatedAt: '2026-09-30 08:45:00'
+  },
+  {
+    id: 'WF-2026-012',
+    code: 'WF-PCTC-12',
+    name: 'C型LNG双燃料储罐舱预装作业面',
+    workfaceType: '有限空间',
+    belongingType: 'project',
+    shipModelId: 'M-005',
+    shipModelName: '17.5万吨 PCTC双燃料汽车运输船',
+    shipModelType: '汽车运输船 (PCTC)',
+    projectId: 'PRJ-2026-PCTC05',
+    projectName: '17.5万吨 PCTC双燃料汽车运输船',
+    shipCode: 'HULL-PCTC-175',
+    dockingArea: '东南造船厂 2号码头',
+    modelLevel: 'middle',
+    modelLevelName: '中舱货油/货舱层',
+    elevation: '+8.0m ~ +18.5m (罐体舱处)',
+    volume: '980',
+    workType: '合拢焊接',
+    riskLevel: '较大风险(橙)',
+    status: 'active',
+    safetyOfficer: '刘涛',
+    safetyOfficerPhone: '13812345604',
+    teamName: '特种车间-双燃料罐装组',
+    teamLeader: '吴强',
+    teamLeaderPhone: '13933221100',
+    capacityLimit: 10,
+    currentPersonnelCount: 3,
+    currentPersonnel: [
+      { id: 'P81', name: '吴强', role: '双燃料调试组长', team: '双燃料罐装组', tagId: 'TAG-UWB-981', entryTime: '08:15', stayDuration: '2小时45分', heartRate: 78, battery: 94, status: 'normal' },
+      { id: 'P82', name: '刘涛', role: '专职安全巡检', team: '安监部', tagId: 'TAG-UWB-982', entryTime: '08:20', stayDuration: '2小时40分', heartRate: 74, battery: 98, status: 'normal' },
+    ],
+    boundBaseStations: [
+      { id: 'BS-PCTC-02', name: '双燃料储罐舱基站', code: 'DEV-BS-12', type: '定位基站', status: 'online', ip: '192.168.10.46', coverage: '30m半径' }
+    ],
+    boundGasDetectors: [
+      { id: 'GAS-10', sn: 'GAS-PCTC-401', name: 'C型罐区可燃气监测探头', status: 'online', readings: { o2: '20.9%', ch4: '0% LEL', co: '2 ppm', h2s: '0.0 ppm' }, lastUpdate: '刚刚' }
+    ],
+    boundCameras: [],
+    boundAlarms: [],
+    startDate: '2026-09-25',
+    endDate: '2026-11-30',
+    dailyWorkHours: '08:00 - 18:00',
+    safetyMeasures: [
+      '低温双层不锈钢管路氩弧焊接与真空保压',
+      '冷罐绝热层防潮防火隔离',
+      '双燃料气体泄漏一级预警联动'
+    ],
+    description: 'PCTC汽车运输船C型独立LNG双燃料储罐与冷箱管路鞍座就位锁紧工程。',
+    createdAt: '2026-09-25 09:00:00',
+    updatedAt: '2026-09-30 08:15:00'
   }
 ];
 
@@ -862,7 +1111,8 @@ export function getStoredWorkfaces(): WorkfaceRecord[] {
       if (Array.isArray(parsed) && parsed.length > 0) {
         return parsed.map((item: any) => ({
           ...item,
-          belongingType: item.belongingType || (item.yardZoneId ? 'yard' : 'project')
+          belongingType: item.belongingType || (item.yardZoneId ? 'yard' : 'project'),
+          workfaceType: item.belongingType === 'yard' ? '通用作业面' : (item.workfaceType || '有限空间')
         }));
       }
     }

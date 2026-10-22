@@ -32,6 +32,13 @@ import {
   getStoredShipModels, 
   saveStoredShipModels 
 } from '@/src/data/shipModelData';
+import { 
+  WorkfaceRecord, 
+  getStoredWorkfaces, 
+  saveStoredWorkfaces 
+} from '@/src/data/workfaceData';
+import { WorkfaceDetailModal } from './workface/WorkfaceDetailModal';
+import { WorkfaceFormModal } from './workface/WorkfaceFormModal';
 
 export type { ShipModel, ShipLayer };
 export { initialMockShipModels, getStoredShipModels, saveStoredShipModels };
@@ -48,6 +55,25 @@ export function ShipModelManagement() {
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'detail' | 'layers' | null>(null);
   const [editingModel, setEditingModel] = useState<ShipModel | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  // 有限空间配置 关联弹窗状态
+  const [confinedSpaceModel, setConfinedSpaceModel] = useState<ShipModel | null>(null);
+  const [workfaces, setWorkfaces] = useState<WorkfaceRecord[]>(() => getStoredWorkfaces());
+  const [confinedDetailTarget, setConfinedDetailTarget] = useState<WorkfaceRecord | null>(null);
+  const [confinedFormTarget, setConfinedFormTarget] = useState<WorkfaceRecord | null>(null);
+  const [isConfinedFormOpen, setIsConfinedFormOpen] = useState(false);
+  const [deletingConfinedWf, setDeletingConfinedWf] = useState<WorkfaceRecord | null>(null);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  const updateWorkfaceList = (newList: WorkfaceRecord[]) => {
+    setWorkfaces(newList);
+    saveStoredWorkfaces(newList);
+  };
 
   // Form fields for create/edit
   const [formFields, setFormFields] = useState({
@@ -377,13 +403,23 @@ export function ShipModelManagement() {
                     </div>
                   </div>
                   
-                  {/* 底部按钮栏：查看、编辑、分层配置、删除 */}
+                  {/* 底部按钮栏：查看、有限空间配置、分层配置、编辑、删除 */}
                   <div className="mt-auto pt-2 border-t border-slate-100 grid grid-cols-2 gap-1.5 text-[11px]">
                     <button 
                       onClick={() => setSelectedModel(model)}
                       className="flex items-center justify-center gap-1 py-1.5 font-semibold text-blue-600 bg-blue-50 border border-blue-100 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer"
                     >
                       <Eye className="w-3.5 h-3.5" /> 查看
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setWorkfaces(getStoredWorkfaces());
+                        setConfinedSpaceModel(model);
+                      }}
+                      className="flex items-center justify-center gap-1 py-1.5 font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors cursor-pointer"
+                      title="有限空间配置"
+                    >
+                      <Box className="w-3.5 h-3.5 text-amber-600" /> 有限空间配置
                     </button>
                     <button 
                       onClick={() => handleOpenLayers(model)}
@@ -399,7 +435,7 @@ export function ShipModelManagement() {
                     </button>
                     <button 
                       onClick={() => setDeleteTargetId(model.id)}
-                      className="flex items-center justify-center gap-1 py-1.5 font-semibold text-rose-600 bg-rose-50 border border-rose-100 rounded-lg hover:bg-rose-100 transition-colors cursor-pointer"
+                      className="col-span-2 flex items-center justify-center gap-1 py-1.5 font-semibold text-rose-600 bg-rose-50 border border-rose-100 rounded-lg hover:bg-rose-100 transition-colors cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" /> 删除
                     </button>
@@ -421,7 +457,7 @@ export function ShipModelManagement() {
                     <th className="py-3 px-3.5 whitespace-nowrap border-r border-slate-200/50">船型规模</th>
                     <th className="py-3 px-3.5 whitespace-nowrap border-r border-slate-200/50">船型类型</th>
                     <th className="py-3 px-4 whitespace-nowrap border-r border-slate-200/50">主尺度 (LOA × 宽 × 深)</th>
-                    <th className="py-3 px-4 text-center min-w-[210px]">操作</th>
+                    <th className="py-3 px-4 text-center min-w-[280px]">操作</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -492,6 +528,17 @@ export function ShipModelManagement() {
                             >
                               <Eye className="w-3 h-3" />
                               <span>查看</span>
+                            </button>
+                            <button 
+                              onClick={() => {
+                                setWorkfaces(getStoredWorkfaces());
+                                setConfinedSpaceModel(model);
+                              }}
+                              className="px-2.5 py-1 text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 hover:bg-amber-100 rounded transition-all cursor-pointer inline-flex items-center gap-0.5 shadow-2xs"
+                              title="有限空间配置"
+                            >
+                              <Box className="w-3 h-3 text-amber-600" />
+                              <span>有限空间配置</span>
                             </button>
                             <button 
                               onClick={() => handleOpenLayers(model)}
@@ -1002,6 +1049,298 @@ export function ShipModelManagement() {
               <button
                 onClick={() => handleConfirmDelete(deleteTargetId)}
                 className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded text-xs font-bold transition-all shadow-2xs cursor-pointer"
+              >
+                确认删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast 提示 */}
+      {toastMsg && (
+        <div className="fixed top-16 right-8 z-50 bg-slate-800 text-white text-xs px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <span>{toastMsg}</span>
+        </div>
+      )}
+
+      {/* 关联有限空间配置模态框 (Ship Model Confined Space Modal) */}
+      {confinedSpaceModel && (
+        <div 
+          onClick={() => setConfinedSpaceModel(null)}
+          className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl shadow-2xl w-[94vw] max-w-[1550px] flex flex-col overflow-hidden border border-slate-200 max-h-[92vh]"
+          >
+            {/* 顶部标题栏 */}
+            <div className="px-6 py-4 bg-slate-900 text-white flex justify-between items-center shrink-0 border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-amber-400 flex items-center justify-center font-bold">
+                  <Box className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-extrabold text-base text-white">
+                      【{confinedSpaceModel.name}】 - 有限空间配置
+                    </h3>
+                    <span className="bg-amber-500/20 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-500/30">
+                      {confinedSpaceModel.type}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    维护与管理归属该船模的有限空间（密闭舱室）作业面及其运行状态
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setConfinedSpaceModel(null)}
+                className="text-slate-400 hover:text-white p-1.5 rounded-full hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* 操作与工具栏 */}
+            <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between shrink-0">
+              <div className="text-xs text-slate-600">
+                当前关联有限空间作业面总数：<strong className="text-slate-900 font-bold font-mono">
+                  {workfaces.filter(w => (w.belongingType === 'project' && w.shipModelId === confinedSpaceModel.id) || (w.belongingType === 'project' && w.shipModelName === confinedSpaceModel.name)).length}
+                </strong> 个
+              </div>
+
+              <button
+                onClick={() => {
+                  const newTemplate: WorkfaceRecord = {
+                    id: `WF-${Date.now().toString().slice(-6)}`,
+                    code: `WF-CONF-${Math.floor(100 + Math.random() * 900)}`,
+                    name: '',
+                    workfaceType: '有限空间',
+                    belongingType: 'project',
+                    shipModelId: confinedSpaceModel.id,
+                    shipModelName: confinedSpaceModel.name,
+                    shipModelType: confinedSpaceModel.type,
+                    shipModelLayerId: confinedSpaceModel.layers?.[0]?.id || 'L-01',
+                    shipModelLayerName: confinedSpaceModel.layers?.[0]?.name || '主甲板层',
+                    elevation: confinedSpaceModel.layers?.[0]?.elevationRange || '+18.5m ~ +26.25m',
+                    workType: '密闭舱室作业',
+                    riskLevel: '重大风险(红)',
+                    status: 'active',
+                    safetyOfficer: '周卫国',
+                    safetyOfficerPhone: '13812345601',
+                    teamName: '施工班组',
+                    teamLeader: '队长',
+                    teamLeaderPhone: '13800000000',
+                    capacityLimit: 10,
+                    currentPersonnelCount: 0,
+                    currentPersonnel: [],
+                    boundBaseStations: [],
+                    boundGasDetectors: [],
+                    boundCameras: [],
+                    boundAlarms: [],
+                    safetyMeasures: [],
+                    description: '',
+                    createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+                    updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19)
+                  };
+                  setConfinedFormTarget(newTemplate);
+                  setIsConfinedFormOpen(true);
+                }}
+                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>新增有限空间</span>
+              </button>
+            </div>
+
+            {/* 有限空间列表内容 */}
+            <div className="p-5 overflow-y-auto flex-1">
+              <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50/90 border-b border-slate-200 text-slate-700 font-bold">
+                      <th className="py-3 px-4">编号</th>
+                      <th className="py-3 px-4 min-w-[200px]">有限空间作业面名称</th>
+                      <th className="py-3 px-4">关联船体分层</th>
+                      <th className="py-3 px-4 text-center min-w-[220px]">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {(() => {
+                      const modelWorkfaces = workfaces.filter(
+                        w => (w.belongingType === 'project' && w.shipModelId === confinedSpaceModel.id) ||
+                             (w.belongingType === 'project' && w.shipModelName === confinedSpaceModel.name)
+                      );
+                      if (modelWorkfaces.length === 0) {
+                        return (
+                          <tr>
+                            <td colSpan={4} className="py-12 text-center text-slate-400">
+                              暂无归属于【{confinedSpaceModel.name}】的有限空间作业面，请点击上方“新增有限空间”进行配置
+                            </td>
+                          </tr>
+                        );
+                      }
+                      return modelWorkfaces.map(wf => {
+                        const isEnabled = wf.status === 'active' || wf.status === '作业中' || wf.status === '启用';
+
+                        return (
+                          <tr key={wf.id} className="hover:bg-slate-50 transition-colors">
+                            <td className="py-3.5 px-4 font-mono font-bold text-slate-600">
+                              {wf.code}
+                            </td>
+                            <td className="py-3.5 px-4 font-bold text-slate-900">
+                              {wf.name}
+                            </td>
+                            <td className="py-3.5 px-4 text-slate-700 font-medium">
+                              {wf.shipModelLayerName || wf.modelLevelName || '主甲板层'}
+                            </td>
+                            <td className="py-3 px-3.5 text-center">
+                              <div className="flex items-center justify-center gap-2">
+                                {/* 状态启用/关闭切换按钮 */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const nextStatus = isEnabled ? 'forbidden' : 'active';
+                                    const nextActionLabel = isEnabled ? '关闭' : '启用';
+                                    const updated = workfaces.map(item => item.id === wf.id ? { 
+                                      ...item, 
+                                      status: nextStatus as any, 
+                                      updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19) 
+                                    } : item);
+                                    updateWorkfaceList(updated);
+                                    showToast(`有限空间【${wf.name}】已【${nextActionLabel}】`);
+                                  }}
+                                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer shadow-2xs ${
+                                    isEnabled 
+                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' 
+                                      : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
+                                  }`}
+                                  title={isEnabled ? '点击切换为关闭' : '点击切换为启用'}
+                                >
+                                  <span className={`w-2 h-2 rounded-full ${isEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                                  <span>{isEnabled ? '启用' : '关闭'}</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => setConfinedDetailTarget(wf)}
+                                  className="text-blue-600 hover:text-blue-800 font-bold transition-colors cursor-pointer"
+                                >
+                                  详情
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setConfinedFormTarget(wf);
+                                    setIsConfinedFormOpen(true);
+                                  }}
+                                  className="text-slate-600 hover:text-slate-900 font-bold transition-colors cursor-pointer"
+                                >
+                                  编辑
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setDeletingConfinedWf(wf)}
+                                  className="text-rose-600 hover:text-rose-800 font-bold transition-colors cursor-pointer"
+                                >
+                                  删除
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      });
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* 底部关闭 */}
+            <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end shrink-0">
+              <button
+                onClick={() => setConfinedSpaceModel(null)}
+                className="px-5 py-1.5 bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-bold transition-colors shadow-2xs cursor-pointer"
+              >
+                关闭
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 有限空间 - 详情弹窗 */}
+      <WorkfaceDetailModal
+        isOpen={!!confinedDetailTarget}
+        workface={confinedDetailTarget}
+        onClose={() => setConfinedDetailTarget(null)}
+        onEdit={(wf) => {
+          setConfinedDetailTarget(null);
+          setConfinedFormTarget(wf);
+          setIsConfinedFormOpen(true);
+        }}
+      />
+
+      {/* 有限空间 - 新增/编辑弹窗 */}
+      <WorkfaceFormModal
+        isOpen={isConfinedFormOpen}
+        isShipModelConfinedMode={true}
+        onClose={() => {
+          setIsConfinedFormOpen(false);
+          setConfinedFormTarget(null);
+        }}
+        onSave={(record) => {
+          const exists = workfaces.some(w => w.id === record.id);
+          let updated: WorkfaceRecord[];
+          if (exists) {
+            updated = workfaces.map(w => w.id === record.id ? record : w);
+            showToast(`有限空间【${record.name}】已成功修改`);
+          } else {
+            updated = [record, ...workfaces];
+            showToast(`有限空间【${record.name}】已成功创建`);
+          }
+          updateWorkfaceList(updated);
+          setIsConfinedFormOpen(false);
+          setConfinedFormTarget(null);
+        }}
+        initialData={confinedFormTarget}
+      />
+
+      {/* 有限空间 - 单条记录删除确认弹窗 */}
+      {deletingConfinedWf && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-md w-full p-6 space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-rose-600" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-sm font-bold text-slate-900">确认删除该有限空间记录？</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  您即将删除有限空间 <strong className="text-slate-900 font-semibold">【{deletingConfinedWf.name}】</strong>（编号：<span className="font-mono text-blue-600">{deletingConfinedWf.code}</span>）。删除后记录不可恢复。
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setDeletingConfinedWf(null)}
+                className="px-3.5 py-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-medium transition-colors cursor-pointer"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const updated = workfaces.filter(w => w.id !== deletingConfinedWf.id);
+                  updateWorkfaceList(updated);
+                  showToast(`有限空间【${deletingConfinedWf.name}】已成功删除`);
+                  setDeletingConfinedWf(null);
+                }}
+                className="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-medium transition-colors shadow-xs cursor-pointer"
               >
                 确认删除
               </button>

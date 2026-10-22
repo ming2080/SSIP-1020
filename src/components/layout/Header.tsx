@@ -107,7 +107,7 @@ export function Header({ title, currentUser, onLogout }: HeaderProps) {
             window.dispatchEvent(new CustomEvent('navigate_view', { detail: { view: 'workface_screen' } }));
           }}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 hover:from-slate-800 hover:to-blue-800 text-cyan-300 rounded-lg text-xs font-bold border border-cyan-800/80 shadow-sm transition-all cursor-pointer active:scale-95 group"
-          title="进入作业面大屏安全监控系统 (src/yxkj-v5.html)"
+          title="进入作业面大屏安全监控系统 (src/yxkj-v7.html)"
         >
           <Tv className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform animate-pulse" />
           <span className="text-white">大屏监控</span>

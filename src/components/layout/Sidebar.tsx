@@ -102,7 +102,6 @@ const MENU_STRUCTURE: MenuItem[] = [
     icon: Layers, 
     children: [
       { id: 'workface_screen', label: '作业面大屏', icon: Tv },
-      { id: 'workface_monitor', label: '监控分析', icon: BarChart3 },
       { id: 'workface_config', label: '作业面配置', icon: SlidersHorizontal },
     ]
   },
@@ -132,7 +131,7 @@ function getParentMenuId(view: ViewType): string | null {
       return item.id;
     }
   }
-  if (view === 'workface') return 'workface_menu';
+  if (view === 'workface' || view === 'workface_monitor') return 'workface_menu';
   return null;
 }
 
@@ -162,15 +161,19 @@ export function Sidebar({ currentView, onChangeView, currentUser, onLogout }: Si
   };
 
   // 点击二级子菜单
-  const handleChildClick = (childId: ViewType) => {
+  const handleChildClick = (childId: ViewType, e?: React.MouseEvent) => {
     if (childId === 'workface_screen') {
+      window.open('/src/yxkj-v7.html', '_blank');
       try {
         if (!document.fullscreenElement) {
           document.documentElement.requestFullscreen?.().catch(() => {});
         }
       } catch (_) {}
+    } else if (childId === 'workface_config') {
+      window.open('/src/yxkj-v7.html', '_blank');
     }
     onChangeView(childId);
+    window.dispatchEvent(new CustomEvent('navigate_view', { detail: { view: childId } }));
   };
 
   return (
@@ -268,7 +271,12 @@ export function Sidebar({ currentView, onChangeView, currentUser, onLogout }: Si
                           <button
                             key={child.id}
                             type="button"
-                            onClick={() => handleChildClick(child.id)}
+                            onClick={(e) => handleChildClick(child.id, e)}
+                            title={
+                              child.id === 'workface_config' || child.id === 'workface_screen'
+                                ? `${child.label} (指向 src/yxkj-v7.html)`
+                                : child.label
+                            }
                             className={cn(
                               "w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-xs transition-all duration-150 cursor-pointer text-left",
                               isChildActive

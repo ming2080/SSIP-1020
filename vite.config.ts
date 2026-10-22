@@ -1,11 +1,39 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import fs from 'fs';
 import {defineConfig} from 'vite';
+
+const serveYxkjPlugin = () => ({
+  name: 'serve-yxkj-html',
+  configureServer(server: any) {
+    server.middlewares.use((req: any, res: any, next: any) => {
+      if (req.url && req.url.includes('yxkj-v')) {
+        const isV6 = req.url.includes('yxkj-v6.html');
+        const isV5 = req.url.includes('yxkj-v5.html');
+        if (isV6 || isV5) {
+          const fileName = isV6 ? 'yxkj-v6.html' : 'yxkj-v5.html';
+          const possiblePaths = [
+            path.resolve(__dirname, 'public', fileName),
+            path.resolve(__dirname, 'src', fileName),
+          ];
+          for (const p of possiblePaths) {
+            if (fs.existsSync(p)) {
+              res.setHeader('Content-Type', 'text/html; charset=utf-8');
+              res.end(fs.readFileSync(p));
+              return;
+            }
+          }
+        }
+      }
+      next();
+    });
+  }
+});
 
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), serveYxkjPlugin()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
@@ -22,3 +50,4 @@ export default defineConfig(() => {
     },
   };
 });
+
