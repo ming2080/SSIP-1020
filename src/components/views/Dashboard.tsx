@@ -4226,20 +4226,13 @@ export function Dashboard({ onExit, onNavigate, initialProjectId, initialViewSco
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              window.open('/src/yxkj-v7.html', '_blank');
-              try {
-                if (!document.fullscreenElement) {
-                  document.documentElement.requestFullscreen?.().catch(() => {});
-                }
-              } catch (_) {}
-
               if (onNavigate) {
                 onNavigate('workface_screen');
               }
               window.dispatchEvent(new CustomEvent('navigate_view', { detail: { view: 'workface_screen' } }));
             }}
             className="px-3 py-1 text-xs font-bold border border-[#00d2ff]/80 bg-gradient-to-r from-[#06244d] via-[#0d3b6f] to-[#082046] text-[#00d2ff] hover:text-white hover:border-[#00e676] hover:shadow-[0_0_14px_rgba(0,230,118,0.5)] rounded-full transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer shadow-[0_0_12px_rgba(0,210,255,0.4)] active:scale-95 group"
-            title="进入作业面大屏安全监控系统 (指向 src/yxkj-v7.html)"
+            title="进入作业面大屏安全监控系统"
           >
             <Tv className="w-3.5 h-3.5 text-[#00d2ff] group-hover:scale-110 group-hover:text-[#00e676] transition-transform animate-pulse" />
             <span>作业面大屏</span>

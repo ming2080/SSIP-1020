@@ -162,16 +162,6 @@ export function Sidebar({ currentView, onChangeView, currentUser, onLogout }: Si
 
   // 点击二级子菜单
   const handleChildClick = (childId: ViewType, e?: React.MouseEvent) => {
-    if (childId === 'workface_screen') {
-      window.open('/src/yxkj-v7.html', '_blank');
-      try {
-        if (!document.fullscreenElement) {
-          document.documentElement.requestFullscreen?.().catch(() => {});
-        }
-      } catch (_) {}
-    } else if (childId === 'workface_config') {
-      window.open('/src/yxkj-v7.html', '_blank');
-    }
     onChangeView(childId);
     window.dispatchEvent(new CustomEvent('navigate_view', { detail: { view: childId } }));
   };
@@ -272,11 +262,7 @@ export function Sidebar({ currentView, onChangeView, currentUser, onLogout }: Si
                             key={child.id}
                             type="button"
                             onClick={(e) => handleChildClick(child.id, e)}
-                            title={
-                              child.id === 'workface_config' || child.id === 'workface_screen'
-                                ? `${child.label} (指向 src/yxkj-v7.html)`
-                                : child.label
-                            }
+                            title={child.label}
                             className={cn(
                               "w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-xs transition-all duration-150 cursor-pointer text-left",
                               isChildActive

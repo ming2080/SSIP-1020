@@ -430,19 +430,6 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
               />
             </div>
 
-            {/* 需求 4：作业面类型筛选 (有限空间 / 通用作业面) */}
-            <select
-              value={filterWorkfaceType}
-              onChange={e => {
-                setFilterWorkfaceType(e.target.value as any);
-                setCurrentPage(1);
-              }}
-              className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
-            >
-              <option value="ALL">全部空间类型</option>
-              <option value="通用作业面">📦 通用作业面</option>
-              <option value="有限空间">🛡️ 有限空间 (密闭舱室)</option>
-            </select>
 
             {/* 归属类型筛选 (船厂厂区 / 船舶建造项目) */}
             <select

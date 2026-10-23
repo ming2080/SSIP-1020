@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Bell, 
-  Search, 
   Settings, 
   User, 
   ChevronDown, 
@@ -78,15 +77,7 @@ export function Header({ title, currentUser, onLogout }: HeaderProps) {
       {/* 右侧：功能搜索、通知、设置及【账号登录信息】 */}
       <div className="flex items-center gap-3">
         
-        {/* 全站快捷搜索 */}
-        <div className="relative hidden sm:block">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input 
-            type="text" 
-            placeholder="搜索项目、船模、设备..." 
-            className="pl-8 pr-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50 text-slate-800 w-44 md:w-52 placeholder-slate-400 transition-all"
-          />
-        </div>
+
 
         {/* 移动端入口快捷按钮 */}
         <button

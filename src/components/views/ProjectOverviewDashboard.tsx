@@ -176,9 +176,6 @@ export function ProjectOverviewDashboard({ onNavigate }: ProjectOverviewDashboar
             <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white flex items-center gap-3">
               在建造船项目总览看板
             </h1>
-            <p className="text-xs text-slate-300 mt-1">
-              全厂在建主力船舶与关键里程碑节点履约进度
-            </p>
           </div>
         </div>
 
@@ -475,23 +472,10 @@ export function ProjectOverviewDashboard({ onNavigate }: ProjectOverviewDashboar
                         }`}>
                           {project.overallProgress}%
                         </span>
-                        <span className="text-xs text-slate-400 font-mono">
-                          (计划: {project.plannedProgress}%)
-                        </span>
                       </div>
                       <div className="text-[11px] text-slate-500 mt-0.5">
                         距交付倒计时: <span className="font-mono font-bold text-slate-800">{project.remainingDays}</span> 天
                       </div>
-                    </div>
-
-                    <div className="shrink-0">
-                      <button 
-                        onClick={() => handleGoTo3DTwin(project.id)}
-                        className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
-                      >
-                        <Ship className="w-3.5 h-3.5" />
-                        <span>3D孪生查看</span>
-                      </button>
                     </div>
                   </div>
                 </div>
