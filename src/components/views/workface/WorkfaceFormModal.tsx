@@ -68,6 +68,7 @@ interface WorkfaceFormModalProps {
   onClose: () => void;
   onSave: (record: WorkfaceRecord) => void;
   initialData?: WorkfaceRecord | null;
+  activeType?: 'workface' | 'confinedSpace';
   isShipModelConfinedMode?: boolean;
 }
 
@@ -128,13 +129,21 @@ export function WorkfaceFormModal({
   onClose, 
   onSave, 
   initialData,
+  activeType,
   isShipModelConfinedMode = false
 }: WorkfaceFormModalProps) {
+  // 模式判定 (优先使用 activeType, 其次 isShipModelConfinedMode)
+  const isConfinedMode = activeType 
+    ? activeType === 'confinedSpace' 
+    : (isShipModelConfinedMode || initialData?.workfaceType === '有限空间' || initialData?.belongingType === 'project');
+
   // 表单活动标签页：合并为两步【基础信息】与【责任与安全要求】
   const [activeTab, setActiveTab] = useState<'basic' | 'responsibilityAndSafety'>('basic');
   
-  // 需求 4：作业面类型单选标签 (有限空间 / 通用作业面)
-  const [workfaceType, setWorkfaceType] = useState<'有限空间' | '通用作业面'>('通用作业面');
+  // 作业面/有限空间类型
+  const [workfaceType, setWorkfaceType] = useState<'有限空间' | '通用作业面'>(
+    isConfinedMode ? '有限空间' : '通用作业面'
+  );
 
   // 基本字段
   const [code, setCode] = useState('');
@@ -301,7 +310,7 @@ export function WorkfaceFormModal({
     const storedModels = getStoredShipModels();
     setShipModelsList(storedModels);
 
-    if (isShipModelConfinedMode) {
+    if (isConfinedMode) {
       setWorkfaceType('有限空间');
       setBelongingType('project');
       
@@ -326,6 +335,9 @@ export function WorkfaceFormModal({
       if (targetLayer) {
         setElevation(targetLayer.elevationRange);
       }
+    } else {
+      setWorkfaceType('通用作业面');
+      setBelongingType('yard');
     }
 
     if (initialData) {
@@ -522,13 +534,13 @@ export function WorkfaceFormModal({
       setErrorMsg('请输入作业面名称');
       return;
     }
-    if (isShipModelConfinedMode) {
+    if (isConfinedMode) {
       if (!selectedShipModelId) {
-        setErrorMsg('请选择归属船模型');
+        setErrorMsg('请选择关联船模类型');
         return;
       }
       if (!selectedShipLayerId) {
-        setErrorMsg('请选择船模型分层位置');
+        setErrorMsg('请选择舱段分层位置');
         return;
       }
     } else if (belongingType === 'yard') {
@@ -553,7 +565,7 @@ export function WorkfaceFormModal({
 
     // 必填校验：主基站为必选设备
     if (selectedBaseStationIds.length === 0) {
-      setErrorMsg('主基站为必选设备，请至少绑定一台主基站以确保作业面定位覆盖');
+      setErrorMsg('主基站为必选设备，请至少绑定一台主基站以确保定位覆盖');
       return;
     }
 
@@ -623,56 +635,56 @@ export function WorkfaceFormModal({
       code: code.trim(),
       name: name.trim(),
       
-      // 需求 4：作业面类型
-      workfaceType,
+      // 作业面类型
+      workfaceType: isConfinedMode ? '有限空间' : '通用作业面',
 
-      belongingType: isShipModelConfinedMode ? 'project' : belongingType,
+      belongingType: isConfinedMode ? 'project' : belongingType,
       
       // 1. 厂区专属字段
-      yardZoneId: (!isShipModelConfinedMode && belongingType === 'yard') ? yardZoneId : undefined,
-      yardZoneName: (!isShipModelConfinedMode && belongingType === 'yard') ? currentYardZone.name : undefined,
-      yardSubAreaId: (!isShipModelConfinedMode && belongingType === 'yard') ? yardSubAreaId : undefined,
-      yardSubAreaName: (!isShipModelConfinedMode && belongingType === 'yard') ? currentYardSubArea.name : undefined,
-      yardSpecs: (!isShipModelConfinedMode && belongingType === 'yard') ? currentYardSubArea.specs : undefined,
+      yardZoneId: (!isConfinedMode && belongingType === 'yard') ? yardZoneId : undefined,
+      yardZoneName: (!isConfinedMode && belongingType === 'yard') ? currentYardZone.name : undefined,
+      yardSubAreaId: (!isConfinedMode && belongingType === 'yard') ? yardSubAreaId : undefined,
+      yardSubAreaName: (!isConfinedMode && belongingType === 'yard') ? currentYardSubArea.name : undefined,
+      yardSpecs: (!isConfinedMode && belongingType === 'yard') ? currentYardSubArea.specs : undefined,
       
       // 2. 船舶建造项目专属字段 / 船模专属字段
-      projectId: isShipModelConfinedMode 
+      projectId: isConfinedMode 
         ? (currentShipModelObj?.id || 'M-001') 
         : (belongingType === 'project' ? prjObj.id : 'SEC-YARD'),
-      projectName: isShipModelConfinedMode 
+      projectName: isConfinedMode 
         ? (currentShipModelObj?.name || '') 
         : (belongingType === 'project' ? prjObj.name : '东南造船基地'),
-      shipCode: isShipModelConfinedMode 
+      shipCode: isConfinedMode 
         ? (currentShipModelObj?.type || '') 
         : (belongingType === 'project' ? prjObj.shipCode : ''),
-      dockingArea: isShipModelConfinedMode 
+      dockingArea: isConfinedMode 
         ? (currentShipLayerObj?.name || '') 
         : (belongingType === 'project' ? prjObj.dockingArea : currentYardSubArea.name),
-      modelLevel: isShipModelConfinedMode 
+      modelLevel: isConfinedMode 
         ? (currentShipLayerObj?.id || 'L-01') 
         : (belongingType === 'project' ? floorObj.id : 'deck'),
-      modelLevelName: isShipModelConfinedMode 
+      modelLevelName: isConfinedMode 
         ? (currentShipLayerObj?.name || '') 
         : (belongingType === 'project' ? floorObj.name : currentYardSubArea.name),
-      elevation: isShipModelConfinedMode 
+      elevation: isConfinedMode 
         ? (currentShipLayerObj?.elevationRange || elevation) 
         : (belongingType === 'project' ? (floorObj.elevation || elevation || '+8.0m ~ +16.0m') : currentYardSubArea.specs),
       volume: volume.trim() || undefined,
       
       // 船模衍生扩展字段同步
-      shipModelId: isShipModelConfinedMode 
+      shipModelId: isConfinedMode 
         ? currentShipModelObj?.id 
         : (belongingType === 'project' ? prjObj.id : undefined),
-      shipModelName: isShipModelConfinedMode 
+      shipModelName: isConfinedMode 
         ? currentShipModelObj?.name 
         : (belongingType === 'project' ? prjObj.name : undefined),
-      shipModelType: isShipModelConfinedMode 
+      shipModelType: isConfinedMode 
         ? currentShipModelObj?.type 
         : (belongingType === 'project' ? prjObj.shipCode : undefined),
-      shipModelLayerId: isShipModelConfinedMode 
+      shipModelLayerId: isConfinedMode 
         ? currentShipLayerObj?.id 
         : (belongingType === 'project' ? floorObj.id : undefined),
-      shipModelLayerName: isShipModelConfinedMode 
+      shipModelLayerName: isConfinedMode 
         ? currentShipLayerObj?.name 
         : (belongingType === 'project' ? floorObj.name : undefined),
       
@@ -691,9 +703,9 @@ export function WorkfaceFormModal({
       workType,
       riskLevel,
       status,
-      safetyOfficer: officerNames,
-      safetyOfficerPhone: officerPhones,
-      safetyOfficers: selectedOfficers,
+      safetyOfficer: isConfinedMode ? '' : officerNames,
+      safetyOfficerPhone: isConfinedMode ? '' : officerPhones,
+      safetyOfficers: isConfinedMode ? [] : selectedOfficers,
       teamName: teamName.trim(),
       teamLeader: teamLeader.trim(),
       teamLeaderPhone: teamLeaderPhone.trim(),
@@ -730,15 +742,23 @@ export function WorkfaceFormModal({
         {/* 弹窗头部 */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50/80">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-xs">
-              <Layers className="w-5 h-5" />
+            <div className={`w-9 h-9 rounded-lg flex items-center justify-center shadow-xs text-white ${
+              isConfinedMode ? 'bg-amber-600' : 'bg-blue-600'
+            }`}>
+              {isConfinedMode ? <ShieldAlert className="w-5 h-5" /> : <Layers className="w-5 h-5" />}
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-800">
-                {initialData ? `编辑作业面 - ${initialData.name}` : '新增作业面'}
+                {isConfinedMode 
+                  ? (initialData ? `编辑有限空间 - ${initialData.name}` : '新增有限空间')
+                  : (initialData ? `编辑作业面 - ${initialData.name}` : '新增作业面')
+                }
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                基于高精度数字孪生与三维空间网格规范定义作业管控面
+                {isConfinedMode
+                  ? '基于船模数字孪生及舱段分层定义有限空间防护网格'
+                  : '基于高精度数字孪生与三维空间网格规范定义作业管控面'
+                }
               </p>
             </div>
           </div>
@@ -761,33 +781,33 @@ export function WorkfaceFormModal({
 
         {/* 表单内容区 */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
-          {/* 作业面编号、名称与空间上限人数行 */}
+          {/* 编号、名称与空间上限人数行 */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* 作业面编号 */}
+            {/* 编号 */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                作业面编号 <span className="text-red-500">*</span>
+                {isConfinedMode ? '有限空间编号' : '作业面编号'} <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={code}
                 onChange={e => setCode(e.target.value)}
-                placeholder="如 WF-LNG-01 或 WF-SEC-05"
+                placeholder={isConfinedMode ? '如 CS-LNG-01 或 CS-TANK-02' : '如 WF-LNG-01 或 WF-SEC-05'}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
               />
             </div>
 
-            {/* 作业面名称 */}
+            {/* 名称 */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                作业面名称 <span className="text-red-500">*</span>
+                {isConfinedMode ? '有限空间名称' : '作业面名称'} <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                placeholder="如 1#液货舱绝热合拢作业面"
+                placeholder={isConfinedMode ? '如 1#液货舱双层底压载舱' : '如 1#液货舱绝热合拢作业面'}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
               />
@@ -811,35 +831,33 @@ export function WorkfaceFormModal({
             </div>
           </div>
 
-          {/* 作业面归属区域类型选择 / 船模模式直接选择 */}
-          {isShipModelConfinedMode ? (
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3.5">
+          {/* 归属层级与业务要素区 */}
+          {isConfinedMode ? (
+            /* 【有限空间】标签：默认船模类型，一级关联船模，二级舱段分层，支持空间容积 */
+            <div className="p-4 bg-amber-50/40 border border-amber-200/80 rounded-xl space-y-3.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <Ship className="w-4 h-4 text-blue-600" />
-                  <span>有限空间归属船模与舱段分层 <span className="text-red-500">*</span></span>
+                  <Ship className="w-4 h-4 text-amber-600" />
+                  <span>有限空间归属船模与舱段结构分层 <span className="text-red-500">*</span></span>
                 </label>
-                <span className="text-[11px] text-slate-500">
-                  基于 3D 船模数字孪生空间网格选择关联模型与分层
+                <span className="text-[11px] text-amber-800 font-medium bg-amber-100/60 px-2 py-0.5 rounded border border-amber-200">
+                  船模类型归属
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* 一级：船模型选择 */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* 一级：关联船模的类型 */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center justify-between">
                     <span className="flex items-center gap-1">
-                      <Ship className="w-3.5 h-3.5 text-blue-600" />
-                      <span>一级：船模型选择 <span className="text-red-500">*</span></span>
-                    </span>
-                    <span className="text-[10px] text-blue-600 font-normal">
-                      在列 3D 船模 ({shipModelsList.length}个)
+                      <Ship className="w-3.5 h-3.5 text-amber-600" />
+                      <span>一级：关联船模类型 <span className="text-red-500">*</span></span>
                     </span>
                   </label>
                   <select
                     value={selectedShipModelId}
                     onChange={e => handleShipModelChange(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer font-medium text-slate-800"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none cursor-pointer font-medium text-slate-800"
                   >
                     {shipModelsList.map(model => (
                       <option key={model.id} value={model.id}>
@@ -849,18 +867,18 @@ export function WorkfaceFormModal({
                   </select>
                 </div>
 
-                {/* 二级：船模型分层 / 施工区域 */}
+                {/* 二级：舱段分层选择 */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center justify-between">
                     <span className="flex items-center gap-1">
                       <Layers className="w-3.5 h-3.5 text-indigo-600" />
-                      <span>二级：船模型分层 / 施工区域 <span className="text-red-500">*</span></span>
+                      <span>二级：舱段结构分层 <span className="text-red-500">*</span></span>
                     </span>
                   </label>
                   <select
                     value={selectedShipLayerId}
                     onChange={e => handleShipLayerChange(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer font-medium text-slate-800"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none cursor-pointer font-medium text-slate-800"
                   >
                     {currentShipModelObj?.layers?.map(layer => (
                       <option key={layer.id} value={layer.id}>
@@ -869,163 +887,73 @@ export function WorkfaceFormModal({
                     ))}
                   </select>
                 </div>
+
+                {/* 空间容积 (m³) */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
+                    <Box className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>空间容积 (m³)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={volume}
+                    onChange={e => setVolume(e.target.value)}
+                    placeholder="如 1200"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white"
+                  />
+                </div>
               </div>
             </div>
           ) : (
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3.5">
+            /* 【作业面】标签：归属类型默认厂区，不显示归属类型下拉选择，直接选择一级二级 */
+            <div className="p-4 bg-blue-50/40 border border-blue-200/80 rounded-xl space-y-3.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4 text-blue-600" />
-                  <span>作业面归属区域类型 <span className="text-red-500">*</span></span>
+                  <Building2 className="w-4 h-4 text-blue-600" />
+                  <span>厂区作业面区域网格配置 <span className="text-red-500">*</span></span>
                 </label>
-                <span className="text-[11px] text-slate-500">
-                  {belongingType === 'yard' ? '基于船厂总体地理平面图分区' : '基于船舶数字孪生三维数模分层'}
+                <span className="text-[11px] text-blue-800 font-medium bg-blue-100/60 px-2 py-0.5 rounded border border-blue-200">
+                  厂区归属 (默认)
                 </span>
               </div>
 
-              {/* 归属类型卡片式单选组 */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* 选项 1：船厂厂区 */}
-                <button
-                  type="button"
-                  onClick={() => setBelongingType('yard')}
-                  className={`px-3.5 py-2.5 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-3 ${
-                    belongingType === 'yard'
-                      ? 'border-blue-600 bg-blue-50/70 text-blue-900 ring-2 ring-blue-500/20 shadow-xs'
-                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-                  }`}
-                >
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                    belongingType === 'yard' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
-                  }`}>
-                    <Building2 className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-xs font-bold flex items-center justify-between">
-                      <span>船厂厂区</span>
-                      {belongingType === 'yard' && <span className="w-2 h-2 rounded-full bg-blue-600" />}
-                    </div>
-                  </div>
-                </button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 一级功能分区 */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    一级：厂区功能分区 <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={yardZoneId}
+                    onChange={e => handleYardZoneChange(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                  >
+                    {SOUTHEAST_SHIPYARD_ZONES.map(zone => (
+                      <option key={zone.id} value={zone.id}>
+                        {zone.name} ({zone.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                {/* 选项 2：船舶建造项目 */}
-                <button
-                  type="button"
-                  onClick={() => setBelongingType('project')}
-                  className={`px-3.5 py-2.5 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-3 ${
-                    belongingType === 'project'
-                      ? 'border-blue-600 bg-blue-50/70 text-blue-900 ring-2 ring-blue-500/20 shadow-xs'
-                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-                  }`}
-                >
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                    belongingType === 'project' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
-                  }`}>
-                    <Ship className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-xs font-bold flex items-center justify-between">
-                      <span>船舶建造项目</span>
-                      {belongingType === 'project' && <span className="w-2 h-2 rounded-full bg-blue-600" />}
-                    </div>
-                  </div>
-                </button>
+                {/* 二级具体位置/工位/车间 */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    二级：具体工位 / 车间 / 平台 <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={yardSubAreaId}
+                    onChange={e => handleYardSubAreaChange(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                  >
+                    {currentYardZone.subAreas.map(sub => (
+                      <option key={sub.id} value={sub.id}>
+                        {sub.name} ({sub.specs})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-
-              {/* 1. 厂区类型: 东南造船基地平面图二级联动选择 */}
-              {belongingType === 'yard' && (
-                <div className="pt-3 border-t border-slate-200 space-y-3 animate-in fade-in duration-150">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* 一级功能分区 */}
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">
-                        一级：厂区功能分区 <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={yardZoneId}
-                        onChange={e => handleYardZoneChange(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
-                      >
-                        {SOUTHEAST_SHIPYARD_ZONES.map(zone => (
-                          <option key={zone.id} value={zone.id}>
-                            {zone.name} ({zone.code})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* 二级具体位置/工位/车间 */}
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">
-                        二级：具体工位 / 车间 / 平台 <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={yardSubAreaId}
-                        onChange={e => handleYardSubAreaChange(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
-                      >
-                        {currentYardZone.subAreas.map(sub => (
-                          <option key={sub.id} value={sub.id}>
-                            {sub.name} ({sub.specs})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* 2. 【船舶建造项目】一级关联在建船舶工程项目，二级加载船舶分层 */}
-              {belongingType === 'project' && (
-                <div className="pt-3 border-t border-slate-200 space-y-3 animate-in fade-in duration-150">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* 一级：关联船舶建造项目 */}
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center justify-between">
-                        <span className="flex items-center gap-1">
-                          <Ship className="w-3.5 h-3.5 text-blue-600" />
-                          <span>一级：船舶建造项目 <span className="text-red-500">*</span></span>
-                        </span>
-                        <span className="text-[10px] text-blue-600 font-normal">
-                          在建工程项目 ({MOCK_PROJECTS.length}个)
-                        </span>
-                      </label>
-                      <select
-                        value={selectedProjectId}
-                        onChange={e => handleProjectChange(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer font-medium text-slate-800"
-                      >
-                        {MOCK_PROJECTS.map(project => (
-                          <option key={project.id} value={project.id}>
-                            {project.name} ({project.shipCode})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* 二级：加载工程分层/施工区域 */}
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center justify-between">
-                        <span className="flex items-center gap-1">
-                          <Layers className="w-3.5 h-3.5 text-indigo-600" />
-                          <span>二级：船舶分层 / 施工区域 <span className="text-red-500">*</span></span>
-                        </span>
-                      </label>
-                      <select
-                        value={selectedFloorId}
-                        onChange={e => handleFloorChange(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer font-medium text-slate-800"
-                      >
-                        {PROJECT_FLOOR_OPTIONS.map(floor => (
-                          <option key={floor.id} value={floor.id}>
-                            {floor.name} ({floor.code})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
@@ -1093,8 +1021,8 @@ export function WorkfaceFormModal({
             </div>
           </div>
 
-          {/* 责任安全员配置 (仅在选择“船厂厂区作业面”时显示) */}
-          {belongingType === 'yard' && (
+          {/* 责任安全员配置 (仅在选择“船厂厂区作业面”时显示，有限空间不配置) */}
+          {!isConfinedMode && belongingType === 'yard' && (
             <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 shadow-2xs animate-in fade-in duration-150">
               <div className="flex items-center justify-between pb-2 border-b border-slate-200">
                 <div className="flex items-center gap-2 text-xs font-bold text-slate-800">

@@ -1072,7 +1072,7 @@ export function DeviceManagement() {
     setSelectedDevice(null);
   };
 
-  // 表格单元格渲染器 1：厂区通用 / 关联项目，联动显示作业面徽标
+  // 表格单元格渲染器 1：厂区通用 / 关联项目 (不再显示作业面信息)
   const renderProjectCell = (device: {
     associationType?: 'global' | 'project';
     projectId?: string;
@@ -1082,15 +1082,10 @@ export function DeviceManagement() {
     const isGlobal = device.associationType === 'global' || device.project === '全厂通用设备';
     if (isGlobal) {
       return (
-        <div className="flex flex-col items-center gap-1">
+        <div className="flex flex-col items-center justify-center">
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
             🏢 全厂通用
           </span>
-          {device.workfaceName && (
-            <span className="text-[10px] text-blue-700 bg-blue-50/90 px-1.5 py-0.2 rounded border border-blue-200 truncate max-w-[170px]" title={`关联作业面: ${device.workfaceName}`}>
-              面: {device.workfaceName}
-            </span>
-          )}
         </div>
       );
     }

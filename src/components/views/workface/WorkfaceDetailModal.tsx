@@ -116,17 +116,17 @@ export function WorkfaceDetailModal({
           <div className="bg-slate-50/70 rounded-xl p-4 border border-slate-200 space-y-3">
             <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1.5 border-b border-slate-200 pb-2">
               <Layers className="w-4 h-4 text-blue-600" />
-              <span>基础信息与结构设置</span>
+              <span>{isConfinedSpace ? '有限空间基础信息与结构设置' : '作业面基础信息与结构设置'}</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-3 gap-x-6 text-xs">
               <div>
-                <span className="text-slate-400">作业面编号：</span>
+                <span className="text-slate-400">{isConfinedSpace ? '有限空间编号：' : '作业面编号：'}</span>
                 <span className="text-slate-800 font-mono font-semibold ml-1">{workface.code}</span>
               </div>
 
               <div>
-                <span className="text-slate-400">作业面名称：</span>
+                <span className="text-slate-400">{isConfinedSpace ? '有限空间名称：' : '作业面名称：'}</span>
                 <span className="text-slate-800 font-medium ml-1">{workface.name}</span>
               </div>
 
@@ -138,13 +138,13 @@ export function WorkfaceDetailModal({
               <div>
                 <span className="text-slate-400">归属区域类型：</span>
                 <span className="text-slate-800 font-medium ml-1">
-                  {workface.belongingType === 'yard' ? '船厂厂区' : '船舶建造项目'}
+                  {workface.belongingType === 'yard' ? '船厂厂区' : '船模类型 (建造船模)'}
                 </span>
               </div>
 
               <div>
                 <span className="text-slate-400">
-                  {workface.belongingType === 'yard' ? '所属厂区工位：' : '所属工程分层：'}
+                  {isConfinedSpace ? '关联船模与分层：' : '所属厂区工位：'}
                 </span>
                 <span className="text-slate-800 font-medium ml-1">
                   {workface.belongingType === 'yard' 
@@ -153,6 +153,12 @@ export function WorkfaceDetailModal({
                 </span>
               </div>
 
+              {isConfinedSpace && workface.volume && (
+                <div>
+                  <span className="text-slate-400">空间容积：</span>
+                  <span className="text-emerald-700 font-mono font-semibold ml-1">{workface.volume} m³</span>
+                </div>
+              )}
 
               {workface.belongingType === 'yard' && workface.yardSpecs && (
                 <div>
@@ -163,8 +169,8 @@ export function WorkfaceDetailModal({
             </div>
           </div>
 
-          {/* 2. 责任安全员 (仅厂区/作业面类型显示) */}
-          {workface.belongingType === 'yard' && (
+          {/* 2. 责任安全员 (仅厂区/作业面类型显示，有限空间不显示) */}
+          {!isConfinedSpace && workface.belongingType === 'yard' && (
             <div className="bg-slate-50/70 rounded-xl p-4 border border-slate-200 space-y-3">
               <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1.5 border-b border-slate-200 pb-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />

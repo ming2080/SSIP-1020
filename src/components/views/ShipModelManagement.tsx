@@ -403,23 +403,13 @@ export function ShipModelManagement() {
                     </div>
                   </div>
                   
-                  {/* 底部按钮栏：查看、有限空间配置、分层配置、编辑、删除 */}
+                  {/* 底部按钮栏：查看、分层配置、编辑、删除 */}
                   <div className="mt-auto pt-2 border-t border-slate-100 grid grid-cols-2 gap-1.5 text-[11px]">
                     <button 
                       onClick={() => setSelectedModel(model)}
                       className="flex items-center justify-center gap-1 py-1.5 font-semibold text-blue-600 bg-blue-50 border border-blue-100 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer"
                     >
                       <Eye className="w-3.5 h-3.5" /> 查看
-                    </button>
-                    <button 
-                      onClick={() => {
-                        setWorkfaces(getStoredWorkfaces());
-                        setConfinedSpaceModel(model);
-                      }}
-                      className="flex items-center justify-center gap-1 py-1.5 font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors cursor-pointer"
-                      title="有限空间配置"
-                    >
-                      <Box className="w-3.5 h-3.5 text-amber-600" /> 有限空间配置
                     </button>
                     <button 
                       onClick={() => handleOpenLayers(model)}
@@ -435,7 +425,7 @@ export function ShipModelManagement() {
                     </button>
                     <button 
                       onClick={() => setDeleteTargetId(model.id)}
-                      className="col-span-2 flex items-center justify-center gap-1 py-1.5 font-semibold text-rose-600 bg-rose-50 border border-rose-100 rounded-lg hover:bg-rose-100 transition-colors cursor-pointer"
+                      className="flex items-center justify-center gap-1 py-1.5 font-semibold text-rose-600 bg-rose-50 border border-rose-100 rounded-lg hover:bg-rose-100 transition-colors cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" /> 删除
                     </button>
@@ -528,17 +518,6 @@ export function ShipModelManagement() {
                             >
                               <Eye className="w-3 h-3" />
                               <span>查看</span>
-                            </button>
-                            <button 
-                              onClick={() => {
-                                setWorkfaces(getStoredWorkfaces());
-                                setConfinedSpaceModel(model);
-                              }}
-                              className="px-2.5 py-1 text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 hover:bg-amber-100 rounded transition-all cursor-pointer inline-flex items-center gap-0.5 shadow-2xs"
-                              title="有限空间配置"
-                            >
-                              <Box className="w-3 h-3 text-amber-600" />
-                              <span>有限空间配置</span>
                             </button>
                             <button 
                               onClick={() => handleOpenLayers(model)}

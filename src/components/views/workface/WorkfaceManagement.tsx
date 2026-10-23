@@ -64,6 +64,9 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
   // 选中的作业面 (批量操作)
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   
+  // 标签栏状态：作业面 vs 有限空间
+  const [activeTypeTab, setActiveTypeTab] = useState<'workface' | 'confinedSpace'>('workface');
+
   // 检索筛选条件
   const [searchTerm, setSearchTerm] = useState('');
   const [filterWorkfaceType, setFilterWorkfaceType] = useState<'ALL' | '有限空间' | '通用作业面'>('ALL');
@@ -122,6 +125,15 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
   // 过滤后的数据 (包含船厂厂区与船舶建造项目)
   const filteredWorkfaces = useMemo(() => {
     return workfaces.filter(wf => {
+      // 切换标签栏二分卡片筛选
+      const isConfined = wf.workfaceType === '有限空间' || wf.belongingType === 'project';
+      if (activeTypeTab === 'workface' && isConfined) {
+        return false;
+      }
+      if (activeTypeTab === 'confinedSpace' && !isConfined) {
+        return false;
+      }
+
       // 关键字搜索
       if (searchTerm.trim()) {
         const keyword = searchTerm.toLowerCase().trim();
@@ -138,19 +150,6 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
         }
       }
 
-      // 作业面类型筛选 (有限空间 / 通用作业面)
-      if (filterWorkfaceType !== 'ALL') {
-        const itemType = wf.workfaceType || (wf.workType === '密闭舱室作业' ? '有限空间' : '通用作业面');
-        if (itemType !== filterWorkfaceType) {
-          return false;
-        }
-      }
-
-      // 归属区域类型筛选 (船厂厂区 / 船舶建造项目)
-      if (filterBelonging !== 'ALL' && wf.belongingType !== filterBelonging) {
-        return false;
-      }
-
       // 厂区功能分区筛选
       if (filterYardZone !== 'ALL' && wf.yardZoneId !== filterYardZone) {
         return false;
@@ -163,11 +162,6 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
 
       // 船体分层筛选
       if (filterModelLevel !== 'ALL' && wf.modelLevel !== filterModelLevel && wf.shipModelLayerId !== filterModelLevel) {
-        return false;
-      }
-
-      // 作业类型筛选
-      if (filterWorkType !== 'ALL' && wf.workType !== filterWorkType) {
         return false;
       }
 
@@ -186,7 +180,7 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
 
       return true;
     });
-  }, [workfaces, searchTerm, filterWorkfaceType, filterBelonging, filterYardZone, filterProject, filterModelLevel, filterWorkType, filterRiskLevel, filterStatus]);
+  }, [workfaces, activeTypeTab, searchTerm, filterYardZone, filterProject, filterModelLevel, filterRiskLevel, filterStatus]);
 
   // 统计概览计算
   const stats = useMemo(() => {
@@ -410,6 +404,53 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
         </div>
       )}
 
+      {/* 顶部分类切换标签栏 (作业面 vs 有限空间) */}
+      <div className="px-5 pt-3 pb-0 bg-white border-b border-slate-200 shrink-0">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTypeTab('workface');
+              setCurrentPage(1);
+            }}
+            className={`pb-2.5 px-4 text-xs font-bold transition-all cursor-pointer border-b-2 flex items-center gap-2 ${
+              activeTypeTab === 'workface'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            <span>作业面</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
+              activeTypeTab === 'workface' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
+            }`}>
+              {workfaces.filter(w => w.workfaceType !== '有限空间' && w.belongingType !== 'project').length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTypeTab('confinedSpace');
+              setCurrentPage(1);
+            }}
+            className={`pb-2.5 px-4 text-xs font-bold transition-all cursor-pointer border-b-2 flex items-center gap-2 ${
+              activeTypeTab === 'confinedSpace'
+                ? 'border-amber-600 text-amber-600'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <ShieldAlert className="w-4 h-4" />
+            <span>有限空间</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
+              activeTypeTab === 'confinedSpace' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'
+            }`}>
+              {workfaces.filter(w => w.workfaceType === '有限空间' || w.belongingType === 'project').length}
+            </span>
+          </button>
+        </div>
+      </div>
+
       {/* 综合操作与筛选工具栏 */}
       <div className="p-4 bg-white border-b border-slate-200 shrink-0 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -425,37 +466,20 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                placeholder="搜索作业面名称"
+                placeholder={activeTypeTab === 'workface' ? '搜索作业面名称或编号' : '搜索有限空间名称或编号'}
                 className="w-full pl-9 pr-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50/50"
               />
             </div>
 
-
-            {/* 归属类型筛选 (船厂厂区 / 船舶建造项目) */}
-            <select
-              value={filterBelonging}
-              onChange={e => {
-                setFilterBelonging(e.target.value as any);
-                setFilterYardZone('ALL');
-                setFilterProject('ALL');
-                setCurrentPage(1);
-              }}
-              className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
-            >
-              <option value="ALL">全部归属区域</option>
-              <option value="yard">🏢 船厂厂区</option>
-              <option value="project">🚢 船舶建造项目</option>
-            </select>
-
-            {/* 联动筛选 A: 厂区功能分区 (平面图区域) */}
-            {filterBelonging === 'yard' && (
+            {/* 联动筛选: 厂区功能分区 */}
+            {activeTypeTab === 'workface' && (
               <select
                 value={filterYardZone}
                 onChange={e => {
                   setFilterYardZone(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="px-2.5 py-1.5 border border-blue-200 rounded-lg text-xs bg-blue-50/50 text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 animate-in fade-in duration-150"
+                className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="ALL">全部厂区功能区</option>
                 {SOUTHEAST_SHIPYARD_ZONES.map(z => (
@@ -464,38 +488,37 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
               </select>
             )}
 
-            {/* 联动筛选 B: 造船项目 */}
-            {filterBelonging !== 'yard' && (
-              <select
-                value={filterProject}
-                onChange={e => {
-                  setFilterProject(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="ALL">全部造船工程</option>
-                {MOCK_PROJECTS.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            )}
+            {/* 联动筛选: 船模/工程 */}
+            {activeTypeTab === 'confinedSpace' && (
+              <>
+                <select
+                  value={filterProject}
+                  onChange={e => {
+                    setFilterProject(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="ALL">全部关联船模</option>
+                  {MOCK_PROJECTS.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
 
-            {/* 联动筛选 C: 船体分层 (仅在项目类型时显示) */}
-            {filterBelonging === 'project' && (
-              <select
-                value={filterModelLevel}
-                onChange={e => {
-                  setFilterModelLevel(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="px-2.5 py-1.5 border border-indigo-200 rounded-lg text-xs bg-indigo-50/50 text-indigo-900 focus:outline-none focus:ring-2 focus:ring-blue-500 animate-in fade-in duration-150"
-              >
-                <option value="ALL">全部船体分层</option>
-                {MODEL_LAYER_OPTIONS.map(l => (
-                  <option key={l.id} value={l.id}>{l.name}</option>
-                ))}
-              </select>
+                <select
+                  value={filterModelLevel}
+                  onChange={e => {
+                    setFilterModelLevel(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="px-2.5 py-1.5 border border-amber-200 rounded-lg text-xs bg-amber-50/50 text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="ALL">全部舱段分层</option>
+                  {MODEL_LAYER_OPTIONS.map(l => (
+                    <option key={l.id} value={l.id}>{l.name}</option>
+                  ))}
+                </select>
+              </>
             )}
 
             {/* 状态筛选 (作业中/空闲中/禁入中) */}
@@ -529,22 +552,13 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => {
-                window.open('/src/yxkj-v7.html', '_blank');
-              }}
-              className="px-3 py-1.5 bg-gradient-to-r from-slate-900 to-indigo-950 text-cyan-300 hover:text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border border-cyan-800 shadow-xs cursor-pointer"
-              title="打开作业面大屏安全监控系统 (src/yxkj-v7.html)"
-            >
-              <Tv className="w-3.5 h-3.5 text-cyan-400" />
-              <span>作业面大屏 (v7)</span>
-            </button>
-            <button
-              type="button"
               onClick={handleOpenCreate}
-              className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+              className={`px-4 py-1.5 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer ${
+                activeTypeTab === 'confinedSpace' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-blue-600 hover:bg-blue-700'
+              }`}
             >
               <Plus className="w-4 h-4" />
-              <span>新增作业面</span>
+              <span>{activeTypeTab === 'workface' ? '新增作业面' : '新增有限空间'}</span>
             </button>
           </div>
         </div>
@@ -554,7 +568,7 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
           <div className="p-2.5 bg-blue-50/90 border border-blue-200 rounded-lg flex items-center justify-between text-xs animate-in fade-in duration-150">
             <div className="flex items-center gap-2 text-blue-900 font-medium">
               <span className="w-2 h-2 rounded-full bg-blue-600" />
-              <span>已选中 <strong>{selectedIds.length}</strong> 项作业面</span>
+              <span>已选中 <strong>{selectedIds.length}</strong> 项{activeTypeTab === 'workface' ? '作业面' : '有限空间'}</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -570,7 +584,7 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
         )}
       </div>
 
-      {/* 作业面列表表格展示区 */}
+      {/* 列表表格展示区 */}
       <div className="flex-1 overflow-auto p-4">
         <div className="bg-white border border-slate-200 rounded-xl shadow-2xs overflow-hidden">
           <table className="w-full text-xs text-left border-collapse">
@@ -584,13 +598,27 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                     className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                   />
                 </th>
-                <th className="py-2.5 px-3 whitespace-nowrap">作业面编号</th>
-                <th className="py-2.5 px-3 whitespace-nowrap min-w-[160px]">作业面名称</th>
-                <th className="py-2.5 px-3 whitespace-nowrap text-center">归属类型</th>
-                <th className="py-2.5 px-3 whitespace-nowrap">所属工程 / 区域</th>
-                <th className="py-2.5 px-3 whitespace-nowrap">具体工位 / 楼层</th>
-                <th className="py-2.5 px-3 whitespace-nowrap text-center">作业类型</th>
-                <th className="py-2.5 px-3 whitespace-nowrap">责任安全员</th>
+                <th className="py-2.5 px-3 whitespace-nowrap">
+                  {activeTypeTab === 'workface' ? '作业面编号' : '有限空间编号'}
+                </th>
+                <th className="py-2.5 px-3 whitespace-nowrap min-w-[160px]">
+                  {activeTypeTab === 'workface' ? '作业面名称' : '有限空间名称'}
+                </th>
+                <th className="py-2.5 px-3 whitespace-nowrap">
+                  {activeTypeTab === 'workface' ? '所属厂区功能区' : '关联船模类型'}
+                </th>
+                <th className="py-2.5 px-3 whitespace-nowrap">
+                  {activeTypeTab === 'workface' ? '具体工位 / 车间' : '舱段结构分层'}
+                </th>
+                {activeTypeTab === 'confinedSpace' && (
+                  <th className="py-2.5 px-3 whitespace-nowrap text-right">
+                    空间容积 (m³)
+                  </th>
+                )}
+                <th className="py-2.5 px-3 whitespace-nowrap text-center">类型</th>
+                {activeTypeTab === 'workface' && (
+                  <th className="py-2.5 px-3 whitespace-nowrap">责任安全员</th>
+                )}
                 <th className="py-2.5 px-3 whitespace-nowrap text-center">状态</th>
                 <th className="py-2.5 px-3 whitespace-nowrap text-center sticky right-0 bg-slate-50/95 shadow-[-4px_0_8px_rgba(0,0,0,0.02)] min-w-[120px]">
                   操作
@@ -619,12 +647,12 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                         />
                       </td>
 
-                      {/* 作业面编号 */}
+                      {/* 编号 */}
                       <td className="py-2.5 px-3 font-mono font-medium text-slate-700 whitespace-nowrap">
                         {wf.code}
                       </td>
 
-                      {/* 作业面名称 */}
+                      {/* 名称 */}
                       <td className="py-2.5 px-3">
                         <button 
                           type="button"
@@ -634,19 +662,6 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                         >
                           {wf.name}
                         </button>
-                      </td>
-
-                      {/* 归属类型 */}
-                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        {wf.belongingType === 'yard' ? (
-                          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                            船厂厂区
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
-                            船舶建造项目
-                          </span>
-                        )}
                       </td>
 
                       {/* 所属工程 / 区域 */}
@@ -662,7 +677,7 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                         )}
                       </td>
 
-                      {/* 具体工位 / 楼层 */}
+                      {/* 具体工位 / 舱段分层 */}
                       <td className="py-2.5 px-3 whitespace-nowrap text-slate-700">
                         {wf.belongingType === 'yard' ? (
                           <span title={wf.yardSpecs || ''} className="font-medium text-slate-800">
@@ -670,31 +685,40 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                           </span>
                         ) : (
                           <span className="font-medium text-slate-800">
-                            {wf.shipModelLayerName || wf.modelLevelName || '主甲板层'}
+                            {wf.shipModelLayerName || wf.modelLevelName || '双层底压载舱'}
                           </span>
                         )}
                       </td>
 
-                      {/* 作业类型 - 根据归属类型显示：“厂区”显示为“作业面”，“船模”显示为“有限空间” */}
+                      {/* 容积 (仅有限空间显示) */}
+                      {activeTypeTab === 'confinedSpace' && (
+                        <td className="py-2.5 px-3 whitespace-nowrap font-mono text-right text-emerald-700 font-medium">
+                          {wf.volume ? `${wf.volume} m³` : '-'}
+                        </td>
+                      )}
+
+                      {/* 作业类型 */}
                       <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        {wf.belongingType === 'yard' ? (
-                          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                            作业面
-                          </span>
-                        ) : (
+                        {wf.workfaceType === '有限空间' || wf.belongingType === 'project' ? (
                           <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-300">
                             有限空间
                           </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                            作业面
+                          </span>
                         )}
                       </td>
 
-                      {/* 责任安全员 */}
-                      <td 
-                        className="py-2.5 px-3 whitespace-nowrap text-slate-800 font-medium"
-                        title={`联系电话: ${wf.safetyOfficerPhone}`}
-                      >
-                        {wf.safetyOfficer}
-                      </td>
+                      {/* 责任安全员 (仅作业面显示，有限空间不显示) */}
+                      {activeTypeTab === 'workface' && (
+                        <td 
+                          className="py-2.5 px-3 whitespace-nowrap text-slate-800 font-medium"
+                          title={`联系电话: ${wf.safetyOfficerPhone}`}
+                        >
+                          {wf.safetyOfficer || '安监责任组'}
+                        </td>
+                      )}
 
                       {/* 状态 */}
                       <td className="py-2.5 px-3 text-center whitespace-nowrap">
@@ -707,7 +731,6 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                       {/* 操作列 */}
                       <td className="py-2.5 px-3 text-center whitespace-nowrap sticky right-0 bg-white group-hover:bg-slate-50/80 shadow-[-4px_0_8px_rgba(0,0,0,0.02)]">
                         <div className="flex items-center justify-center gap-2 text-xs">
-                          {/* 最左侧：状态变更下拉 */}
                           <select
                             value=""
                             onChange={e => {
@@ -716,7 +739,7 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                               }
                             }}
                             className="px-2 py-0.5 rounded border border-blue-200 text-xs font-medium bg-blue-50/80 hover:bg-blue-100 text-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer transition-colors shadow-2xs"
-                            title="点击变更作业面状态"
+                            title="点击变更状态"
                           >
                             <option value="" disabled hidden>状态变更</option>
                             <option value="作业中" className="text-emerald-600 font-semibold bg-white">作业中</option>
@@ -742,7 +765,7 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                             type="button"
                             onClick={() => handleRequestDelete(wf)}
                             className="text-red-600 hover:text-red-800 font-medium transition-colors cursor-pointer"
-                            title="删除作业面"
+                            title="删除"
                           >
                             删除
                           </button>
@@ -753,8 +776,8 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                 })
               ) : (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-slate-400 text-xs">
-                    没有找到符合条件的作业面记录
+                  <td colSpan={9} className="py-12 text-center text-slate-400 text-xs">
+                    没有找到符合条件的{activeTypeTab === 'workface' ? '作业面' : '有限空间'}记录
                   </td>
                 </tr>
               )}
@@ -814,6 +837,7 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
         onClose={() => setIsFormOpen(false)}
         onSave={handleSaveForm}
         initialData={formInitialData}
+        activeType={activeTypeTab}
       />
 
       {/* 详情页弹窗 */}
