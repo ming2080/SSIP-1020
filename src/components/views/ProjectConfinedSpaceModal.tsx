@@ -14,7 +14,6 @@ import {
   X, 
   Search, 
   Check, 
-  Plus, 
   Trash2, 
   Save, 
   Box, 
@@ -65,10 +64,6 @@ export function ProjectConfinedSpaceModal({
   const [searchTerms, setSearchTerms] = useState<Record<string, string>>({});
   const [activeDropdownWfId, setActiveDropdownWfId] = useState<string | null>(null);
 
-  // 4. 快捷新增舱位状态
-  const [showAddQuick, setShowAddQuick] = useState(false);
-  const [quickWfName, setQuickWfName] = useState('');
-  const [quickWfLayer, setQuickWfLayer] = useState('货舱层');
 
   // 构建精简人员候选库（仅包含：姓名、标签号、所在班组、手机号）
   const personnelPool = useMemo<PersonnelCandidate[]>(() => {
@@ -224,47 +219,23 @@ export function ProjectConfinedSpaceModal({
     setProjectWorkfaces(newWfs);
   };
 
-  // 新增单个舱位
-  const handleAddCustomSpace = () => {
-    if (!quickWfName.trim()) return;
-    const count = projectWorkfaces.length + 1;
-    const prefix = project.shipCode ? project.shipCode.replace('HULL-', '') : 'PRJ';
-    const newWf: WorkfaceRecord = {
-      id: `WF-${project.id}-${Date.now()}`,
-      code: `WF-${prefix}-0${count}`,
-      name: quickWfName.trim(),
-      workfaceType: '有限空间',
-      belongingType: 'project',
-      projectId: project.id,
-      projectName: project.name,
-      shipCode: project.shipCode || '',
-      dockingArea: project.dockingArea || '造船作业面',
-      shipModelLayerName: quickWfLayer,
-      modelLevelName: quickWfLayer,
-      workType: '密闭舱室作业',
-      riskLevel: '重大风险(红)',
-      status: 'active',
-      safetyOfficer: '',
-      safetyOfficerPhone: '',
-      safetyOfficers: [],
-      teamName: '',
-      teamLeader: '',
-      teamLeaderPhone: '',
-      currentPersonnelCount: 0,
-      currentPersonnel: [],
-      boundBaseStations: [],
-      boundGasDetectors: [],
-      boundCameras: [],
-      boundAlarms: [],
-      safetyMeasures: [],
-      description: '',
-      createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
-      updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19)
-    };
+  // 状态归一化解析函数
+  const normalizeSpaceStatus = (status: string): '作业中' | '空闲中' | '禁入中' => {
+    if (status === 'active' || status === '作业中') return '作业中';
+    if (status === 'forbidden' || status === 'restricted' || status === '禁入中' || status === 'paused') return '禁入中';
+    return '空闲中';
+  };
 
-    setProjectWorkfaces(prev => [...prev, newWf]);
-    setQuickWfName('');
-    setShowAddQuick(false);
+  // 修改单个有限空间的状态 (作业中 / 空闲中 / 禁入中)
+  const handleUpdateSpaceStatus = (wfId: string, newStatus: '作业中' | '空闲中' | '禁入中') => {
+    setProjectWorkfaces(prev => prev.map(wf => {
+      if (wf.id !== wfId) return wf;
+      return {
+        ...wf,
+        status: newStatus as any,
+        updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19)
+      };
+    }));
   };
 
   // 删除单个舱位
@@ -405,14 +376,6 @@ export function ProjectConfinedSpaceModal({
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setShowAddQuick(!showAddQuick)}
-              className="px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>新增舱位</span>
-            </button>
             {projectWorkfaces.length === 0 && (
               <button
                 type="button"
@@ -432,46 +395,6 @@ export function ProjectConfinedSpaceModal({
             </button>
           </div>
         </div>
-
-        {/* 快捷新增舱位 */}
-        {showAddQuick && (
-          <div className="px-5 py-2.5 bg-blue-50/40 border-b border-blue-100 flex items-center gap-3 text-xs">
-            <span className="font-semibold text-slate-700">舱位名称:</span>
-            <input
-              type="text"
-              value={quickWfName}
-              onChange={e => setQuickWfName(e.target.value)}
-              placeholder="如：3#压载水舱、双层底滑油舱"
-              className="px-2.5 py-1 text-xs bg-white border border-slate-300 rounded-md w-56 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-            <span className="font-semibold text-slate-700">所在分层:</span>
-            <select
-              value={quickWfLayer}
-              onChange={e => setQuickWfLayer(e.target.value)}
-              className="px-2.5 py-1 text-xs bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="货舱层 (中舱)">货舱层 (中舱)</option>
-              <option value="双层底/底部舱区">双层底/底部舱区</option>
-              <option value="机舱区">机舱区</option>
-              <option value="主甲板层">主甲板层</option>
-              <option value="艏尖舱/艉尖舱">艏尖舱/艉尖舱</option>
-            </select>
-            <button
-              type="button"
-              onClick={handleAddCustomSpace}
-              className="px-3 py-1 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 cursor-pointer"
-            >
-              添加
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowAddQuick(false)}
-              className="px-2.5 py-1 bg-white text-slate-500 border border-slate-200 rounded-md hover:bg-slate-100 cursor-pointer"
-            >
-              取消
-            </button>
-          </div>
-        )}
 
         {/* 主体内容：按分层结构排列的有限空间舱位网络 */}
         <div className="flex-1 overflow-y-auto p-5">
@@ -516,6 +439,13 @@ export function ProjectConfinedSpaceModal({
                         );
                       });
 
+                      const spaceStatus = normalizeSpaceStatus(wf.status as string);
+                      const spaceStatusCls = spaceStatus === '作业中'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                        : spaceStatus === '禁入中'
+                          ? 'bg-rose-50 text-rose-700 border-rose-300'
+                          : 'bg-slate-50 text-slate-700 border-slate-300';
+
                       return (
                         <div 
                           key={wf.id}
@@ -523,15 +453,28 @@ export function ProjectConfinedSpaceModal({
                           onClick={e => e.stopPropagation()}
                         >
                           <div>
-                            {/* 舱位名称与编号（仅保留这两项） */}
+                            {/* 舱位名称、编号、状态变更与删除 */}
                             <div className="flex items-center justify-between gap-1.5 mb-2">
-                              <span className="font-bold text-xs text-slate-900 truncate" title={wf.name}>
-                                {wf.name}
-                              </span>
-                              <div className="flex items-center gap-1 shrink-0">
-                                <span className="font-mono text-[10px] font-semibold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="font-bold text-xs text-slate-900 truncate" title={wf.name}>
+                                  {wf.name}
+                                </span>
+                                <span className="font-mono text-[10px] font-semibold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 shrink-0">
                                   {wf.code}
                                 </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                {/* 状态修改选择器 */}
+                                <select
+                                  value={spaceStatus}
+                                  onChange={e => handleUpdateSpaceStatus(wf.id, e.target.value as '作业中' | '空闲中' | '禁入中')}
+                                  className={`px-1.5 py-0.5 rounded text-[11px] font-semibold border cursor-pointer focus:outline-none transition-colors ${spaceStatusCls}`}
+                                  title="修改有限空间状态"
+                                >
+                                  <option value="作业中" className="text-emerald-700 bg-white font-semibold">作业中</option>
+                                  <option value="空闲中" className="text-slate-700 bg-white font-semibold">空闲中</option>
+                                  <option value="禁入中" className="text-rose-700 bg-white font-semibold">禁入中</option>
+                                </select>
                                 <button
                                   type="button"
                                   onClick={() => handleRemoveSpace(wf.id)}

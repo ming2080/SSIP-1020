@@ -521,20 +521,22 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
               </>
             )}
 
-            {/* 状态筛选 (作业中/空闲中/禁入中) */}
-            <select
-              value={filterStatus}
-              onChange={e => {
-                setFilterStatus(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
-            >
-              <option value="ALL">全部状态</option>
-              <option value="作业中">🟢 作业中</option>
-              <option value="空闲中">🔵 空闲中</option>
-              <option value="禁入中">🔴 禁入中</option>
-            </select>
+            {/* 状态筛选 (作业中/空闲中/禁入中) - 仅作业面标签展示 */}
+            {activeTypeTab === 'workface' && (
+              <select
+                value={filterStatus}
+                onChange={e => {
+                  setFilterStatus(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
+              >
+                <option value="ALL">全部状态</option>
+                <option value="作业中">🟢 作业中</option>
+                <option value="空闲中">🔵 空闲中</option>
+                <option value="禁入中">🔴 禁入中</option>
+              </select>
+            )}
 
             {/* 重置按钮 */}
             <button
@@ -619,7 +621,9 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                 {activeTypeTab === 'workface' && (
                   <th className="py-2.5 px-3 whitespace-nowrap">责任安全员</th>
                 )}
-                <th className="py-2.5 px-3 whitespace-nowrap text-center">状态</th>
+                {activeTypeTab === 'workface' && (
+                  <th className="py-2.5 px-3 whitespace-nowrap text-center">状态</th>
+                )}
                 <th className="py-2.5 px-3 whitespace-nowrap text-center sticky right-0 bg-slate-50/95 shadow-[-4px_0_8px_rgba(0,0,0,0.02)] min-w-[120px]">
                   操作
                 </th>
@@ -720,32 +724,37 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                         </td>
                       )}
 
-                      {/* 状态 */}
-                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium border inline-flex items-center gap-1.5 ${statusObj.cls}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${statusObj.dot}`} />
-                          {statusObj.label}
-                        </span>
-                      </td>
+                      {/* 状态 (仅作业面显示) */}
+                      {activeTypeTab === 'workface' && (
+                        <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium border inline-flex items-center gap-1.5 ${statusObj.cls}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${statusObj.dot}`} />
+                            {statusObj.label}
+                          </span>
+                        </td>
+                      )}
 
                       {/* 操作列 */}
                       <td className="py-2.5 px-3 text-center whitespace-nowrap sticky right-0 bg-white group-hover:bg-slate-50/80 shadow-[-4px_0_8px_rgba(0,0,0,0.02)]">
                         <div className="flex items-center justify-center gap-2 text-xs">
-                          <select
-                            value=""
-                            onChange={e => {
-                              if (e.target.value) {
-                                handleUpdateStatus(wf, e.target.value as '作业中' | '空闲中' | '禁入中');
-                              }
-                            }}
-                            className="px-2 py-0.5 rounded border border-blue-200 text-xs font-medium bg-blue-50/80 hover:bg-blue-100 text-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer transition-colors shadow-2xs"
-                            title="点击变更状态"
-                          >
-                            <option value="" disabled hidden>状态变更</option>
-                            <option value="作业中" className="text-emerald-600 font-semibold bg-white">作业中</option>
-                            <option value="空闲中" className="text-slate-600 font-semibold bg-white">空闲中</option>
-                            <option value="禁入中" className="text-red-600 font-semibold bg-white">禁入中</option>
-                          </select>
+                          {/* 状态变更 (仅作业面标签显示) */}
+                          {activeTypeTab === 'workface' && (
+                            <select
+                              value=""
+                              onChange={e => {
+                                if (e.target.value) {
+                                  handleUpdateStatus(wf, e.target.value as '作业中' | '空闲中' | '禁入中');
+                                }
+                              }}
+                              className="px-2 py-0.5 rounded border border-blue-200 text-xs font-medium bg-blue-50/80 hover:bg-blue-100 text-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer transition-colors shadow-2xs"
+                              title="点击变更状态"
+                            >
+                              <option value="" disabled hidden>状态变更</option>
+                              <option value="作业中" className="text-emerald-600 font-semibold bg-white">作业中</option>
+                              <option value="空闲中" className="text-slate-600 font-semibold bg-white">空闲中</option>
+                              <option value="禁入中" className="text-red-600 font-semibold bg-white">禁入中</option>
+                            </select>
+                          )}
 
                           <button
                             type="button"
@@ -776,7 +785,7 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                 })
               ) : (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400 text-xs">
+                  <td colSpan={activeTypeTab === 'confinedSpace' ? 8 : 9} className="py-12 text-center text-slate-400 text-xs">
                     没有找到符合条件的{activeTypeTab === 'workface' ? '作业面' : '有限空间'}记录
                   </td>
                 </tr>
