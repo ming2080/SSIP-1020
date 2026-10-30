@@ -306,15 +306,15 @@
       .ov-strip{
         grid-area:ov; display:flex; flex-direction:column; align-items:stretch; min-width:0; min-height:0;
         background:linear-gradient(180deg, rgba(6,28,58,.95), rgba(2,15,35,.98));
-        border:1.5px solid rgba(0,210,255,.4); border-radius:var(--r-lg);
-        box-shadow:inset 0 1px 0 rgba(140,220,255,.18), inset 0 0 32px rgba(0,110,190,.16), 0 8px 24px rgba(0,0,0,.45), 0 0 24px rgba(0,180,255,.14);
+        border:1.5px solid rgba(0,210,255,.45); border-radius:var(--r-lg);
+        box-shadow:inset 0 1px 0 rgba(140,220,255,.20), inset 0 0 36px rgba(0,110,190,.20), 0 8px 24px rgba(0,0,0,.45), 0 0 28px rgba(0,180,255,.18);
       }
       .ov-strip .p-head{
-        height:38px; padding:0 18px; border-bottom:1px solid rgba(0,180,240,.20);
-        background:linear-gradient(90deg, rgba(0,140,220,.25), rgba(0,100,180,.08) 45%, transparent 80%);
+        height:40px; padding:0 20px; border-bottom:1px solid rgba(0,180,240,.22);
+        background:linear-gradient(90deg, rgba(0,140,220,.28), rgba(0,100,180,.10) 45%, transparent 80%);
       }
       .ov-live-tag{
-        display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--cyan);
+        display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--cyan);
         font-family:var(--mono); letter-spacing:1px; padding:3px 12px; border-radius:999px;
         background:rgba(0,229,255,.08); border:1px solid rgba(0,229,255,.30);
       }
@@ -325,59 +325,43 @@
       @keyframes pulseDot{ 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:.4; transform:scale(.75); } }
       .ov-metrics{
         display:grid; grid-template-columns:repeat(4, minmax(0, 1fr));
-        gap:14px; padding:12px 18px 14px; min-height:0; min-width:0;
+        gap:16px; padding:16px 20px 18px; min-height:0; min-width:0;
       }
       .ov-metrics .metric{
-        position:relative; display:flex; flex-direction:column; justify-content:space-between;
-        padding:12px 18px 11px; border-radius:var(--r-md);
-        background:linear-gradient(135deg, rgba(7,34,68,.90) 0%, rgba(2,15,35,.96) 100%);
+        position:relative; display:flex; flex-direction:row; align-items:center; justify-content:space-between;
+        padding:18px 22px 16px; border-radius:var(--r-lg); min-height:138px;
+        background:linear-gradient(135deg, rgba(8,38,76,.92) 0%, rgba(2,16,38,.98) 100%);
         border:1.5px solid var(--line-soft);
-        box-shadow:inset 0 1px 0 rgba(140,220,255,.14), inset 0 0 24px rgba(0,90,160,.12), 0 4px 18px rgba(0,0,0,.4);
+        box-shadow:inset 0 1px 0 rgba(140,220,255,.16), inset 0 0 28px rgba(0,90,160,.15), 0 6px 22px rgba(0,0,0,.45);
         transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease;
         overflow:hidden;
       }
       .ov-metrics .metric:hover{ transform:translateY(-2px); }
       .ov-metrics .metric::before{
-        content:""; position:absolute; top:-1px; left:-1px; width:14px; height:14px;
-        border-top:2px solid currentColor; border-left:2px solid currentColor;
-        border-top-left-radius:var(--r-md); opacity:.9; pointer-events:none;
+        content:""; position:absolute; top:-1px; left:-1px; width:16px; height:16px;
+        border-top:2.5px solid currentColor; border-left:2.5px solid currentColor;
+        border-top-left-radius:var(--r-lg); opacity:.9; pointer-events:none;
       }
       .ov-metrics .metric::after{
-        content:""; position:absolute; bottom:-1px; right:-1px; width:14px; height:14px;
-        border-bottom:2px solid currentColor; border-right:2px solid currentColor;
-        border-bottom-right-radius:var(--r-md); opacity:.9; pointer-events:none;
+        content:""; position:absolute; bottom:-1px; right:-1px; width:16px; height:16px;
+        border-bottom:2.5px solid currentColor; border-right:2.5px solid currentColor;
+        border-bottom-right-radius:var(--r-lg); opacity:.9; pointer-events:none;
       }
-      .ov-metrics .metric .m-top{ display:flex; align-items:center; gap:9px; white-space:nowrap; }
+      .ov-metrics .metric .m-left{ display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:10px; min-width:0; }
       .ov-metrics .metric .m-ico{
-        width:34px; height:34px; border-radius:8px; border:1px solid;
+        width:54px; height:54px; border-radius:12px; border:1.5px solid;
         display:flex; align-items:center; justify-content:center; flex:none;
       }
-      .ov-metrics .metric .m-ico svg{ width:19px; height:19px; display:block; }
-      .ov-metrics .metric .m-lab{ font-size:16px; font-weight:700; color:#f0f8ff; letter-spacing:1px; }
-      .ov-metrics .metric .m-tag{
-        margin-left:auto; font-size:11.5px; font-weight:700; letter-spacing:1px;
-        padding:2.5px 8px; border-radius:4px; border:1px solid; white-space:nowrap;
-      }
-      .ov-metrics .metric .m-main{
-        display:flex; align-items:baseline; justify-content:space-between; margin-top:8px; gap:8px;
-      }
+      .ov-metrics .metric .m-ico svg{ width:30px; height:30px; display:block; }
+      .ov-metrics .metric .m-lab{ font-size:17.5px; font-weight:700; color:#f0f8ff; letter-spacing:1px; white-space:nowrap; }
+      .ov-metrics .metric .m-right{ display:flex; align-items:center; justify-content:flex-end; margin-left:auto; text-align:right; }
       .ov-metrics .metric .num{
         font-family:var(--mono); font-variant-numeric:tabular-nums;
-        font-size:52px; font-weight:800; line-height:1; letter-spacing:1px;
+        font-size:64px; font-weight:800; line-height:1; letter-spacing:1px;
       }
       .ov-metrics .metric .tot{
-        font-size:19px; color:#a2c8ea; font-weight:600; margin-left:6px;
+        font-size:22px; color:#a2c8ea; font-weight:700; margin-left:8px;
         font-family:var(--font); letter-spacing:0;
-      }
-      .ov-metrics .metric .m-sub{
-        font-size:13px; color:#8cb2d3; font-family:var(--font); letter-spacing:.5px; white-space:nowrap;
-      }
-      .ov-metrics .metric .m-progress{
-        margin-top:9px; height:4px; border-radius:2px; background:rgba(0,100,160,.25);
-        overflow:hidden; position:relative;
-      }
-      .ov-metrics .metric .m-bar{
-        display:block; height:100%; border-radius:2px; transition:width .45s ease;
       }
 
       /* Metric 4 Theme Palettes */
@@ -386,18 +370,14 @@
         box-shadow:inset 0 1px 0 rgba(140,220,255,.18), 0 0 22px rgba(0,229,255,.18), inset 0 0 26px rgba(0,229,255,.08);
       }
       .ov-metrics .metric.c .num{ color:#00e5ff; text-shadow:0 0 18px rgba(0,229,255,.75); }
-      .ov-metrics .metric.c .m-ico{ color:#00e5ff; background:rgba(0,229,255,.14); border-color:rgba(0,229,255,.5); box-shadow:0 0 10px rgba(0,229,255,.3); }
-      .ov-metrics .metric.c .m-tag{ color:#00e5ff; background:rgba(0,229,255,.12); border-color:rgba(0,229,255,.4); }
-      .ov-metrics .metric.c .m-bar{ background:linear-gradient(90deg, #0099ff, #00e5ff); box-shadow:0 0 8px #00e5ff; }
+      .ov-metrics .metric.c .m-ico{ color:#00e5ff; background:rgba(0,229,255,.14); border-color:rgba(0,229,255,.5); box-shadow:0 0 12px rgba(0,229,255,.35); }
 
       .ov-metrics .metric.o{
         border-color:rgba(255,136,0,.65); color:#ff9100;
         box-shadow:inset 0 1px 0 rgba(255,190,140,.18), 0 0 24px rgba(255,136,0,.22), inset 0 0 26px rgba(255,136,0,.10);
       }
       .ov-metrics .metric.o .num{ color:#ff9100; text-shadow:0 0 20px rgba(255,145,0,.85); }
-      .ov-metrics .metric.o .m-ico{ color:#ff9922; background:rgba(255,136,0,.15); border-color:rgba(255,150,30,.6); box-shadow:0 0 12px rgba(255,136,0,.35); }
-      .ov-metrics .metric.o .m-tag{ color:#ffab3d; background:rgba(255,136,0,.14); border-color:rgba(255,150,30,.5); }
-      .ov-metrics .metric.o .m-bar{ background:linear-gradient(90deg, #ff4400, #ffaa00); box-shadow:0 0 10px #ff8800; }
+      .ov-metrics .metric.o .m-ico{ color:#ff9922; background:rgba(255,136,0,.15); border-color:rgba(255,150,30,.6); box-shadow:0 0 14px rgba(255,136,0,.4); }
       .ov-metrics .metric.o.dense-active{ animation:denseBreathe 2s ease-in-out infinite; }
       @keyframes denseBreathe{ 0%,100%{ box-shadow:inset 0 1px 0 rgba(255,190,140,.18), 0 0 18px rgba(255,136,0,.2), inset 0 0 26px rgba(255,136,0,.08); } 50%{ box-shadow:inset 0 1px 0 rgba(255,220,160,.25), 0 0 32px rgba(255,136,0,.45), inset 0 0 34px rgba(255,136,0,.18); } }
 
@@ -406,18 +386,14 @@
         box-shadow:inset 0 1px 0 rgba(140,200,255,.18), 0 0 22px rgba(61,155,255,.18), inset 0 0 26px rgba(61,155,255,.08);
       }
       .ov-metrics .metric.b .num{ color:#4da6ff; text-shadow:0 0 18px rgba(61,155,255,.75); }
-      .ov-metrics .metric.b .m-ico{ color:#4da6ff; background:rgba(61,155,255,.14); border-color:rgba(61,155,255,.5); box-shadow:0 0 10px rgba(61,155,255,.3); }
-      .ov-metrics .metric.b .m-tag{ color:#7bb8ff; background:rgba(61,155,255,.12); border-color:rgba(61,155,255,.4); }
-      .ov-metrics .metric.b .m-bar{ background:linear-gradient(90deg, #1d4ed8, #3b82f6); box-shadow:0 0 8px #3b82f6; }
+      .ov-metrics .metric.b .m-ico{ color:#4da6ff; background:rgba(61,155,255,.14); border-color:rgba(61,155,255,.5); box-shadow:0 0 12px rgba(61,155,255,.35); }
 
       .ov-metrics .metric.g{
         border-color:rgba(31,224,138,.6); color:#1fe08a;
         box-shadow:inset 0 1px 0 rgba(140,255,200,.18), 0 0 22px rgba(31,224,138,.18), inset 0 0 26px rgba(31,224,138,.08);
       }
       .ov-metrics .metric.g .num{ color:#1fe08a; text-shadow:0 0 18px rgba(31,224,138,.75); }
-      .ov-metrics .metric.g .m-ico{ color:#1fe08a; background:rgba(31,224,138,.14); border-color:rgba(31,224,138,.5); box-shadow:0 0 10px rgba(31,224,138,.3); }
-      .ov-metrics .metric.g .m-tag{ color:#5fffc0; background:rgba(31,224,138,.12); border-color:rgba(31,224,138,.4); }
-      .ov-metrics .metric.g .m-bar{ background:linear-gradient(90deg, #059669, #10b981); box-shadow:0 0 8px #10b981; }
+      .ov-metrics .metric.g .m-ico{ color:#1fe08a; background:rgba(31,224,138,.14); border-color:rgba(31,224,138,.5); box-shadow:0 0 12px rgba(31,224,138,.35); }
 
       /* ---------- right: crew statistics ---------- */
       .head-stat{ font-size:12px; color:var(--muted); letter-spacing:1px; white-space:nowrap; }
@@ -521,73 +497,38 @@
         box-shadow:inset 0 1px 0 rgba(140,220,255,.14), inset 0 0 28px rgba(0,90,160,.12), 0 6px 24px rgba(0,0,0,.45);
         animation:fadeIn .25s ease-out;
       }
-      .cc-topbar{
-        display:flex; align-items:center; gap:10px; padding:9px 14px;
-        background:linear-gradient(90deg, rgba(0,140,220,.22), rgba(0,90,160,.06) 65%, transparent);
-        border-bottom:1px solid rgba(0,180,240,.22);
-      }
-      .cc-search-box{ position:relative; width:220px; }
-      .cc-search-box input{
-        width:100%; height:32px; padding:0 10px 0 32px; font-size:12px;
-        background:rgba(4,22,46,.85); border:1px solid var(--line); border-radius:var(--r-sm);
-        color:#eaf8ff; outline:none; font-family:var(--font);
-        transition:border-color .2s, box-shadow .2s;
-      }
-      .cc-search-box input:focus{ border-color:var(--cyan); box-shadow:0 0 12px rgba(0,229,255,.3); }
-      .cc-search-ico{
-        position:absolute; left:9px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:var(--muted); pointer-events:none;
-      }
-      .cc-select{
-        height:32px; padding:0 8px; font-size:12px; background:rgba(4,22,46,.88);
-        border:1px solid var(--line); border-radius:var(--r-sm); color:#d9f1ff; outline:none; cursor:pointer;
-      }
-      .cc-select:focus{ border-color:var(--cyan); }
-      .cc-actions{ margin-left:auto; display:flex; align-items:center; gap:8px; }
-      .cc-btn{
-        height:30px; padding:0 11px; font-size:12px; font-weight:600; border-radius:var(--r-sm);
-        background:rgba(0,180,255,.12); border:1px solid rgba(0,220,255,.35); color:var(--cyan);
-        display:inline-flex; align-items:center; gap:5px; cursor:pointer; transition:all .2s;
-      }
-      .cc-btn:hover{ background:rgba(0,200,255,.25); color:#fff; border-color:var(--cyan); box-shadow:0 0 12px rgba(0,229,255,.3); }
-      .cc-stat-chip{
-        font-size:12px; font-weight:600; padding:4px 11px; border-radius:var(--r-sm);
-        background:rgba(0,229,255,.12); border:1px solid rgba(0,229,255,.4); color:var(--cyan);
-        display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
-      }
-      .cc-stat-chip b{ font-family:var(--mono); font-size:14px; color:#fff; text-shadow:0 0 10px var(--cyan); }
       .cc-table-wrap{
         flex:1; overflow-y:auto; overflow-x:hidden; min-height:0;
         scrollbar-width:thin; scrollbar-color:rgba(0,180,255,.4) rgba(0,30,60,.2);
       }
       .cc-table-wrap::-webkit-scrollbar{ width:6px; }
       .cc-table-wrap::-webkit-scrollbar-thumb{ background:rgba(0,180,255,.4); border-radius:3px; }
-      .cc-table{ width:100%; border-collapse:collapse; font-size:12.5px; text-align:left; }
+      .cc-table{ width:100%; border-collapse:collapse; font-size:15px; text-align:left; }
       .cc-table th{
-        position:sticky; top:0; z-index:2; padding:9px 12px; font-size:11.5px; font-weight:700;
+        position:sticky; top:0; z-index:2; padding:12px 14px; font-size:14.5px; font-weight:700;
         letter-spacing:1px; color:var(--cyan); background:#062348; border-bottom:1px solid rgba(0,200,255,.3);
         white-space:nowrap;
       }
       .cc-table td{
-        padding:8px 12px; border-bottom:1px solid rgba(0,170,230,.10); color:#cfe9f7; white-space:nowrap; vertical-align:middle;
+        padding:11px 14px; border-bottom:1px solid rgba(0,170,230,.12); color:#cfe9f7; white-space:nowrap; vertical-align:middle; font-size:14.5px;
       }
-      .cc-table tr:hover td{ background:rgba(0,130,220,.12); }
-      .cc-table td.col-id{ font-family:var(--mono); font-weight:600; color:#8fe9ff; }
-      .cc-table td.col-name{ font-weight:700; color:#ffffff; }
-      .cc-table td.col-tag{ font-family:var(--mono); color:#a0e0ff; }
-      .cc-table td.col-loc{ color:#e0f2fe; font-weight:600; }
-      .cc-table td.col-exciter{ font-size:11.5px; color:#38bdf8; }
-      .cc-table td.col-time{ font-family:var(--mono); color:var(--muted); }
-      .cc-table td.col-stay{ font-family:var(--mono); font-weight:700; color:#e0f2fe; }
-      .cc-table tr.intrude-row td{ background:rgba(255,59,92,.18) !important; color:#ffb0be !important; border-bottom-color:rgba(255,59,92,.3) !important; }
-      .cc-table tr.intrude-row td.col-name{ color:#fff !important; text-shadow:0 0 10px rgba(255,59,92,.9); }
-      .cc-table tr.timeout-row td.col-stay{ color:#ffb020 !important; text-shadow:0 0 8px rgba(255,176,32,.7); }
+      .cc-table tr:hover td{ background:rgba(0,130,220,.14); }
+      .cc-table td.col-id{ font-family:var(--mono); font-weight:700; color:#8fe9ff; font-size:15.5px; }
+      .cc-table td.col-name{ font-weight:800; color:#ffffff; font-size:16px; }
+      .cc-table td.col-tag{ font-family:var(--mono); color:#a0e0ff; font-size:14.5px; }
+      .cc-table td.col-loc{ color:#e0f2fe; font-weight:700; font-size:15px; }
+      .cc-table td.col-time{ font-family:var(--mono); color:var(--muted); font-size:14px; }
+      .cc-table td.col-stay{ font-family:var(--mono); font-weight:700; color:#e0f2fe; font-size:15px; }
+      .cc-table tr.intrude-row td{ background:rgba(255,59,92,.22) !important; color:#ffb0be !important; border-bottom-color:rgba(255,59,92,.35) !important; }
+      .cc-table tr.intrude-row td.col-name{ color:#fff !important; text-shadow:0 0 12px rgba(255,59,92,.9); }
+      .cc-table tr.timeout-row td.col-stay{ color:#ffb020 !important; text-shadow:0 0 10px rgba(255,176,32,.8); }
       .cc-pill{
-        display:inline-flex; align-items:center; gap:4px; padding:2px 7px; border-radius:4px; font-size:11px; font-weight:700; white-space:nowrap;
+        display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:6px; font-size:13.5px; font-weight:700; white-space:nowrap;
       }
-      .cc-pill.work{ background:rgba(31,224,138,.16); border:1px solid rgba(31,224,138,.55); color:#22ea91; }
-      .cc-pill.timeout{ background:rgba(255,176,32,.2); border:1px solid rgba(255,176,32,.65); color:#ffb020; }
-      .cc-pill.intrude{ background:rgba(255,59,92,.25); border:1px solid rgba(255,59,92,.75); color:#ff5c74; animation:badgeBreathe 1.5s ease-in-out infinite; }
-      .cc-empty{ padding:40px 10px; text-align:center; color:var(--muted); font-size:13.5px; }
+      .cc-pill.work{ background:rgba(31,224,138,.18); border:1px solid rgba(31,224,138,.6); color:#22ea91; }
+      .cc-pill.timeout{ background:rgba(255,176,32,.22); border:1px solid rgba(255,176,32,.7); color:#ffb020; }
+      .cc-pill.intrude{ background:rgba(255,59,92,.28); border:1px solid rgba(255,59,92,.8); color:#ff5c74; animation:badgeBreathe 1.5s ease-in-out infinite; }
+      .cc-empty{ padding:50px 10px; text-align:center; color:var(--muted); font-size:15px; }
 
       @media (prefers-reduced-motion: reduce){
         *{ animation-duration:.01s !important; animation-iteration-count:1 !important; }
@@ -644,52 +585,40 @@
           </div>
           <div class="ov-metrics">
             <div class="metric c" id="ovBox1">
-              <div class="m-top">
+              <div class="m-left">
                 <span class="m-ico" id="ovIco1"></span>
                 <span class="m-lab" id="ovLab1">当前船上总人数</span>
-                <span class="m-tag" id="ovTag1">全船受控</span>
               </div>
-              <div class="m-main">
+              <div class="m-right">
                 <div class="num"><span id="ovNum1">0</span><span class="tot" id="ovTot1"> 人</span></div>
-                <div class="m-sub" id="ovSub1">在岗作业总人数</div>
               </div>
-              <div class="m-progress"><span class="m-bar" id="ovBar1" style="width:100%"></span></div>
             </div>
-            <div class="metric o" id="ovBox2" style="cursor:pointer;" title="点击切换至空间视图【船舱人员】标签查看完整在舱名单">
-              <div class="m-top">
+            <div class="metric o" id="ovBox2" style="cursor:pointer;" title="点击切换至空间视图【船舱区域】标签查看完整在舱名单">
+              <div class="m-left">
                 <span class="m-ico" id="ovIco2"></span>
                 <span class="m-lab" id="ovLab2">舱内密集人员数</span>
-                <span class="m-tag" id="ovTag2">进出规则统计</span>
               </div>
-              <div class="m-main">
+              <div class="m-right">
                 <div class="num"><span id="ovNum2">0</span><span class="tot" id="ovTot2"> 人</span></div>
-                <div class="m-sub" id="ovSub2">船舱进出规则受控在舱</div>
               </div>
-              <div class="m-progress"><span class="m-bar" id="ovBar2" style="width:65%"></span></div>
             </div>
             <div class="metric b" id="ovBox3">
-              <div class="m-top">
+              <div class="m-left">
                 <span class="m-ico" id="ovIco3"></span>
                 <span class="m-lab" id="ovLab3">有限空间总人数</span>
-                <span class="m-tag" id="ovTag3">密闭舱室作业</span>
               </div>
-              <div class="m-main">
+              <div class="m-right">
                 <div class="num"><span id="ovNum3">0</span><span class="tot" id="ovTot3"> 人</span></div>
-                <div class="m-sub" id="ovSub3">在舱受控人员</div>
               </div>
-              <div class="m-progress"><span class="m-bar" id="ovBar3" style="width:80%"></span></div>
             </div>
             <div class="metric g" id="ovBox4">
-              <div class="m-top">
+              <div class="m-left">
                 <span class="m-ico" id="ovIco4"></span>
                 <span class="m-lab" id="ovLab4">今日有限空间进舱数/总数</span>
-                <span class="m-tag" id="ovTag4">舱位覆盖率</span>
               </div>
-              <div class="m-main">
+              <div class="m-right">
                 <div class="num"><span id="ovNum4">0</span><span class="tot" id="ovTot4"> / 16 舱</span></div>
-                <div class="m-sub" id="ovSub4">作业舱位覆盖率</div>
               </div>
-              <div class="m-progress"><span class="m-bar" id="ovBar4" style="width:50%"></span></div>
             </div>
           </div>
         </section>
@@ -710,8 +639,8 @@
             <div class="view-label"><span class="tick"></span>空间视图</div>
             <div class="mode-tabs" role="tablist">
               <button type="button" id="tabConfined" class="active">有限空间</button>
+              <button type="button" id="tabCabinCrew">船舱区域</button>
               <button type="button" id="tabWorkface">作业面</button>
-              <button type="button" id="tabCabinCrew">船舱人员</button>
             </div>
             <div class="cur-name" id="curProjName">—</div>
           </section>
@@ -1560,9 +1489,9 @@
           var entryD = new Date(c.entryTs);
           var entryTimeStr = pad(entryD.getHours()) + ":" + pad(entryD.getMinutes()) + ":" + pad(entryD.getSeconds());
           
-          var status = "在舱作业中";
+          var status = "正常作业";
           if(s.forbid === "intrude"){
-            status = "非法闯入";
+            status = "异常闯入";
           } else if(stayMins > 120){
             status = "停留超时";
           }
@@ -1600,65 +1529,18 @@
       if(!ccPanel) return;
       var allList = getCabinPersonnelList();
 
-      var cabinNames = [];
-      var seenLocs = {};
-      allList.forEach(function(item){
-        if(item.location && !seenLocs[item.location]){
-          seenLocs[item.location] = true;
-          cabinNames.push(item.location);
-        }
-      });
-
-      var filtered = allList.filter(function(item){
-        if(ccFilterCabin !== "ALL" && item.location !== ccFilterCabin) return false;
-        if(ccFilterStatus !== "ALL" && item.status !== ccFilterStatus) return false;
-        if(ccFilterKeyword.trim()){
-          var kw = ccFilterKeyword.trim().toLowerCase();
-          var matchId = item.workerId.toLowerCase().indexOf(kw) !== -1;
-          var matchName = item.name.toLowerCase().indexOf(kw) !== -1;
-          var matchTeam = item.team.toLowerCase().indexOf(kw) !== -1;
-          var matchTag = item.tagCode.toLowerCase().indexOf(kw) !== -1;
-          var matchLoc = item.location.toLowerCase().indexOf(kw) !== -1;
-          var matchTrade = item.trade ? item.trade.toLowerCase().indexOf(kw) !== -1 : false;
-          if(!matchId && !matchName && !matchTeam && !matchTag && !matchLoc && !matchTrade) return false;
-        }
-        return true;
-      });
-
-      var cabinOpts = '<option value="ALL">全部船舱位置</option>' + cabinNames.map(function(loc){
-        return '<option value="' + loc + '"' + (ccFilterCabin === loc ? ' selected' : '') + '>' + loc + '</option>';
-      }).join("");
-
-      var html = '<div class="cc-topbar">'
-        + '<div class="cc-search-box">'
-        + '<svg class="cc-search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>'
-        + '<input type="text" id="ccSearchInput" placeholder="搜索工号/姓名/标签/工种..." value="' + ccFilterKeyword + '">'
-        + '</div>'
-        + '<select class="cc-select" id="ccCabinSelect">' + cabinOpts + '</select>'
-        + '<select class="cc-select" id="ccStatusSelect">'
-        + '<option value="ALL"' + (ccFilterStatus === "ALL" ? ' selected' : '') + '>全部在舱状态</option>'
-        + '<option value="在舱作业中"' + (ccFilterStatus === "在舱作业中" ? ' selected' : '') + '>在舱作业中</option>'
-        + '<option value="停留超时"' + (ccFilterStatus === "停留超时" ? ' selected' : '') + '>停留超时</option>'
-        + '<option value="非法闯入"' + (ccFilterStatus === "非法闯入" ? ' selected' : '') + '>非法闯入</option>'
-        + '</select>'
-        + '<div class="cc-actions">'
-        + '<div class="cc-stat-chip">进出规则统计在舱: <b id="ccTotalNum">' + allList.length + '</b> 人</div>'
-        + '<button type="button" class="cc-btn" id="ccExportBtn" title="导出当前船舱人员花名册"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>导出名单</button>'
-        + '<button type="button" class="cc-btn" id="ccRefreshBtn" title="刷新船舱人员数据"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>刷新</button>'
-        + '</div>'
-        + '</div>'
-        + '<div class="cc-table-wrap">'
+      var html = '<div class="cc-table-wrap">'
         + '<table class="cc-table">'
         + '<thead><tr>'
-        + '<th>工号</th><th>姓名</th><th>工种</th><th>班组</th><th>标签编号</th><th>所在位置</th><th>进舱规则/关联激励器</th><th>进入时间</th><th>停留时间</th><th>在舱状态</th>'
+        + '<th>工号</th><th>姓名</th><th>工种</th><th>班组</th><th>标签编号</th><th>所在位置</th><th>进入时间</th><th>停留时间</th><th>状态</th>'
         + '</tr></thead>'
         + '<tbody>';
 
-      if(filtered.length === 0){
-        html += '<tr><td colspan="10" class="cc-empty">未查询到符合条件的在舱人员</td></tr>';
+      if(allList.length === 0){
+        html += '<tr><td colspan="9" class="cc-empty">暂无在舱人员数据</td></tr>';
       } else {
-        filtered.forEach(function(p){
-          var isIntrude = p.status === "非法闯入";
+        allList.forEach(function(p){
+          var isIntrude = p.status === "异常闯入" || p.status === "非法闯入";
           var isTimeout = p.status === "停留超时";
           var rowCls = isIntrude ? ' class="intrude-row"' : (isTimeout ? ' class="timeout-row"' : '');
           var pillCls = isIntrude ? 'intrude' : (isTimeout ? 'timeout' : 'work');
@@ -1671,7 +1553,6 @@
             + '<td>' + p.team + '</td>'
             + '<td class="col-tag">' + p.tagCode + '</td>'
             + '<td class="col-loc">' + p.location + '</td>'
-            + '<td class="col-exciter">' + (p.triggeredExciterName || (p.triggeredExciterCode + ' 进舱激励器')) + '</td>'
             + '<td class="col-time">' + p.entryTime + '</td>'
             + '<td class="col-stay">' + p.duration + '</td>'
             + '<td><span class="cc-pill ' + pillCls + '">' + pillIcon + p.status + '</span></td>'
@@ -1681,44 +1562,6 @@
 
       html += '</tbody></table></div>';
       ccPanel.innerHTML = html;
-
-      // 绑定输入与下拉事件
-      var inputEl = document.getElementById("ccSearchInput");
-      if(inputEl){
-        inputEl.addEventListener("input", function(e){
-          ccFilterKeyword = e.target.value;
-          renderCabinCrewPanel();
-          var ni = document.getElementById("ccSearchInput");
-          if(ni){ ni.focus(); ni.selectionStart = ni.selectionEnd = ni.value.length; }
-        });
-      }
-      var cabinSel = document.getElementById("ccCabinSelect");
-      if(cabinSel){
-        cabinSel.addEventListener("change", function(e){
-          ccFilterCabin = e.target.value;
-          renderCabinCrewPanel();
-        });
-      }
-      var statusSel = document.getElementById("ccStatusSelect");
-      if(statusSel){
-        statusSel.addEventListener("change", function(e){
-          ccFilterStatus = e.target.value;
-          renderCabinCrewPanel();
-        });
-      }
-      var refreshBtn = document.getElementById("ccRefreshBtn");
-      if(refreshBtn){
-        refreshBtn.addEventListener("click", function(){
-          renderCabinCrewPanel();
-          toast("船舱进出人员物联感知数据已刷新");
-        });
-      }
-      var exportBtn = document.getElementById("ccExportBtn");
-      if(exportBtn){
-        exportBtn.addEventListener("click", function(){
-          exportCabinCrewCSV(filtered);
-        });
-      }
     }
 
     function exportCabinCrewCSV(list){
