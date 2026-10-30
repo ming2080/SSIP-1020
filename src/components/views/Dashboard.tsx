@@ -1502,9 +1502,10 @@ const YARD_SPATIAL_WORKERS: YardWorkerPoint[] = [
   { id: 'W-01', name: '李强', role: '起重指挥', area: '龙门吊作业区', top: '19%', left: '12.5%', status: '在岗', avatarBg: 'bg-emerald-500', personId: 'EMP-003' },
   { id: 'W-02', name: '王伟', role: '龙门吊司机', area: '龙门吊作业区', top: '16.5%', left: '23%', status: '在岗', avatarBg: 'bg-blue-600', personId: 'EMP-001' },
   { id: 'W-03', name: '张三', role: '合拢焊工', area: '龙门吊作业区', top: '16.5%', left: '33%', status: '在岗', avatarBg: 'bg-cyan-600', personId: 'EMP-001' },
-  // 龙门吊同一位置重叠聚焦人员
+  // 龙门吊同一位置重叠聚焦人员 (聚焦 3 人)
   { id: 'W-04A', name: '赵六', role: '装配钳工', area: '龙门吊作业区', top: '38.5%', left: '31%', status: '在岗', avatarBg: 'bg-amber-500', personId: 'EMP-006' },
   { id: 'W-04B', name: '刘洋', role: '电焊工', area: '龙门吊作业区', top: '38.5%', left: '31%', status: '在岗', avatarBg: 'bg-indigo-600', personId: 'EMP-001' },
+  { id: 'W-04C', name: '王鹏', role: '起重辅助工', area: '龙门吊作业区', top: '38.5%', left: '31%', status: '在岗', avatarBg: 'bg-teal-600', personId: 'EMP-003' },
   { id: 'W-05', name: '孙敏', role: '探伤工程师', area: '龙门吊作业区', top: '30.5%', left: '23%', status: '在岗', avatarBg: 'bg-teal-600', personId: 'EMP-002' },
 
   // 2. 钢材与预处理厂区人员点位
@@ -2801,7 +2802,7 @@ export function Dashboard({ onExit, onNavigate, initialProjectId, initialViewSco
         {showPersonnelLayer && (
           <div className="absolute inset-0 pointer-events-none transition-opacity duration-500 opacity-100">
             {viewScope === 'yard' ? (
-              // 厂区人员点位：根据坐标分组，若同一位置有重叠人员，头像层叠显示（不合并成数字点）
+              // 厂区人员点位：根据坐标分组，若出现人员聚焦，点位椭圆带出尖图标上显示聚焦人数
               (() => {
                 const groupedMap = new Map<string, YardWorkerPoint[]>();
                 YARD_SPATIAL_WORKERS.forEach(w => {
@@ -2819,12 +2820,12 @@ export function Dashboard({ onExit, onNavigate, initialProjectId, initialViewSco
                   return (
                     <div 
                       key={key}
-                      className="absolute pointer-events-auto z-20 group cursor-pointer -translate-x-1/2 -translate-y-1/2 p-2"
+                      className="absolute pointer-events-auto z-20 group/marker cursor-pointer -translate-x-1/2 -translate-y-full flex flex-col items-center"
                       style={{ top: firstWorker.top, left: firstWorker.left }}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (isClustered) {
-                          // 点击重叠聚合点：弹出重叠人员列表
+                          // 点击人员聚焦聚合点：弹出聚焦人员列表
                           setSelectedWorkerDetail(null);
                           setSelectedWorkerCluster(prev => (prev?.top === firstWorker.top && prev?.left === firstWorker.left) ? null : {
                             area: firstWorker.area,
@@ -2856,45 +2857,71 @@ export function Dashboard({ onExit, onNavigate, initialProjectId, initialViewSco
                         }
                       }}
                     >
-                      {/* 头像显示：重叠显示多个头像（不合并成单一数字点） */}
-                      {isClustered ? (
+                      {/* 🎯 定位人员图标：点位椭圆带出尖设计 (聚焦显示聚焦人数，单人显示人员图标) */}
+                      <div className="relative flex flex-col items-center transition-all duration-300 group-hover/marker:scale-125 select-none">
+                        {/* 椭圆主体 */}
                         <div 
-                          className="flex items-center -space-x-2.5 hover:scale-120 transition-transform cursor-pointer"
-                          title={`此工位聚焦 ${workers.length} 位作业人员，点击查看人员列表`}
+                          className={`flex items-center justify-center border-2 border-white transition-all shadow-[0_2px_8px_rgba(0,0,0,0.4)] ${
+                            isClustered
+                              ? 'min-w-[34px] px-2 h-[25px] rounded-full bg-gradient-to-b from-[#00f0ff] via-[#0099ff] to-[#0055d4] text-white shadow-[0_0_14px_rgba(0,210,255,0.85)]'
+                              : firstWorker.status === '告警'
+                                ? 'w-7 h-[25px] rounded-full bg-gradient-to-b from-[#ff5252] via-[#e53935] to-[#b71c1c] text-white shadow-[0_0_14px_rgba(255,23,68,0.85)] animate-pulse'
+                                : 'w-7 h-[25px] rounded-full bg-gradient-to-b from-[#00e676] via-[#00c853] to-[#007e33] text-white shadow-[0_0_12px_rgba(0,230,118,0.85)]'
+                          }`}
                         >
-                          {workers.slice(0, 3).map((w, idx) => (
-                            <div 
-                              key={w.id}
-                              style={{ zIndex: 10 - idx }}
-                              className={`w-6 h-6 rounded-full border-2 border-white text-[10px] font-bold text-white flex items-center justify-center shadow-[0_0_10px_rgba(0,0,0,0.5)] ${
-                                w.avatarBg || (idx % 2 === 0 ? 'bg-emerald-500' : 'bg-blue-600')
-                              }`}
-                            >
-                              {w.name.slice(0, 1)}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div 
-                          className="w-6 h-6 rounded-full bg-[#00e676] border-2 border-white shadow-[0_0_12px_#00e676] flex items-center justify-center hover:scale-130 transition-transform cursor-pointer text-[#061833] font-bold text-[10px]"
-                          title={`点击查看人员定位信息: ${firstWorker.name} (${firstWorker.role}) - ${firstWorker.area}`}
-                        >
-                          <User className="w-3.5 h-3.5 text-[#061833]" />
-                        </div>
-                      )}
-                      
-                      {/* 人员悬浮快速标签 */}
-                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-30">
-                        <div className="bg-[#061833]/95 border border-[#00e676] text-[10px] text-white px-2 py-0.5 rounded shadow-lg whitespace-nowrap flex items-center gap-1">
                           {isClustered ? (
-                            <span className="text-[#00e676] font-bold">
-                              {workers.map(w => w.name).join(', ')} ({workers.length}人同位作业)
-                            </span>
+                            /* 聚焦情况显示聚焦的人数 */
+                            <div className="flex items-center gap-0.5 leading-none">
+                              <Users className="w-3 h-3 text-white shrink-0 mr-0.5" />
+                              <span className="font-mono text-xs font-black text-white tracking-tight">{workers.length}</span>
+                            </div>
                           ) : (
-                            <>
+                            <User className="w-3.5 h-3.5 text-white" />
+                          )}
+                        </div>
+
+                        {/* 椭圆底部出尖设计 (倒三角平滑尖端向下指向地面坐标) */}
+                        <div 
+                          className={`w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] -mt-[1px] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] ${
+                            isClustered
+                              ? 'border-t-[#0055d4]'
+                              : firstWorker.status === '告警'
+                                ? 'border-t-[#b71c1c]'
+                                : 'border-t-[#007e33]'
+                          }`}
+                        />
+
+                        {/* 地面微光波纹/投影光斑 */}
+                        <div className="relative -mt-[1px] flex items-center justify-center">
+                          <div 
+                            className={`w-2.5 h-1 rounded-full blur-[0.5px] ${
+                              isClustered 
+                                ? 'bg-[#00f0ff]/80 shadow-[0_0_8px_#00f0ff]' 
+                                : firstWorker.status === '告警'
+                                  ? 'bg-[#ff1744]/80 shadow-[0_0_8px_#ff1744]'
+                                  : 'bg-[#00e676]/80 shadow-[0_0_8px_#00e676]'
+                            }`} 
+                          />
+                          {isClustered && (
+                            <div className="absolute w-4 h-1.5 rounded-full border border-[#00f0ff]/70 animate-ping opacity-60" />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 人员悬浮快速标签 */}
+                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover/marker:opacity-100 pointer-events-none transition-all duration-200 z-50">
+                        <div className="bg-[#061833]/95 border border-[#00d2ff] text-[10px] text-white px-2.5 py-1 rounded-lg shadow-xl whitespace-nowrap flex items-center gap-1.5 backdrop-blur-md">
+                          {isClustered ? (
+                            <div className="flex items-center gap-1 font-medium">
+                              <span className="text-[#00e5ff] font-bold">人员聚焦 {workers.length} 人：</span>
+                              <span className="text-white">{workers.map(w => w.name).join('、')}</span>
+                              <span className="text-cyan-300/80">({firstWorker.area})</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 font-medium">
                               <span className="text-[#00e676] font-bold">{firstWorker.name}</span>
-                              <span className="text-[#8ab4f8]">({firstWorker.role})</span>
-                            </>
+                              <span className="text-[#8ab4f8]">({firstWorker.role} · {firstWorker.area})</span>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -2903,61 +2930,134 @@ export function Dashboard({ onExit, onNavigate, initialProjectId, initialViewSco
                 });
               })()
             ) : (
-              currentProject.markers.map((marker) => (
-                <div 
-                  key={marker.id}
-                  className="absolute pointer-events-auto z-20 cursor-pointer -translate-x-1/2 -translate-y-1/2 p-2"
-                  style={{ top: marker.top, left: marker.left }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (marker.type === 'alarm') {
-                      setActiveAlarmModalData({
-                        id: `ALERT-${marker.id}`,
-                        time: formatDate(currentTime).split(' ')[1],
-                        name: marker.name,
-                        workerId: marker.id,
-                        role: marker.role,
-                        reason: `${marker.role}作业面未佩戴防护且触及禁入警戒线`,
-                        location: `${currentProject.name} - ${marker.role}作业区`,
-                        projectName: currentProject.name,
-                        dangerLevel: 'high',
-                        gasReading: '氧气 18.2% (偏低警告) | 可燃气 0%LEL',
-                        deviceLinked: 'LNG-GAS-01 气体检测仪 & 龙门吊防碰声光报警器',
-                        status: 'pending'
-                      });
-                    }
-                    setSelectedWorkerDetail(prev => prev?.id === marker.id ? null : {
-                      id: marker.id,
-                      name: marker.name,
-                      role: marker.role,
-                      status: marker.type,
-                      location: `${currentProject.name} - ${marker.role}作业面`,
-                      projectName: currentProject.name,
-                      time: formatDate(currentTime),
-                      battery: marker.type === 'offline' ? '12% (低电)' : '88%',
-                      signalPower: '-68 dBm (良好)',
-                      phone: '139-8765-4321',
-                      company: `${currentProject.shipType}建造工程部`,
-                      wearables: ['防爆定位手环', '气密作业感知徽章'],
-                      top: marker.top,
-                      left: marker.left
-                    });
-                  }}
-                >
-                  <div 
-                    className={`w-6 h-6 rounded-full border-2 border-white flex items-center justify-center hover:scale-125 transition-transform shadow-[0_0_12px_rgba(0,0,0,0.6)] cursor-pointer ${
-                      marker.type === 'alarm' 
-                        ? 'bg-red-600 animate-pulse shadow-[0_0_14px_#ff1744]' 
-                        : marker.type === 'offline'
-                        ? 'bg-[#ffb300] shadow-[0_0_10px_#ffb300]'
-                        : 'bg-[#00e676] shadow-[0_0_10px_#00e676]'
-                    }`}
-                    title={`点击查看人员定位信息: ${marker.name} (${marker.role})`}
-                  >
-                    <User className="w-3.5 h-3.5 text-white" />
-                  </div>
-                </div>
-              ))
+              (() => {
+                const projGrouped = new Map<string, typeof currentProject.markers>();
+                currentProject.markers.forEach(m => {
+                  const key = `${m.top}_${m.left}`;
+                  if (!projGrouped.has(key)) {
+                    projGrouped.set(key, []);
+                  }
+                  projGrouped.get(key)!.push(m);
+                });
+
+                return Array.from(projGrouped.entries()).map(([key, pMarkers]) => {
+                  const firstMarker = pMarkers[0];
+                  const isClustered = pMarkers.length > 1;
+
+                  return (
+                    <div 
+                      key={key}
+                      className="absolute pointer-events-auto z-20 group/marker cursor-pointer -translate-x-1/2 -translate-y-full flex flex-col items-center"
+                      style={{ top: firstMarker.top, left: firstMarker.left }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (firstMarker.type === 'alarm') {
+                          setActiveAlarmModalData({
+                            id: `ALERT-${firstMarker.id}`,
+                            time: formatDate(currentTime).split(' ')[1],
+                            name: firstMarker.name,
+                            workerId: firstMarker.id,
+                            role: firstMarker.role,
+                            reason: `${firstMarker.role}作业面未佩戴防护且触及禁入警戒线`,
+                            location: `${currentProject.name} - ${firstMarker.role}作业区`,
+                            projectName: currentProject.name,
+                            dangerLevel: 'high',
+                            gasReading: '氧气 18.2% (偏低警告) | 可燃气 0%LEL',
+                            deviceLinked: 'LNG-GAS-01 气体检测仪 & 龙门吊防碰声光报警器',
+                            status: 'pending'
+                          });
+                        }
+                        setSelectedWorkerDetail(prev => prev?.id === firstMarker.id ? null : {
+                          id: firstMarker.id,
+                          name: firstMarker.name,
+                          role: firstMarker.role,
+                          status: firstMarker.type,
+                          location: `${currentProject.name} - ${firstMarker.role}作业面`,
+                          projectName: currentProject.name,
+                          time: formatDate(currentTime),
+                          battery: firstMarker.type === 'offline' ? '12% (低电)' : '88%',
+                          signalPower: '-68 dBm (良好)',
+                          phone: '139-8765-4321',
+                          company: `${currentProject.shipType}建造工程部`,
+                          wearables: ['防爆定位手环', '气密作业感知徽章'],
+                          top: firstMarker.top,
+                          left: firstMarker.left
+                        });
+                      }}
+                    >
+                      {/* 🎯 定位人员图标：点位椭圆带出尖设计 */}
+                      <div className="relative flex flex-col items-center transition-all duration-300 group-hover/marker:scale-125 select-none">
+                        {/* 椭圆主体 */}
+                        <div 
+                          className={`flex items-center justify-center border-2 border-white transition-all shadow-[0_2px_8px_rgba(0,0,0,0.4)] ${
+                            isClustered
+                              ? 'min-w-[34px] px-2 h-[25px] rounded-full bg-gradient-to-b from-[#00f0ff] via-[#0099ff] to-[#0055d4] text-white shadow-[0_0_14px_rgba(0,210,255,0.85)]'
+                              : firstMarker.type === 'alarm'
+                                ? 'w-7 h-[25px] rounded-full bg-gradient-to-b from-[#ff5252] via-[#e53935] to-[#b71c1c] text-white shadow-[0_0_14px_rgba(255,23,68,0.85)] animate-pulse'
+                                : firstMarker.type === 'offline'
+                                  ? 'w-7 h-[25px] rounded-full bg-gradient-to-b from-[#ffb300] via-[#fb8c00] to-[#e65100] text-white shadow-[0_0_10px_rgba(255,179,0,0.7)]'
+                                  : 'w-7 h-[25px] rounded-full bg-gradient-to-b from-[#00e676] via-[#00c853] to-[#007e33] text-white shadow-[0_0_12px_rgba(0,230,118,0.85)]'
+                          }`}
+                        >
+                          {isClustered ? (
+                            <div className="flex items-center gap-0.5 leading-none">
+                              <Users className="w-3 h-3 text-white shrink-0 mr-0.5" />
+                              <span className="font-mono text-xs font-black text-white tracking-tight">{pMarkers.length}</span>
+                            </div>
+                          ) : (
+                            <User className="w-3.5 h-3.5 text-white" />
+                          )}
+                        </div>
+
+                        {/* 椭圆底部出尖设计 */}
+                        <div 
+                          className={`w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] -mt-[1px] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] ${
+                            isClustered
+                              ? 'border-t-[#0055d4]'
+                              : firstMarker.type === 'alarm'
+                                ? 'border-t-[#b71c1c]'
+                                : firstMarker.type === 'offline'
+                                  ? 'border-t-[#e65100]'
+                                  : 'border-t-[#007e33]'
+                          }`}
+                        />
+
+                        {/* 地面微光 */}
+                        <div className="relative -mt-[1px] flex items-center justify-center">
+                          <div 
+                            className={`w-2.5 h-1 rounded-full blur-[0.5px] ${
+                              isClustered
+                                ? 'bg-[#00f0ff]/80 shadow-[0_0_8px_#00f0ff]'
+                                : firstMarker.type === 'alarm'
+                                  ? 'bg-[#ff1744]/80 shadow-[0_0_8px_#ff1744]'
+                                  : firstMarker.type === 'offline'
+                                    ? 'bg-[#ffb300]/80 shadow-[0_0_8px_#ffb300]'
+                                    : 'bg-[#00e676]/80 shadow-[0_0_8px_#00e676]'
+                            }`} 
+                          />
+                          {isClustered && (
+                            <div className="absolute w-4 h-1.5 rounded-full border border-[#00f0ff]/70 animate-ping opacity-60" />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 悬停信息浮层 */}
+                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover/marker:opacity-100 pointer-events-none transition-all duration-200 z-50">
+                        <div className="bg-[#061833]/95 border border-[#00d2ff] text-[10px] text-white px-2.5 py-1 rounded-lg shadow-xl whitespace-nowrap flex items-center gap-1 backdrop-blur-md">
+                          {isClustered ? (
+                            <span className="text-[#00e5ff] font-bold">人员聚焦 {pMarkers.length} 人：{pMarkers.map(m => m.name).join('、')}</span>
+                          ) : (
+                            <>
+                              <span className="text-[#00e676] font-bold">{firstMarker.name}</span>
+                              <span className="text-[#8ab4f8]">({firstMarker.role})</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                });
+              })()
             )}
           </div>
         )}
@@ -3231,7 +3331,7 @@ export function Dashboard({ onExit, onNavigate, initialProjectId, initialViewSco
               top: selectedWorkerDetail.top || '40%',
               left: selectedWorkerDetail.left || '50%',
               transform: 'translate(-50%, -100%)',
-              marginTop: '-18px'
+              marginTop: '-36px'
             }}
           >
             <div className="w-80 bg-[#061833]/95 border-2 border-[#00e676] rounded-2xl p-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.85),0_0_24px_rgba(0,230,118,0.35)] backdrop-blur-xl relative text-[#e2f1ff]">
@@ -3330,7 +3430,7 @@ export function Dashboard({ onExit, onNavigate, initialProjectId, initialViewSco
               top: selectedWorkerCluster.top || '40%',
               left: selectedWorkerCluster.left || '50%',
               transform: 'translate(-50%, -100%)',
-              marginTop: '-18px'
+              marginTop: '-36px'
             }}
           >
             <div className="w-88 bg-[#061833]/95 border-2 border-cyan-400 rounded-2xl p-4 shadow-[0_8px_32px_rgba(0,0,0,0.85),0_0_24px_rgba(0,210,255,0.35)] backdrop-blur-xl relative text-[#e2f1ff]">
@@ -4654,9 +4754,9 @@ export function Dashboard({ onExit, onNavigate, initialProjectId, initialViewSco
           }`}
         >
           
-          {/* 左1: 人员定位总览 */}
+          {/* 左1: 厂区人员概览 */}
           <SciFiPanel 
-            title={viewScope === 'yard' ? "厂区人员定位总览" : `${currentProject.shipType}人员定位总览`}
+            title={viewScope === 'yard' ? "厂区人员概览" : `${currentProject.shipType}人员概览`}
             icon={<Crosshair className="w-3.5 h-3.5" />}
             className="h-[142px]"
           >
@@ -4679,7 +4779,7 @@ export function Dashboard({ onExit, onNavigate, initialProjectId, initialViewSco
                     <div className="w-4 h-4 rounded-full bg-blue-600/30 flex items-center justify-center shrink-0">
                       <Users className="w-2.5 h-2.5 text-[#00d2ff]" />
                     </div>
-                    <span className="whitespace-nowrap">在岗人数</span>
+                    <span className="whitespace-nowrap">到厂人数</span>
                   </div>
                   <span className="font-mono text-[#00d2ff] font-bold text-sm whitespace-nowrap ml-1">{currentOnDuty}</span>
                 </div>
@@ -4689,7 +4789,7 @@ export function Dashboard({ onExit, onNavigate, initialProjectId, initialViewSco
                     <div className="w-4 h-4 rounded-full bg-amber-500/30 flex items-center justify-center shrink-0">
                       <User className="w-2.5 h-2.5 text-[#ffb300]" />
                     </div>
-                    <span className="whitespace-nowrap">离岗人数</span>
+                    <span className="whitespace-nowrap">未到人数</span>
                   </div>
                   <span className="font-mono text-[#ffb300] font-bold text-sm whitespace-nowrap ml-1">{currentOffDuty}</span>
                 </div>
@@ -4697,9 +4797,9 @@ export function Dashboard({ onExit, onNavigate, initialProjectId, initialViewSco
             </div>
           </SciFiPanel>
 
-          {/* 左2: 当日累计班组分布 (流动条与数据区科技蓝风格统一) */}
+          {/* 左2: 班级人员分布 (流动条与数据区科技蓝风格统一) */}
           <SciFiPanel 
-            title="当日累计班组分布"
+            title="班级人员分布"
             icon={<Layers className="w-3.5 h-3.5" />}
             className="flex-1 min-h-[230px]"
           >
@@ -4736,9 +4836,9 @@ export function Dashboard({ onExit, onNavigate, initialProjectId, initialViewSco
             </div>
           </SciFiPanel>
 
-          {/* 左3: 人员类型统计 */}
+          {/* 左3: 工种人员分布 */}
           <SciFiPanel 
-            title={viewScope === 'yard' ? "人员工种类型统计" : "船上工种类型统计"}
+            title={viewScope === 'yard' ? "工种人员分布" : "船上工种人员分布"}
             icon={<Users className="w-3.5 h-3.5" />}
             className="h-[175px] shrink-0"
           >
@@ -4834,7 +4934,7 @@ export function Dashboard({ onExit, onNavigate, initialProjectId, initialViewSco
             <div className={`grid ${viewScope === 'yard' ? 'grid-cols-4' : 'grid-cols-5'} divide-x divide-[#1f4a7c]/60 pt-0.5`}>
               {(viewScope === 'yard' ? [
                 { 
-                  label: '在岗人数', 
+                  label: '到厂人数', 
                   value: `${currentOnDuty.toLocaleString()} 人`, 
                   icon: Users,
                   iconBg: 'bg-blue-600/30 text-[#00d2ff] border-blue-500/40' 
@@ -4865,7 +4965,7 @@ export function Dashboard({ onExit, onNavigate, initialProjectId, initialViewSco
                   iconBg: 'bg-emerald-500/30 text-[#00e676] border-emerald-500/40' 
                 },
                 { 
-                  label: '在岗人数', 
+                  label: '到厂人数', 
                   value: `${currentOnDuty} 人`, 
                   icon: Users,
                   iconBg: 'bg-blue-600/30 text-[#00d2ff] border-blue-500/40' 

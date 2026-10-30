@@ -273,13 +273,17 @@ export interface WorkfaceRecord {
   elevation?: string;             // 标高范围 (如 +8.0m ~ +18.5m)
   volume?: string;                // 容积 (m³)，如 "1280" 或 "850"
   
+  // 引用关联的在线在建项目ID/名称列表
+  linkedProjectIds?: string[];
+  linkedProjectNames?: string[];
+  
   // 作业面区域划定数据
   areaDefinition?: WorkfaceAreaDefinition;
   fence?: WorkfaceFence;
 
   workType: '合拢焊接' | '密闭舱室作业' | '高空涂装' | '管系装配' | '电气舾装' | '探伤质检' | '通用作业';
   riskLevel: '重大风险(红)' | '较大风险(橙)' | '一般风险(黄)' | '低风险(蓝)';
-  status: 'active' | 'paused' | 'completed' | 'draft'; // 运行状态: 作业中 | 暂停中 | 已完工 | 待作业
+  status: 'active' | 'paused' | 'completed' | 'draft' | '允许作业' | '禁止进入' | '作业中' | '空闲中' | '禁入中'; // 运行状态: 允许作业 | 禁止进入
   
   // 安全与责任人 (支持多安全员)
   safetyOfficer: string;          // 责任安全员 (多个以顿号或逗号连接)

@@ -1162,7 +1162,7 @@ export function ShipModelManagement() {
                         );
                       }
                       return modelWorkfaces.map(wf => {
-                        const isEnabled = wf.status === 'active' || wf.status === '作业中' || wf.status === '启用';
+                        const isEnabled = wf.status === 'active' || wf.status === '作业中' || wf.status === '允许作业' || wf.status === '启用';
 
                         return (
                           <tr key={wf.id} className="hover:bg-slate-50 transition-colors">

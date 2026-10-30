@@ -116,22 +116,35 @@ export function ProjectConfinedSpaceModal({
   // 监听及初始化当前船舶项目的有限空间
   useEffect(() => {
     if (!isOpen || !project) return;
-    const all = getStoredWorkfaces();
-    setAllWorkfaces(all);
+    
+    const reloadWorkfaces = (all: WorkfaceRecord[]) => {
+      setAllWorkfaces(all);
+      const matched = all.filter(wf => {
+        const isProjectBelonging = wf.belongingType === 'project';
+        const isProjectIdMatch = wf.projectId === project.id;
+        const isProjectNameMatch = wf.projectName === project.name;
+        const isShipCodeMatch = !!(project.shipCode && wf.shipCode === project.shipCode);
+        const isModelNameMatch = !!(project.name && (wf.shipModelName?.includes(project.name) || project.name.includes(wf.shipModelName || '')));
+        
+        // 引用关联判定: linkedProjectIds 包含当前项目 ID
+        const isLinkedMatch = !!(wf.linkedProjectIds && wf.linkedProjectIds.includes(project.id));
 
-    const matched = all.filter(wf => {
-      const isProjectBelonging = wf.belongingType === 'project';
-      const isProjectIdMatch = wf.projectId === project.id;
-      const isProjectNameMatch = wf.projectName === project.name;
-      const isShipCodeMatch = !!(project.shipCode && wf.shipCode === project.shipCode);
-      const isModelNameMatch = !!(project.name && (wf.shipModelName?.includes(project.name) || project.name.includes(wf.shipModelName || '')));
-      
-      return isProjectBelonging && (isProjectIdMatch || isProjectNameMatch || isShipCodeMatch || isModelNameMatch);
-    });
+        return (isProjectBelonging && (isProjectIdMatch || isProjectNameMatch || isShipCodeMatch || isModelNameMatch)) || isLinkedMatch;
+      });
+      setProjectWorkfaces(matched);
+    };
 
-    setProjectWorkfaces(matched);
+    reloadWorkfaces(getStoredWorkfaces());
     setSearchTerms({});
     setActiveDropdownWfId(null);
+
+    const handleUpdated = (e: any) => {
+      const list = e.detail || getStoredWorkfaces();
+      reloadWorkfaces(list);
+    };
+
+    window.addEventListener('workfaces_updated', handleUpdated);
+    return () => window.removeEventListener('workfaces_updated', handleUpdated);
   }, [isOpen, project]);
 
   // 按分层结构聚合有限空间舱位
@@ -219,15 +232,14 @@ export function ProjectConfinedSpaceModal({
     setProjectWorkfaces(newWfs);
   };
 
-  // 状态归一化解析函数
-  const normalizeSpaceStatus = (status: string): '作业中' | '空闲中' | '禁入中' => {
-    if (status === 'active' || status === '作业中') return '作业中';
-    if (status === 'forbidden' || status === 'restricted' || status === '禁入中' || status === 'paused') return '禁入中';
-    return '空闲中';
+  // 状态归一化解析函数 (两状态模型：允许作业 / 禁止进入)
+  const normalizeSpaceStatus = (status: string): '允许作业' | '禁止进入' => {
+    if (status === '禁止进入' || status === 'forbidden' || status === 'restricted' || status === '禁入中' || status === 'paused') return '禁止进入';
+    return '允许作业';
   };
 
-  // 修改单个有限空间的状态 (作业中 / 空闲中 / 禁入中)
-  const handleUpdateSpaceStatus = (wfId: string, newStatus: '作业中' | '空闲中' | '禁入中') => {
+  // 修改单个有限空间的状态 (允许作业 / 禁止进入)
+  const handleUpdateSpaceStatus = (wfId: string, newStatus: '允许作业' | '禁止进入') => {
     setProjectWorkfaces(prev => prev.map(wf => {
       if (wf.id !== wfId) return wf;
       return {
@@ -335,15 +347,18 @@ export function ProjectConfinedSpaceModal({
 
     const retainedOthers = allWorkfaces.filter(wf => !previousProjectWfIds.has(wf.id) && !currentProjectWfIds.has(wf.id));
     
-    const finalizedCurrentWfs = projectWorkfaces.map(wf => ({
-      ...wf,
-      belongingType: 'project' as const,
-      workfaceType: '有限空间' as const,
-      projectId: project.id,
-      projectName: project.name,
-      shipCode: project.shipCode || wf.shipCode || '',
-      updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19)
-    }));
+    const finalizedCurrentWfs = projectWorkfaces.map(wf => {
+      const isExternalLinked = wf.linkedProjectIds && wf.linkedProjectIds.includes(project.id) && wf.projectId !== project.id;
+      return {
+        ...wf,
+        belongingType: isExternalLinked ? wf.belongingType : ('project' as const),
+        workfaceType: '有限空间' as const,
+        projectId: isExternalLinked ? wf.projectId : project.id,
+        projectName: isExternalLinked ? wf.projectName : project.name,
+        shipCode: isExternalLinked ? wf.shipCode : (project.shipCode || wf.shipCode || ''),
+        updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19)
+      };
+    });
 
     const completeWorkfaces = [...retainedOthers, ...finalizedCurrentWfs];
 
@@ -440,11 +455,9 @@ export function ProjectConfinedSpaceModal({
                       });
 
                       const spaceStatus = normalizeSpaceStatus(wf.status as string);
-                      const spaceStatusCls = spaceStatus === '作业中'
+                      const spaceStatusCls = spaceStatus === '允许作业'
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
-                        : spaceStatus === '禁入中'
-                          ? 'bg-rose-50 text-rose-700 border-rose-300'
-                          : 'bg-slate-50 text-slate-700 border-slate-300';
+                        : 'bg-rose-50 text-rose-700 border-rose-300';
 
                       return (
                         <div 
@@ -462,18 +475,22 @@ export function ProjectConfinedSpaceModal({
                                 <span className="font-mono text-[10px] font-semibold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 shrink-0">
                                   {wf.code}
                                 </span>
+                                {wf.linkedProjectIds && wf.linkedProjectIds.includes(project.id) && (
+                                  <span className="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded font-medium shrink-0">
+                                    引用关联
+                                  </span>
+                                )}
                               </div>
                               <div className="flex items-center gap-1.5 shrink-0">
-                                {/* 状态修改选择器 */}
+                                {/* 状态修改选择器 (两状态：允许作业 / 禁止进入) */}
                                 <select
                                   value={spaceStatus}
-                                  onChange={e => handleUpdateSpaceStatus(wf.id, e.target.value as '作业中' | '空闲中' | '禁入中')}
+                                  onChange={e => handleUpdateSpaceStatus(wf.id, e.target.value as '允许作业' | '禁止进入')}
                                   className={`px-1.5 py-0.5 rounded text-[11px] font-semibold border cursor-pointer focus:outline-none transition-colors ${spaceStatusCls}`}
                                   title="修改有限空间状态"
                                 >
-                                  <option value="作业中" className="text-emerald-700 bg-white font-semibold">作业中</option>
-                                  <option value="空闲中" className="text-slate-700 bg-white font-semibold">空闲中</option>
-                                  <option value="禁入中" className="text-rose-700 bg-white font-semibold">禁入中</option>
+                                  <option value="允许作业" className="text-emerald-700 bg-white font-semibold">允许作业</option>
+                                  <option value="禁止进入" className="text-rose-700 bg-white font-semibold">禁止进入</option>
                                 </select>
                                 <button
                                   type="button"

@@ -65,23 +65,23 @@
       .p-head .en{ font-size:10px; letter-spacing:1.5px; color:var(--muted2); font-family:var(--mono); text-transform:uppercase; }
       .p-head .sp{ flex:1; }
       /* ---------- header ---------- */
-      header.topbar{ position:relative; height:86px; flex:none; display:flex; align-items:stretch; gap:14px; z-index:5; }
+      header.topbar{ position:relative; height:78px; flex:none; display:flex; align-items:stretch; gap:14px; z-index:5; }
       .tb-side{ display:flex; align-items:center; gap:14px; }
       .tb-left{ width:400px; }
       .tb-right{ width:478px; justify-content:flex-end; }
       .clock-box{ line-height:1.05; }
-      #clock{ font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:31px; font-weight:700; color:var(--cyan); letter-spacing:1.5px; text-shadow:0 0 14px rgba(0,229,255,.75); white-space:nowrap; }
+      #clock{ font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:29px; font-weight:700; color:var(--cyan); letter-spacing:1.5px; text-shadow:0 0 14px rgba(0,229,255,.75); white-space:nowrap; }
       .title-zone{ flex:1; position:relative; display:flex; align-items:center; justify-content:center; }
       .title-plate{
-        position:relative; padding:14px 64px 18px; text-align:center;
+        position:relative; padding:10px 56px 14px; text-align:center;
         background:linear-gradient(180deg, rgba(0,86,150,.55), rgba(2,24,52,.88) 70%);
         clip-path:polygon(3.5% 0, 96.5% 0, 100% 78%, 94% 100%, 6% 100%, 0 78%);
         filter:drop-shadow(0 0 18px rgba(0,170,255,.35));
       }
-      .title-plate::after{ content:""; position:absolute; left:8%; right:8%; bottom:5px; height:2px;
+      .title-plate::after{ content:""; position:absolute; left:8%; right:8%; bottom:4px; height:2px;
         background:linear-gradient(90deg, transparent, var(--cyan), transparent); box-shadow:0 0 12px var(--cyan); }
       h1.sys-title{
-        font-size:33px; font-weight:800; letter-spacing:5px; white-space:nowrap; line-height:1.15;
+        font-size:30px; font-weight:800; letter-spacing:5px; white-space:nowrap; line-height:1.15;
         background:linear-gradient(180deg,#ffffff 15%, #a9f1ff 48%, #37c8ff 80%, #0090d8);
         -webkit-background-clip:text; background-clip:text; color:transparent;
         filter:drop-shadow(0 0 10px rgba(0,200,255,.45));
@@ -131,16 +131,16 @@
       .flip-opt.on{ color:var(--cyan); background:rgba(0,160,255,.15); font-weight:700; }
       .flip-opt .opt-check{ width:13px; height:13px; margin-left:auto; flex:none; color:var(--cyan); opacity:0; filter:drop-shadow(0 0 4px rgba(0,229,255,.85)); }
       .flip-opt.on .opt-check{ opacity:1; }
-      /* ---------- layout ---------- */
-      main.board{ position:relative; flex:1; display:grid; grid-template-columns:326px 1fr 372px; grid-template-rows:auto 1fr;
-        grid-template-areas:"left ov ov" "left mid right"; gap:14px; min-height:0; z-index:2; }
-      .col{ display:flex; flex-direction:column; gap:14px; min-height:0; min-width:0; }
+      /* ---------- layout: 顶部全宽超大显眼数据概览 + 紧凑三列内容区 ---------- */
+      main.board{ position:relative; flex:1; display:grid; grid-template-columns:318px 1fr 358px; grid-template-rows:auto 1fr;
+        grid-template-areas:"ov ov ov" "left mid right"; gap:12px; min-height:0; z-index:2; }
+      .col{ display:flex; flex-direction:column; gap:12px; min-height:0; min-width:0; }
       .col-left{ grid-area:left; } .col-center{ grid-area:mid; } .col-right{ grid-area:right; }
       /* ---------- left: projects ---------- */
       .region-tabs{ display:flex; border-bottom:1px solid var(--line-soft); }
       .region-tabs button{
-        flex:1; cursor:pointer; font-family:var(--font); font-size:14px; font-weight:600; letter-spacing:3px;
-        padding:9px 0; color:var(--muted); background:rgba(3,16,36,.6); border:none; border-right:1px solid var(--line-soft);
+        flex:1; cursor:pointer; font-family:var(--font); font-size:13.5px; font-weight:600; letter-spacing:2px;
+        padding:7.5px 0; color:var(--muted); background:rgba(3,16,36,.6); border:none; border-right:1px solid var(--line-soft);
         transition:color .2s, background .2s, box-shadow .2s;
       }
       .region-tabs button:last-child{ border-right:none; }
@@ -149,66 +149,49 @@
       .proj-panel{ flex:1; display:flex; flex-direction:column; min-height:0; }
       #projList{ flex:1; display:flex; flex-direction:column; min-height:0; }
       .proj{
-        flex:none; display:flex; gap:11px; align-items:center; padding:11px 14px; cursor:pointer;
+        flex:none; display:flex; gap:9px; align-items:center; padding:9px 12px; cursor:pointer;
         border-bottom:1px solid rgba(0,150,210,.10); border-left:3px solid transparent; border-radius:var(--r-sm); transition:background .2s;
       }
       .proj:hover{ background:rgba(0,110,180,.12); }
       .proj.active{ background:linear-gradient(90deg, rgba(0,140,220,.22), rgba(0,140,220,.03)); border-left-color:var(--cyan); }
-      .proj .p-ico{ flex:none; width:42px; height:31px; margin-top:3px; color:#7fc6e8; }
+      .proj .p-ico{ flex:none; width:38px; height:28px; margin-top:2px; color:#7fc6e8; }
       .proj .p-ico svg{ width:100%; height:100%; display:block; }
       .proj.active .p-ico{ color:var(--cyan); filter:drop-shadow(0 0 6px rgba(0,229,255,.7)); }
       .proj.active{ box-shadow:inset 0 0 0 1px rgba(0,229,255,.5), 0 0 14px rgba(0,160,255,.16); }
-      .proj h3{ font-size:18px; font-weight:600; color:#eaf8ff; letter-spacing:.5px; }
+      .proj h3{ font-size:16.5px; font-weight:600; color:#eaf8ff; letter-spacing:.5px; }
       .proj.active h3{ color:#fff; }
-      .proj p{ font-size:13px; color:var(--muted); margin-top:4px; line-height:1.5; }
+      .proj p{ font-size:12px; color:var(--muted); margin-top:3px; line-height:1.45; }
       .proj .pstat{ margin-left:auto; flex:none; text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums; }
-      .proj .pstat b{ display:block; font-size:16px; color:var(--cyan); }
-      .proj .pstat span{ font-size:10.5px; color:var(--muted2); letter-spacing:1px; }
-      /* ---------- left: overview metrics ---------- */
-      .metrics{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px; padding:11px; }
-      .metric{ padding:10px 11px 11px; border:1px solid var(--line-soft); border-radius:var(--r-md); background:rgba(2,14,30,.6); box-shadow:inset 0 1px 0 rgba(140,220,255,.06); }
-      .metric .m-top{ display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--muted); letter-spacing:1px; white-space:nowrap; }
-      .metric .m-top svg{ width:16px; height:16px; flex:none; }
-      .metric .num{ font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:34px; font-weight:700; line-height:1.15; margin-top:5px; }
-      .metric .num .tot{ font-size:15px; color:var(--muted2); font-weight:400; }
-      .metric.c{ border-color:rgba(0,229,255,.35); }
-      .metric.g{ border-color:rgba(31,224,138,.35); }
-      .metric.b{ border-color:rgba(61,155,255,.4); }
-      .metric.r{ border-color:rgba(255,59,92,.4); }
-      .metric.c .num{ color:var(--cyan); text-shadow:0 0 12px rgba(0,229,255,.55); }
-      .metric.g .num{ color:var(--green); text-shadow:0 0 12px rgba(31,224,138,.5); }
-      .metric.b .num{ color:var(--blue); text-shadow:0 0 12px rgba(61,155,255,.55); }
-      .metric.r .num{ color:var(--red); text-shadow:0 0 12px rgba(255,59,92,.6); }
-      .metric.r.alarm .num{ animation:blinkSoft 1.8s ease-in-out infinite; }
-      @keyframes blinkSoft{ 0%,100%{ opacity:1; } 50%{ opacity:.55; } }
+      .proj .pstat b{ display:block; font-size:15px; color:var(--cyan); }
+      .proj .pstat span{ font-size:10px; color:var(--muted2); letter-spacing:1px; }
       /* ---------- center ---------- */
-      .center-toolbar{ height:50px; flex:none; display:flex; align-items:center; gap:18px; padding:0 16px; }
-      .view-label{ display:flex; align-items:center; gap:9px; font-size:17px; font-weight:700; letter-spacing:3px; color:#eaf8ff; white-space:nowrap; }
-      .view-label .tick{ width:9px; height:9px; border-radius:2px; background:var(--cyan); transform:rotate(45deg); box-shadow:0 0 9px var(--cyan); flex:none; }
+      .center-toolbar{ height:42px; flex:none; display:flex; align-items:center; gap:14px; padding:0 14px; }
+      .view-label{ display:flex; align-items:center; gap:8px; font-size:15.5px; font-weight:700; letter-spacing:2px; color:#eaf8ff; white-space:nowrap; }
+      .view-label .tick{ width:8px; height:8px; border-radius:2px; background:var(--cyan); transform:rotate(45deg); box-shadow:0 0 8px var(--cyan); flex:none; }
       .mode-tabs{ display:flex; gap:6px; margin:0 auto; }
       .mode-tabs button{
-        cursor:pointer; font-family:var(--font); font-size:15.5px; font-weight:600; letter-spacing:4px;
-        padding:9px 34px; color:var(--muted); background:rgba(3,16,36,.8); border:1px solid var(--line-soft);
+        cursor:pointer; font-family:var(--font); font-size:14px; font-weight:600; letter-spacing:3px;
+        padding:7px 24px; color:var(--muted); background:rgba(3,16,36,.8); border:1px solid var(--line-soft);
         border-radius:var(--r-sm); transition:color .2s, background .2s, box-shadow .2s;
       }
-      .mode-tabs button.active{ color:#eafcff; background:linear-gradient(180deg, rgba(0,140,220,.75), rgba(0,80,150,.75)); box-shadow:0 0 18px rgba(0,180,255,.45), inset 0 0 14px rgba(0,229,255,.25); text-shadow:0 0 8px rgba(160,240,255,.8); }
+      .mode-tabs button.active{ color:#eafcff; background:linear-gradient(180deg, rgba(0,140,220,.75), rgba(0,80,150,.75)); box-shadow:0 0 16px rgba(0,180,255,.45), inset 0 0 12px rgba(0,229,255,.25); text-shadow:0 0 8px rgba(160,240,255,.8); }
       .mode-tabs button:not(.active):hover{ color:#dff6ff; }
-      .center-toolbar .cur-name{ margin-left:auto; font-size:13px; color:var(--muted); letter-spacing:1px; white-space:nowrap; }
+      .center-toolbar .cur-name{ margin-left:auto; font-size:12.5px; color:var(--muted); letter-spacing:1px; white-space:nowrap; }
       #cards{ flex:1; min-height:0; min-width:0; overflow:hidden; position:relative; }
       #cards:focus{ outline:1px solid rgba(0,229,255,.35); outline-offset:-1px; }
-      #cardsGrid{ height:100%; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); grid-template-rows:repeat(4,minmax(0,1fr)); gap:14px; min-width:0; min-height:0; }
+      #cardsGrid{ height:100%; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); grid-template-rows:repeat(4,minmax(0,1fr)); gap:10px; min-width:0; min-height:0; }
       #cardsGrid.page-anim{ animation:pageSlide .45s ease; }
       @keyframes pageSlide{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:translateY(0); } }
       /* ---------- pager ---------- */
-      .pager{ flex:none; height:28px; display:flex; align-items:center; justify-content:center; gap:16px; }
-      .pager-dots{ display:flex; align-items:center; gap:8px; }
-      .pdot{ width:9px; height:9px; padding:0; border:none; border-radius:999px; cursor:pointer; background:rgba(0,170,230,.30); transition:width .25s, background .25s, box-shadow .25s; }
+      .pager{ flex:none; height:24px; display:flex; align-items:center; justify-content:center; gap:14px; }
+      .pager-dots{ display:flex; align-items:center; gap:7px; }
+      .pdot{ width:8px; height:8px; padding:0; border:none; border-radius:999px; cursor:pointer; background:rgba(0,170,230,.30); transition:width .25s, background .25s, box-shadow .25s; }
       .pdot:hover{ background:rgba(0,229,255,.6); }
-      .pdot.active{ width:28px; background:var(--cyan); box-shadow:0 0 10px rgba(0,229,255,.7); }
-      .pager-text{ font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:12.5px; color:var(--muted); letter-spacing:2px; white-space:nowrap; }
+      .pdot.active{ width:24px; background:var(--cyan); box-shadow:0 0 10px rgba(0,229,255,.7); }
+      .pager-text{ font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:12px; color:var(--muted); letter-spacing:2px; white-space:nowrap; }
       /* ---------- space card ---------- */
       .card{
-        position:relative; cursor:pointer; padding:10px 11px 9px; display:flex; flex-direction:column; gap:7px; min-width:0; min-height:0;
+        position:relative; cursor:pointer; padding:8px 10px 7px; display:flex; flex-direction:column; gap:5px; min-width:0; min-height:0;
         background:linear-gradient(180deg, rgba(8,30,58,.92), rgba(4,16,35,.96));
         border:1px solid var(--line-soft); border-radius:var(--r-lg);
         box-shadow:inset 0 1px 0 rgba(140,220,255,.07), inset 0 0 22px rgba(0,90,160,.10), 0 0 12px rgba(0,120,200,.05);
@@ -221,6 +204,55 @@
       .card.intrude::before{ border-color:var(--red); }
       .card.forbid{ border-color:rgba(255,122,89,.45); }
       .card.forbid::before{ border-color:#ff7a59; }
+      .card.ppl-orange-card{ border-color:rgba(255,85,0,.85); box-shadow:0 0 20px rgba(255,85,0,.42), inset 0 0 22px rgba(255,85,0,.15); }
+      .card.ppl-orange-card::before{ border-color:#ff5500; }
+      .card.ppl-yellow-card{ border-color:rgba(250,204,21,.8); box-shadow:0 0 14px rgba(250,204,21,.35), inset 0 0 18px rgba(250,204,21,.10); }
+      .card.ppl-yellow-card::before{ border-color:#facc15; }
+      /* ---------- nobody / empty state card: 人数为0暗灰弱化 ---------- */
+      .card.nobody{
+        background:linear-gradient(180deg, rgba(13,20,30,.88), rgba(7,12,18,.95));
+        border-color:rgba(85,105,128,.28);
+        box-shadow:inset 0 1px 0 rgba(255,255,255,.03), inset 0 0 18px rgba(0,0,0,.4), 0 0 6px rgba(0,0,0,.25);
+        opacity:.72;
+        transition:opacity .25s ease, border-color .25s ease, box-shadow .25s ease;
+      }
+      .card.nobody:hover{
+        opacity:.95;
+        border-color:rgba(135,160,188,.45);
+        box-shadow:0 0 16px rgba(100,130,160,.22), inset 0 0 18px rgba(0,0,0,.35);
+      }
+      .card.nobody::before{ border-color:rgba(110,132,156,.35); }
+      .card.nobody .card-ico{
+        border-color:rgba(105,128,152,.30);
+        color:#738698;
+        background:rgba(25,36,48,.4);
+        box-shadow:none;
+      }
+      .card.nobody .card-head h3{ color:#9ab0c2; }
+      .card.nobody .vol-under,
+      .card.nobody .ppl-big .pr .pl,
+      .card.nobody .wf-count .wf-lab,
+      .card.nobody .wf-safe{ color:#627485; }
+      .card.nobody .ppl-big .pr .pv,
+      .card.nobody .wf-count .wf-num{ color:#798c9d; text-shadow:none; }
+      .card.nobody .ppl-big .pr .pv.name,
+      .card.nobody .wf-safe .wf-name{ color:#8ba0b2; }
+      .card.nobody .donut circle:first-child{ stroke:rgba(255,255,255,.06); }
+      .card.nobody .donut .d-center b{ color:#798c9d; }
+      .card.nobody .donut .d-center span{ color:#576878; }
+      .density-chip{ flex:none; font-size:10.5px; font-weight:700; letter-spacing:.5px; padding:2px 7px; border-radius:4px; display:inline-flex; align-items:center; gap:3px; white-space:nowrap; }
+      .density-chip.orange{ color:#fff; background:linear-gradient(135deg, #ff5500, #cc3300); border:1px solid #ff7722; box-shadow:0 0 8px rgba(255,85,0,.6); }
+      .density-chip.yellow{ color:#1a1400; background:linear-gradient(135deg, #ffee00, #e6b800); border:1px solid #fff066; box-shadow:0 0 8px rgba(255,238,0,.5); }
+      .badge-intruder{
+        font-size:11px; font-weight:700; color:#fff; background:linear-gradient(135deg, #ff3b5c, #d91438);
+        padding:2px 8px; border-radius:4px; border:1px solid #ff6b85;
+        box-shadow:0 0 10px rgba(255,59,92,.8); display:inline-flex; align-items:center; gap:3px;
+        animation:badgeBreathe 1.5s ease-in-out infinite;
+      }
+      .crew-table tr.intruder-row td{ background:rgba(255,59,92,.20) !important; color:#ffb0be !important; border-bottom:1px solid rgba(255,59,92,.35) !important; }
+      .crew-table tr.intruder-row td.c-name{ color:#ffffff !important; font-weight:700; text-shadow:0 0 8px rgba(255,59,92,.9); }
+      .crew-table tr.intruder-row td.c-id{ color:#ff8599 !important; }
+      .crew-table tr.intruder-row td.c-stay{ color:#ff4d6d !important; font-weight:800; }
       .card-head{ display:flex; align-items:center; gap:8px; }
       .card-head > div{ flex:1; min-width:0; }
       .card-ico{ flex:none; width:30px; height:30px; border-radius:50%; border:1.5px solid rgba(0,229,255,.65);
@@ -234,64 +266,174 @@
       .badge::before{ content:""; width:7px; height:7px; border-radius:50%; background:currentColor; opacity:.85; flex:none; }
       .badge.work{ color:#062b18; background:var(--green); box-shadow:0 0 10px rgba(31,224,138,.45); }
       .badge.idle{ color:#3a2a00; background:var(--yellow); }
+      .badge.nobody{ color:#8fa6bb; background:rgba(85,105,130,.22); border:1px solid rgba(125,150,180,.32); box-shadow:none; }
+      .badge.nobody::before{ background:#72889e; }
       .badge.forbid{ color:#ffb59d; background:linear-gradient(180deg,#5c3a33,#39251f); border:1px solid rgba(255,122,89,.6); }
       .badge.intrude{ color:#fff; background:var(--red); animation:badgeBreathe 1.5s ease-in-out infinite; }
       @keyframes badgeBreathe{ 0%,100%{ box-shadow:0 0 7px rgba(255,59,92,.45); } 50%{ box-shadow:0 0 20px rgba(255,59,92,.95); } }
-      .card-body{ flex:1; display:flex; flex-direction:column; gap:7px; min-height:0; }
-      .card-main{ flex:1; display:flex; gap:12px; align-items:center; min-height:0; min-width:0; padding:0 2px; }
-      .donut-col{ flex:none; width:86px; display:flex; flex-direction:column; align-items:center; gap:5px; }
-      .donut{ position:relative; width:86px; height:86px; flex:none; }
+      .card-body{ flex:1; display:flex; flex-direction:column; gap:6px; min-height:0; }
+      .card-main{ flex:1; display:flex; gap:10px; align-items:center; min-height:0; min-width:0; padding:0 2px; }
+      .donut-col{ flex:none; width:76px; display:flex; flex-direction:column; align-items:center; gap:4px; }
+      .donut{ position:relative; width:76px; height:76px; flex:none; }
       /* 容积：圆环正下方的低调小字（与手机号同级字号），不抢主体数字 */
-      .vol-under{ font-size:12.5px; color:var(--muted); letter-spacing:.5px; white-space:nowrap; line-height:1.2; }
+      .vol-under{ font-size:11.5px; color:var(--muted); letter-spacing:.5px; white-space:nowrap; line-height:1.2; }
       .vol-under b{ font-family:var(--mono); font-variant-numeric:tabular-nums; font-weight:400; color:var(--muted); }
-      .vol-under small{ font-size:10.5px; color:var(--muted2); margin-left:2px; }
+      .vol-under small{ font-size:10px; color:var(--muted2); margin-left:2px; }
       .donut svg{ transform:rotate(-90deg); width:100%; height:100%; display:block; }
       .donut .d-center{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-      .donut .d-center b{ font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:24px; color:#fff; line-height:1; }
-      .donut .d-center span{ font-size:13px; color:var(--cyan); font-family:var(--mono); font-variant-numeric:tabular-nums; margin-top:3px; }
-      .ppl-big{ flex:1; display:flex; flex-direction:column; gap:8px; min-width:0; }
-      .ppl-big .pr{ display:flex; align-items:baseline; gap:8px; }
-      .ppl-big .pr .pl{ flex:none; width:76px; font-size:12px; color:var(--muted); letter-spacing:2px; }
-      .ppl-big .pr .pv{ font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:27px; font-weight:700; color:#eaf8ff; line-height:1; }
-      .ppl-big .pr .pv small{ font-size:13px; color:var(--muted2); font-weight:400; margin-left:3px; }
-      .ppl-big .pr .pv.name{ font-family:var(--font); font-size:14.5px; letter-spacing:1px; white-space:nowrap; }
-      .ppl-big .pr .p-phone{ font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:12.5px; color:var(--muted); letter-spacing:.5px; white-space:nowrap; }
+      .donut .d-center b{ font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:20px; color:#fff; line-height:1; }
+      .donut .d-center span{ font-size:12px; color:var(--cyan); font-family:var(--mono); font-variant-numeric:tabular-nums; margin-top:2px; }
+      .ppl-big{ flex:1; display:flex; flex-direction:column; gap:7px; min-width:0; }
+      .ppl-big .pr{ display:flex; align-items:baseline; gap:7px; }
+      .ppl-big .pr .pl{ flex:none; width:72px; font-size:11.5px; color:var(--muted); letter-spacing:1.5px; }
+      .ppl-big .pr .pv{ font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:24px; font-weight:700; color:#eaf8ff; line-height:1; }
+      .ppl-big .pr .pv small{ font-size:12px; color:var(--muted2); font-weight:400; margin-left:3px; }
+      .ppl-big .pr .pv.name{ font-family:var(--font); font-size:14px; letter-spacing:1px; white-space:nowrap; }
+      .ppl-big .pr .p-phone{ font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:12px; color:var(--muted); letter-spacing:.5px; white-space:nowrap; }
       /* ---------- workface card: production crew input (no donut / no quota) ---------- */
-      .wf-main{ flex:1; display:flex; flex-direction:column; justify-content:center; gap:9px; min-height:0; padding:0 4px; }
-      .wf-count{ display:flex; align-items:baseline; gap:12px; }
-      .wf-count .wf-lab{ flex:none; font-size:13.5px; color:var(--muted); letter-spacing:2px; }
-      .wf-count .wf-num{ font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:47px; font-weight:700; color:#eaf8ff; line-height:1; text-shadow:0 0 14px rgba(0,229,255,.35); }
-      .wf-count .wf-num small{ font-size:15px; color:var(--muted2); font-weight:400; margin-left:4px; }
+      .wf-main{ flex:1; display:flex; flex-direction:column; justify-content:center; gap:8px; min-height:0; padding:0 3px; }
+      .wf-count{ display:flex; align-items:baseline; gap:10px; }
+      .wf-count .wf-lab{ flex:none; font-size:13px; color:var(--muted); letter-spacing:1.5px; }
+      .wf-count .wf-num{ font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:40px; font-weight:700; color:#eaf8ff; line-height:1; text-shadow:0 0 14px rgba(0,229,255,.35); }
+      .wf-count .wf-num small{ font-size:14px; color:var(--muted2); font-weight:400; margin-left:4px; }
       .card.intrude .wf-count .wf-num{ color:#ff8296; text-shadow:0 0 14px rgba(255,59,92,.45); }
-      .wf-safe{ display:flex; align-items:baseline; gap:9px; border-top:1px dashed rgba(0,150,210,.20); padding-top:8px; font-size:13px; color:var(--muted); min-width:0; }
-      .wf-safe .wf-role{ flex:none; letter-spacing:2px; }
-      .wf-safe .wf-name{ flex:none; color:#eaf8ff; font-size:15px; font-weight:600; letter-spacing:1px; }
-      .wf-safe .wf-phone{ margin-left:auto; font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:12.5px; color:var(--muted); white-space:nowrap; }
-      /* ---------- top strip: data overview metrics (spans center + right) ---------- */
-      .ov-strip{ grid-area:ov; display:flex; flex-direction:column; align-items:stretch; min-width:0; min-height:0; }
-      .ov-metrics{ flex:1; display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:12px; padding:10px 12px; min-height:0; min-width:0; }
-      /* 预警中区域数据块当前仅隐藏显示（数据仍照常计算）：去掉 ovBox4 的 hidden 属性即可恢复，恢复后自动回到四格平铺 */
-      .ov-metrics .metric[hidden]{ display:none; }
-      .ov-metrics .metric{ display:flex; flex-direction:column; justify-content:center; padding:8px 18px; }
-      .ov-metrics .metric .m-top{ font-size:15.5px; }
-      .ov-metrics .metric .m-top svg{ width:20px; height:20px; }
-      .ov-metrics .metric .num{ font-size:42px; margin-top:4px; }
-      .ov-metrics .metric .num .tot{ font-size:20px; }
+      .wf-safe{ display:flex; align-items:baseline; gap:8px; border-top:1px dashed rgba(0,150,210,.20); padding-top:7px; font-size:12.5px; color:var(--muted); min-width:0; }
+      .wf-safe .wf-role{ flex:none; letter-spacing:1.5px; }
+      .wf-safe .wf-name{ flex:none; color:#eaf8ff; font-size:14.5px; font-weight:600; letter-spacing:1px; }
+      .wf-safe .wf-phone{ margin-left:auto; font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:12px; color:var(--muted); white-space:nowrap; }
+
+      /* ---------- TOP STRIP: HERO DATA OVERVIEW METRICS (spans full board ov ov ov) ---------- */
+      .ov-strip{
+        grid-area:ov; display:flex; flex-direction:column; align-items:stretch; min-width:0; min-height:0;
+        background:linear-gradient(180deg, rgba(6,28,58,.95), rgba(2,15,35,.98));
+        border:1.5px solid rgba(0,210,255,.4); border-radius:var(--r-lg);
+        box-shadow:inset 0 1px 0 rgba(140,220,255,.18), inset 0 0 32px rgba(0,110,190,.16), 0 8px 24px rgba(0,0,0,.45), 0 0 24px rgba(0,180,255,.14);
+      }
+      .ov-strip .p-head{
+        height:38px; padding:0 18px; border-bottom:1px solid rgba(0,180,240,.20);
+        background:linear-gradient(90deg, rgba(0,140,220,.25), rgba(0,100,180,.08) 45%, transparent 80%);
+      }
+      .ov-live-tag{
+        display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--cyan);
+        font-family:var(--mono); letter-spacing:1px; padding:3px 12px; border-radius:999px;
+        background:rgba(0,229,255,.08); border:1px solid rgba(0,229,255,.30);
+      }
+      .live-dot{
+        width:7px; height:7px; border-radius:50%; background:#00e5ff;
+        box-shadow:0 0 8px #00e5ff; animation:pulseDot 1.6s ease-in-out infinite;
+      }
+      @keyframes pulseDot{ 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:.4; transform:scale(.75); } }
+      .ov-metrics{
+        display:grid; grid-template-columns:repeat(4, minmax(0, 1fr));
+        gap:14px; padding:12px 18px 14px; min-height:0; min-width:0;
+      }
+      .ov-metrics .metric{
+        position:relative; display:flex; flex-direction:column; justify-content:space-between;
+        padding:12px 18px 11px; border-radius:var(--r-md);
+        background:linear-gradient(135deg, rgba(7,34,68,.90) 0%, rgba(2,15,35,.96) 100%);
+        border:1.5px solid var(--line-soft);
+        box-shadow:inset 0 1px 0 rgba(140,220,255,.14), inset 0 0 24px rgba(0,90,160,.12), 0 4px 18px rgba(0,0,0,.4);
+        transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+        overflow:hidden;
+      }
+      .ov-metrics .metric:hover{ transform:translateY(-2px); }
+      .ov-metrics .metric::before{
+        content:""; position:absolute; top:-1px; left:-1px; width:14px; height:14px;
+        border-top:2px solid currentColor; border-left:2px solid currentColor;
+        border-top-left-radius:var(--r-md); opacity:.9; pointer-events:none;
+      }
+      .ov-metrics .metric::after{
+        content:""; position:absolute; bottom:-1px; right:-1px; width:14px; height:14px;
+        border-bottom:2px solid currentColor; border-right:2px solid currentColor;
+        border-bottom-right-radius:var(--r-md); opacity:.9; pointer-events:none;
+      }
+      .ov-metrics .metric .m-top{ display:flex; align-items:center; gap:9px; white-space:nowrap; }
+      .ov-metrics .metric .m-ico{
+        width:34px; height:34px; border-radius:8px; border:1px solid;
+        display:flex; align-items:center; justify-content:center; flex:none;
+      }
+      .ov-metrics .metric .m-ico svg{ width:19px; height:19px; display:block; }
+      .ov-metrics .metric .m-lab{ font-size:16px; font-weight:700; color:#f0f8ff; letter-spacing:1px; }
+      .ov-metrics .metric .m-tag{
+        margin-left:auto; font-size:11.5px; font-weight:700; letter-spacing:1px;
+        padding:2.5px 8px; border-radius:4px; border:1px solid; white-space:nowrap;
+      }
+      .ov-metrics .metric .m-main{
+        display:flex; align-items:baseline; justify-content:space-between; margin-top:8px; gap:8px;
+      }
+      .ov-metrics .metric .num{
+        font-family:var(--mono); font-variant-numeric:tabular-nums;
+        font-size:52px; font-weight:800; line-height:1; letter-spacing:1px;
+      }
+      .ov-metrics .metric .tot{
+        font-size:19px; color:#a2c8ea; font-weight:600; margin-left:6px;
+        font-family:var(--font); letter-spacing:0;
+      }
+      .ov-metrics .metric .m-sub{
+        font-size:13px; color:#8cb2d3; font-family:var(--font); letter-spacing:.5px; white-space:nowrap;
+      }
+      .ov-metrics .metric .m-progress{
+        margin-top:9px; height:4px; border-radius:2px; background:rgba(0,100,160,.25);
+        overflow:hidden; position:relative;
+      }
+      .ov-metrics .metric .m-bar{
+        display:block; height:100%; border-radius:2px; transition:width .45s ease;
+      }
+
+      /* Metric 4 Theme Palettes */
+      .ov-metrics .metric.c{
+        border-color:rgba(0,229,255,.55); color:var(--cyan);
+        box-shadow:inset 0 1px 0 rgba(140,220,255,.18), 0 0 22px rgba(0,229,255,.18), inset 0 0 26px rgba(0,229,255,.08);
+      }
+      .ov-metrics .metric.c .num{ color:#00e5ff; text-shadow:0 0 18px rgba(0,229,255,.75); }
+      .ov-metrics .metric.c .m-ico{ color:#00e5ff; background:rgba(0,229,255,.14); border-color:rgba(0,229,255,.5); box-shadow:0 0 10px rgba(0,229,255,.3); }
+      .ov-metrics .metric.c .m-tag{ color:#00e5ff; background:rgba(0,229,255,.12); border-color:rgba(0,229,255,.4); }
+      .ov-metrics .metric.c .m-bar{ background:linear-gradient(90deg, #0099ff, #00e5ff); box-shadow:0 0 8px #00e5ff; }
+
+      .ov-metrics .metric.o{
+        border-color:rgba(255,136,0,.65); color:#ff9100;
+        box-shadow:inset 0 1px 0 rgba(255,190,140,.18), 0 0 24px rgba(255,136,0,.22), inset 0 0 26px rgba(255,136,0,.10);
+      }
+      .ov-metrics .metric.o .num{ color:#ff9100; text-shadow:0 0 20px rgba(255,145,0,.85); }
+      .ov-metrics .metric.o .m-ico{ color:#ff9922; background:rgba(255,136,0,.15); border-color:rgba(255,150,30,.6); box-shadow:0 0 12px rgba(255,136,0,.35); }
+      .ov-metrics .metric.o .m-tag{ color:#ffab3d; background:rgba(255,136,0,.14); border-color:rgba(255,150,30,.5); }
+      .ov-metrics .metric.o .m-bar{ background:linear-gradient(90deg, #ff4400, #ffaa00); box-shadow:0 0 10px #ff8800; }
+      .ov-metrics .metric.o.dense-active{ animation:denseBreathe 2s ease-in-out infinite; }
+      @keyframes denseBreathe{ 0%,100%{ box-shadow:inset 0 1px 0 rgba(255,190,140,.18), 0 0 18px rgba(255,136,0,.2), inset 0 0 26px rgba(255,136,0,.08); } 50%{ box-shadow:inset 0 1px 0 rgba(255,220,160,.25), 0 0 32px rgba(255,136,0,.45), inset 0 0 34px rgba(255,136,0,.18); } }
+
+      .ov-metrics .metric.b{
+        border-color:rgba(61,155,255,.6); color:#3d9bff;
+        box-shadow:inset 0 1px 0 rgba(140,200,255,.18), 0 0 22px rgba(61,155,255,.18), inset 0 0 26px rgba(61,155,255,.08);
+      }
+      .ov-metrics .metric.b .num{ color:#4da6ff; text-shadow:0 0 18px rgba(61,155,255,.75); }
+      .ov-metrics .metric.b .m-ico{ color:#4da6ff; background:rgba(61,155,255,.14); border-color:rgba(61,155,255,.5); box-shadow:0 0 10px rgba(61,155,255,.3); }
+      .ov-metrics .metric.b .m-tag{ color:#7bb8ff; background:rgba(61,155,255,.12); border-color:rgba(61,155,255,.4); }
+      .ov-metrics .metric.b .m-bar{ background:linear-gradient(90deg, #1d4ed8, #3b82f6); box-shadow:0 0 8px #3b82f6; }
+
+      .ov-metrics .metric.g{
+        border-color:rgba(31,224,138,.6); color:#1fe08a;
+        box-shadow:inset 0 1px 0 rgba(140,255,200,.18), 0 0 22px rgba(31,224,138,.18), inset 0 0 26px rgba(31,224,138,.08);
+      }
+      .ov-metrics .metric.g .num{ color:#1fe08a; text-shadow:0 0 18px rgba(31,224,138,.75); }
+      .ov-metrics .metric.g .m-ico{ color:#1fe08a; background:rgba(31,224,138,.14); border-color:rgba(31,224,138,.5); box-shadow:0 0 10px rgba(31,224,138,.3); }
+      .ov-metrics .metric.g .m-tag{ color:#5fffc0; background:rgba(31,224,138,.12); border-color:rgba(31,224,138,.4); }
+      .ov-metrics .metric.g .m-bar{ background:linear-gradient(90deg, #059669, #10b981); box-shadow:0 0 8px #10b981; }
+
       /* ---------- right: crew statistics ---------- */
-      .head-stat{ font-size:12.5px; color:var(--muted); letter-spacing:1px; white-space:nowrap; }
-      .head-stat b{ color:var(--cyan); font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:16px; }
-      .stat-body{ padding:12px 15px 13px; display:flex; flex-direction:column; gap:9px; }
-      .trow{ display:flex; align-items:center; gap:10px; font-size:13.5px; }
-      .t-name{ width:60px; flex:none; color:#cfe9f7; letter-spacing:.5px; white-space:nowrap; font-size:13px; }
-      .t-bar{ flex:1; height:11px; border-radius:6px; background:rgba(0,120,190,.13); overflow:hidden; box-shadow:inset 0 1px 2px rgba(0,0,0,.35); }
-      .t-bar i{ display:block; height:100%; border-radius:6px; }
-      .t-num{ width:50px; flex:none; text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums; color:#eaf8ff; font-weight:700; font-size:16px; }
-      .t-pct{ width:38px; flex:none; text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums; color:var(--muted); font-size:12px; }
+      .head-stat{ font-size:12px; color:var(--muted); letter-spacing:1px; white-space:nowrap; }
+      .head-stat b{ color:var(--cyan); font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:15px; }
+      .stat-body{ padding:9px 12px 10px; display:flex; flex-direction:column; gap:7px; }
+      .trow{ display:flex; align-items:center; gap:8px; font-size:12.5px; }
+      .t-name{ width:58px; flex:none; color:#cfe9f7; letter-spacing:.5px; white-space:nowrap; font-size:12.5px; }
+      .t-bar{ flex:1; height:9px; border-radius:5px; background:rgba(0,120,190,.13); overflow:hidden; box-shadow:inset 0 1px 2px rgba(0,0,0,.35); }
+      .t-bar i{ display:block; height:100%; border-radius:5px; }
+      .t-num{ width:46px; flex:none; text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums; color:#eaf8ff; font-weight:700; font-size:15px; }
+      .t-pct{ width:36px; flex:none; text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums; color:var(--muted); font-size:11.5px; }
       /* ---------- right: access & alert feed ---------- */
       #logPanel{ flex:1; display:flex; flex-direction:column; min-height:0; }
-      #logList{ flex:1; overflow-y:auto; overflow-x:hidden; list-style:none; padding:6px 0; scrollbar-width:none; }
+      #logList{ flex:1; overflow-y:auto; overflow-x:hidden; list-style:none; padding:4px 0; scrollbar-width:none; }
       #logList::-webkit-scrollbar{ display:none; }
-      #logList li{ display:flex; align-items:center; gap:8px; padding:5.5px 13px; font-size:12.5px; line-height:1.35; white-space:nowrap; cursor:pointer; border-left:3px solid transparent; }
+      #logList li{ display:flex; align-items:center; gap:7px; padding:4.5px 11px; font-size:12px; line-height:1.35; white-space:nowrap; cursor:pointer; border-left:3px solid transparent; }
       #logList li:hover{ background:rgba(0,110,180,.13); }
       #logList li.fresh{ animation:logIn .6s ease-out; }
       @keyframes logIn{ from{ background:rgba(0,229,255,.30);} to{ background:transparent;} }
@@ -371,6 +513,82 @@
         background:rgba(3,18,38,.95); border:1px solid var(--line); border-radius:var(--r-md); box-shadow:0 6px 24px rgba(0,0,0,.45), 0 0 16px rgba(0,160,255,.18); color:#dff6ff; font-size:14px; letter-spacing:1px; padding:11px 22px;
         transition:opacity .25s, transform .25s; }
       #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+      /* ---------- cabin crew panel view ---------- */
+      .cabin-crew-panel{
+        flex:1; display:flex; flex-direction:column; min-height:0; overflow:hidden;
+        background:linear-gradient(180deg, rgba(6,28,58,.94), rgba(2,14,32,.98));
+        border:1.5px solid rgba(0,210,255,.35); border-radius:var(--r-lg);
+        box-shadow:inset 0 1px 0 rgba(140,220,255,.14), inset 0 0 28px rgba(0,90,160,.12), 0 6px 24px rgba(0,0,0,.45);
+        animation:fadeIn .25s ease-out;
+      }
+      .cc-topbar{
+        display:flex; align-items:center; gap:10px; padding:9px 14px;
+        background:linear-gradient(90deg, rgba(0,140,220,.22), rgba(0,90,160,.06) 65%, transparent);
+        border-bottom:1px solid rgba(0,180,240,.22);
+      }
+      .cc-search-box{ position:relative; width:220px; }
+      .cc-search-box input{
+        width:100%; height:32px; padding:0 10px 0 32px; font-size:12px;
+        background:rgba(4,22,46,.85); border:1px solid var(--line); border-radius:var(--r-sm);
+        color:#eaf8ff; outline:none; font-family:var(--font);
+        transition:border-color .2s, box-shadow .2s;
+      }
+      .cc-search-box input:focus{ border-color:var(--cyan); box-shadow:0 0 12px rgba(0,229,255,.3); }
+      .cc-search-ico{
+        position:absolute; left:9px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:var(--muted); pointer-events:none;
+      }
+      .cc-select{
+        height:32px; padding:0 8px; font-size:12px; background:rgba(4,22,46,.88);
+        border:1px solid var(--line); border-radius:var(--r-sm); color:#d9f1ff; outline:none; cursor:pointer;
+      }
+      .cc-select:focus{ border-color:var(--cyan); }
+      .cc-actions{ margin-left:auto; display:flex; align-items:center; gap:8px; }
+      .cc-btn{
+        height:30px; padding:0 11px; font-size:12px; font-weight:600; border-radius:var(--r-sm);
+        background:rgba(0,180,255,.12); border:1px solid rgba(0,220,255,.35); color:var(--cyan);
+        display:inline-flex; align-items:center; gap:5px; cursor:pointer; transition:all .2s;
+      }
+      .cc-btn:hover{ background:rgba(0,200,255,.25); color:#fff; border-color:var(--cyan); box-shadow:0 0 12px rgba(0,229,255,.3); }
+      .cc-stat-chip{
+        font-size:12px; font-weight:600; padding:4px 11px; border-radius:var(--r-sm);
+        background:rgba(0,229,255,.12); border:1px solid rgba(0,229,255,.4); color:var(--cyan);
+        display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+      }
+      .cc-stat-chip b{ font-family:var(--mono); font-size:14px; color:#fff; text-shadow:0 0 10px var(--cyan); }
+      .cc-table-wrap{
+        flex:1; overflow-y:auto; overflow-x:hidden; min-height:0;
+        scrollbar-width:thin; scrollbar-color:rgba(0,180,255,.4) rgba(0,30,60,.2);
+      }
+      .cc-table-wrap::-webkit-scrollbar{ width:6px; }
+      .cc-table-wrap::-webkit-scrollbar-thumb{ background:rgba(0,180,255,.4); border-radius:3px; }
+      .cc-table{ width:100%; border-collapse:collapse; font-size:12.5px; text-align:left; }
+      .cc-table th{
+        position:sticky; top:0; z-index:2; padding:9px 12px; font-size:11.5px; font-weight:700;
+        letter-spacing:1px; color:var(--cyan); background:#062348; border-bottom:1px solid rgba(0,200,255,.3);
+        white-space:nowrap;
+      }
+      .cc-table td{
+        padding:8px 12px; border-bottom:1px solid rgba(0,170,230,.10); color:#cfe9f7; white-space:nowrap; vertical-align:middle;
+      }
+      .cc-table tr:hover td{ background:rgba(0,130,220,.12); }
+      .cc-table td.col-id{ font-family:var(--mono); font-weight:600; color:#8fe9ff; }
+      .cc-table td.col-name{ font-weight:700; color:#ffffff; }
+      .cc-table td.col-tag{ font-family:var(--mono); color:#a0e0ff; }
+      .cc-table td.col-loc{ color:#e0f2fe; font-weight:600; }
+      .cc-table td.col-exciter{ font-size:11.5px; color:#38bdf8; }
+      .cc-table td.col-time{ font-family:var(--mono); color:var(--muted); }
+      .cc-table td.col-stay{ font-family:var(--mono); font-weight:700; color:#e0f2fe; }
+      .cc-table tr.intrude-row td{ background:rgba(255,59,92,.18) !important; color:#ffb0be !important; border-bottom-color:rgba(255,59,92,.3) !important; }
+      .cc-table tr.intrude-row td.col-name{ color:#fff !important; text-shadow:0 0 10px rgba(255,59,92,.9); }
+      .cc-table tr.timeout-row td.col-stay{ color:#ffb020 !important; text-shadow:0 0 8px rgba(255,176,32,.7); }
+      .cc-pill{
+        display:inline-flex; align-items:center; gap:4px; padding:2px 7px; border-radius:4px; font-size:11px; font-weight:700; white-space:nowrap;
+      }
+      .cc-pill.work{ background:rgba(31,224,138,.16); border:1px solid rgba(31,224,138,.55); color:#22ea91; }
+      .cc-pill.timeout{ background:rgba(255,176,32,.2); border:1px solid rgba(255,176,32,.65); color:#ffb020; }
+      .cc-pill.intrude{ background:rgba(255,59,92,.25); border:1px solid rgba(255,59,92,.75); color:#ff5c74; animation:badgeBreathe 1.5s ease-in-out infinite; }
+      .cc-empty{ padding:40px 10px; text-align:center; color:var(--muted); font-size:13.5px; }
+
       @media (prefers-reduced-motion: reduce){
         *{ animation-duration:.01s !important; animation-iteration-count:1 !important; }
       }
@@ -415,6 +633,66 @@
       </header>
       <!-- ======================= BOARD ======================= -->
       <main class="board">
+        <!-- ===== OVERVIEW STRIP (Hero KPI Bar: spans full board ov ov ov) ===== -->
+        <section class="panel ov-strip">
+          <div class="p-head">
+            <span class="tick"></span>
+            <h2>数据概览</h2>
+            <span class="en">Core Safety KPI Overview</span>
+            <span class="sp"></span>
+            <span class="ov-live-tag"><i class="live-dot"></i> 实时物联感知监控中</span>
+          </div>
+          <div class="ov-metrics">
+            <div class="metric c" id="ovBox1">
+              <div class="m-top">
+                <span class="m-ico" id="ovIco1"></span>
+                <span class="m-lab" id="ovLab1">当前船上总人数</span>
+                <span class="m-tag" id="ovTag1">全船受控</span>
+              </div>
+              <div class="m-main">
+                <div class="num"><span id="ovNum1">0</span><span class="tot" id="ovTot1"> 人</span></div>
+                <div class="m-sub" id="ovSub1">在岗作业总人数</div>
+              </div>
+              <div class="m-progress"><span class="m-bar" id="ovBar1" style="width:100%"></span></div>
+            </div>
+            <div class="metric o" id="ovBox2" style="cursor:pointer;" title="点击切换至空间视图【船舱人员】标签查看完整在舱名单">
+              <div class="m-top">
+                <span class="m-ico" id="ovIco2"></span>
+                <span class="m-lab" id="ovLab2">舱内密集人员数</span>
+                <span class="m-tag" id="ovTag2">进出规则统计</span>
+              </div>
+              <div class="m-main">
+                <div class="num"><span id="ovNum2">0</span><span class="tot" id="ovTot2"> 人</span></div>
+                <div class="m-sub" id="ovSub2">船舱进出规则受控在舱</div>
+              </div>
+              <div class="m-progress"><span class="m-bar" id="ovBar2" style="width:65%"></span></div>
+            </div>
+            <div class="metric b" id="ovBox3">
+              <div class="m-top">
+                <span class="m-ico" id="ovIco3"></span>
+                <span class="m-lab" id="ovLab3">有限空间总人数</span>
+                <span class="m-tag" id="ovTag3">密闭舱室作业</span>
+              </div>
+              <div class="m-main">
+                <div class="num"><span id="ovNum3">0</span><span class="tot" id="ovTot3"> 人</span></div>
+                <div class="m-sub" id="ovSub3">在舱受控人员</div>
+              </div>
+              <div class="m-progress"><span class="m-bar" id="ovBar3" style="width:80%"></span></div>
+            </div>
+            <div class="metric g" id="ovBox4">
+              <div class="m-top">
+                <span class="m-ico" id="ovIco4"></span>
+                <span class="m-lab" id="ovLab4">今日有限空间进舱数/总数</span>
+                <span class="m-tag" id="ovTag4">舱位覆盖率</span>
+              </div>
+              <div class="m-main">
+                <div class="num"><span id="ovNum4">0</span><span class="tot" id="ovTot4"> / 16 舱</span></div>
+                <div class="m-sub" id="ovSub4">作业舱位覆盖率</div>
+              </div>
+              <div class="m-progress"><span class="m-bar" id="ovBar4" style="width:50%"></span></div>
+            </div>
+          </div>
+        </section>
         <!-- ===== LEFT ===== -->
         <div class="col col-left">
           <section class="panel proj-panel">
@@ -426,29 +704,6 @@
             <div id="projList"></div>
           </section>
         </div>
-        <!-- ===== OVERVIEW STRIP (spans center + right) ===== -->
-        <section class="panel ov-strip">
-          <div class="p-head"><span class="tick"></span><h2>数据概览</h2><span class="en">Data Overview</span></div>
-          <div class="ov-metrics">
-            <div class="metric c" id="ovBox1">
-              <div class="m-top"><span id="ovIco1"></span><span id="ovLab1">当前船上总人数</span></div>
-              <div class="num"><span id="ovNum1">0</span><span class="tot" id="ovTot1"></span></div>
-            </div>
-            <div class="metric g" id="ovBox2">
-              <div class="m-top"><span id="ovIco2"></span><span id="ovLab2">今日有限空间进舱数</span></div>
-              <div class="num"><span id="ovNum2">0</span><span class="tot" id="ovTot2"></span></div>
-            </div>
-            <div class="metric b" id="ovBox3">
-              <div class="m-top"><span id="ovIco3"></span><span id="ovLab3">有限空间作业人数</span></div>
-              <div class="num"><span id="ovNum3">0</span><span class="tot" id="ovTot3"></span></div>
-            </div>
-            <!-- 预警中区域：暂时隐藏显示（标签/数值/告警逻辑保留，移除 hidden 即恢复） -->
-            <div class="metric r" id="ovBox4" hidden>
-              <div class="m-top"><span id="ovIco4"></span><span id="ovLab4">预警中区域</span></div>
-              <div class="num"><span id="ovNum4">0</span><span class="tot" id="ovTot4"></span></div>
-            </div>
-          </div>
-        </section>
         <!-- ===== CENTER ===== -->
         <div class="col col-center">
           <section class="panel center-toolbar">
@@ -456,11 +711,13 @@
             <div class="mode-tabs" role="tablist">
               <button type="button" id="tabConfined" class="active">有限空间</button>
               <button type="button" id="tabWorkface">作业面</button>
+              <button type="button" id="tabCabinCrew">船舱人员</button>
             </div>
             <div class="cur-name" id="curProjName">—</div>
           </section>
           <div id="cards" tabindex="0" aria-label="空间卡片 · 分页浏览，滚轮或滑动翻页"><div id="cardsGrid"></div></div>
           <div class="pager" id="pager"><span class="pager-dots" id="pagerDots"></span><span class="pager-text" id="pagerText"></span></div>
+          <section id="cabinCrewPanel" class="panel cabin-crew-panel" style="display:none;"></section>
         </div>
         <!-- ===== RIGHT ===== -->
         <div class="col col-right">
@@ -918,22 +1175,38 @@
       return items;
     }
     /* 状态体系（3 主状态 + 闯入预警）：
-       作业中（绿）= 有人在场；空闲（黄）= 无人；禁入（橙红静态）= 封锁空间无人；
-       闯入预警 = 禁入空间内检测到人员，徽标与卡片边框红色呼吸闪烁。
-       原「安全」并入：有人在场归作业中，无人归空闲。 */
+       作业中（绿）= 有人在场；无人状态（暗灰）= 无人在场；禁入（橙红静态）= 封锁空间无人；
+       闯入预警 = 禁入空间内检测到人员，徽标与卡片边框红色呼吸闪烁。 */
     function spaceStatus(s){
       if(s.forbid){
         if(s.entered > 0) return { k:"intrude", t:"闯入预警" };
-        return { k:"forbid", t:"禁入" };
+        return { k:"forbid", t:"禁止进入" };
       }
       if(s.entered > 0) return { k:"work", t:"作业中" };
-      return { k:"idle", t:"空闲" };
+      return { k:"nobody", t:"无人状态" };
     }
     function isIntrusion(s){ return !!s.forbid && s.entered > 0; }
     /* 告警口径：禁入闯入 + 气体超限，两者共同计入告警提示 / 总览预警中区域数 / 告警台账 */
     function isAlarmSpace(s){ return isIntrusion(s) || gasOver(s.gas).length > 0; }
     function statusColor(k){
-      return k==="intrude" ? "#ff3b5c" : (k==="forbid" ? "#ff7a59" : (k==="idle" ? "#ffd83d" : "#1fe08a"));
+      return k==="intrude" ? "#ff3b5c" : (k==="forbid" ? "#ff7a59" : (k==="nobody" ? "#6d8299" : (k==="idle" ? "#6d8299" : "#1fe08a")));
+    }
+    /* 空间卡片排序规则：
+       1. 有人员进入（entered > 0）的空间往前摆放，按人从多到少排序；
+       2. 人数为 0 的空间排序按空间名称排序。 */
+    function sortSpaces(list){
+      return list.slice().sort(function(a, b){
+        var aIn = a.entered || 0;
+        var bIn = b.entered || 0;
+        if(aIn > 0 && bIn > 0){
+          if(bIn !== aIn) return bIn - aIn; // 从多到少降序
+          return a.name.localeCompare(b.name, "zh-CN");
+        }
+        if(aIn > 0 && bIn === 0) return -1; // 有人排在前面
+        if(aIn === 0 && bIn > 0) return 1;  // 0人排在后面
+        // 人数为 0 的空间按空间名称排序
+        return a.name.localeCompare(b.name, "zh-CN");
+      });
     }
     function buildSpaces(){
       var p = PROJECTS[state.proj];
@@ -941,9 +1214,11 @@
       var yard = projRegion(state.proj) === "yard";
       var extraC = yard ? EXTRA_YARD_CONFINED : EXTRA_SHIP_CONFINED;
       var extraW = yard ? EXTRA_YARD_WORKFACE : EXTRA_SHIP_WORKFACE;
+      var rawC = p.confined.concat(extraC).map(function(d,i){ var sp = makeSpace(d,i); sp.crew = makeCrew(sp, yard); return sp; });
+      var rawW = p.workface.concat(extraW).map(function(d,i){ var sp = makeSpace(d,i); sp.crew = makeCrew(sp, yard); return sp; });
       state.sets = {
-        confined: p.confined.concat(extraC).map(function(d,i){ var sp = makeSpace(d,i); sp.crew = makeCrew(sp, yard); return sp; }),
-        workface: p.workface.concat(extraW).map(function(d,i){ var sp = makeSpace(d,i); sp.crew = makeCrew(sp, yard); return sp; })
+        confined: sortSpaces(rawC),
+        workface: sortSpaces(rawW)
       };
       state.spaces = state.sets[state.mode];
       state.selIdx = defaultSel();
@@ -981,36 +1256,46 @@
     function donutSVG(s, st){
       var ratio = s.lim ? Math.min(1, s.entered / s.lim) : 0;
       var col = statusColor(st.k);
+      if (st.k === "work" || st.k === "idle") {
+        if (s.entered > 9) col = "#ff5500";
+        else if (s.entered > 3) col = "#ffee00";
+      }
+      var numStyle = s.entered > 9 ? ' style="color:#ff5500;text-shadow:0 0 10px rgba(255,85,0,.8);font-weight:800"' : (s.entered > 3 ? ' style="color:#ffee00;text-shadow:0 0 10px rgba(255,238,0,.8);font-weight:800"' : '');
       return '<svg width="138" height="138" viewBox="0 0 138 138">'
         + '<circle cx="69" cy="69" r="56" fill="none" stroke="rgba(0,150,210,.16)" stroke-width="11"/>'
         + '<circle class="d-arc" cx="69" cy="69" r="56" fill="none" stroke="'+col+'" stroke-width="11" stroke-linecap="round" '
         + 'stroke-dasharray="'+(ratio*CIRC).toFixed(1)+' '+CIRC.toFixed(1)+'"/></svg>'
-        + '<div class="d-center"><b class="d-num">'+s.entered+'/'+s.lim+'</b><span class="d-pct">'+Math.round(ratio*100)+'%</span></div>';
+        + '<div class="d-center"><b class="d-num"'+numStyle+'>'+s.entered+'/'+s.lim+'</b><span class="d-pct">'+Math.round(ratio*100)+'%</span></div>';
     }
     function cardHTML(s, i){
       var st = spaceStatus(s);
-      /* 两种模式卡片形态区分：
-         有限空间 = 安全监控：Donut 在场/定员环 + 舱内人员 + 安全责任人（保持现有设计）；
-         作业面 = 人员生产投入监控：无定员环、无「舱内人员」表述，
-         主体突出实际现场作业人员大数字 + 安全员责任人（姓名 / 电话）。 */
       var body;
+      var pInStyle = "";
+      if (s.entered > 9 && st.k !== "intrude" && st.k !== "forbid") {
+        pInStyle = ' style="color:#ff5500;text-shadow:0 0 14px rgba(255,85,0,.85);font-weight:800"';
+      } else if (s.entered > 3 && st.k !== "intrude" && st.k !== "forbid") {
+        pInStyle = ' style="color:#ffee00;text-shadow:0 0 12px rgba(255,238,0,.8);font-weight:800"';
+      }
       if(state.mode === "workface"){
         body = '<div class="card-body"><div class="wf-main">'
-          + '<div class="wf-count"><span class="wf-lab">现场作业人员</span><span class="wf-num p-in">'+s.entered+'<small>人</small></span></div>'
-          + '<div class="wf-safe"><span class="wf-role">安全员</span><span class="wf-name">'+s.guardian+'</span><span class="wf-phone">'+s.phone+'</span></div>'
+          + '<div class="wf-count"><span class="wf-lab">现场作业人员</span><span class="wf-num p-in"'+pInStyle+'>'+s.entered+'<small>人</small></span></div>'
+          + '<div class="wf-safe"><span class="wf-role">安全监护人</span><span class="wf-name">'+s.guardian+'</span></div>'
           + '</div></div>';
       } else {
         body = '<div class="card-body">'
           +   '<div class="card-main"><div class="donut-col"><div class="donut">'+donutSVG(s, st)+'</div>'
           +   '<div class="vol-under">容积 <b>'+fmtVol(s.vol)+'</b><small>m³</small></div></div>'
           +   '<div class="ppl-big">'
-          +     '<div class="pr"><span class="pl">舱内人员</span><span class="pv p-in">'+s.entered+'<small>人</small></span></div>'
-          +     '<div class="pr"><span class="pl">安全责任人</span><span class="pv name">'+s.guardian+'</span></div>'
-          +     '<div class="pr"><span class="p-phone">'+s.phone+'</span></div>'
+          +     '<div class="pr"><span class="pl">舱内人员</span><span class="pv p-in"'+pInStyle+'>'+s.entered+'<small>人</small></span></div>'
+          +     '<div class="pr"><span class="pl">安全监护人</span><span class="pv name">'+s.guardian+'</span></div>'
           +   '</div></div>'
           + '</div>';
       }
-      return '<article class="card'+(st.k==="intrude"?" intrude":(st.k==="forbid"?" forbid":""))+'" data-card="'+i+'">'
+      var cardCls = st.k === "intrude" ? " intrude" : (st.k === "forbid" ? " forbid" : (s.entered > 9 ? " ppl-orange-card" : (s.entered > 3 ? " ppl-yellow-card" : "")));
+      if(s.entered === 0){
+        cardCls += " nobody";
+      }
+      return '<article class="card'+cardCls+'" data-card="'+i+'">'
         + '<div class="card-head"><span class="card-ico">'+(state.mode === "workface" ? ICON_WORKFACE : ICON_CONFINED)+'</span><div><h3>'+s.name+'</h3></div>'
         + '<span class="badge '+st.k+'">'+st.t+'</span></div>'
         + body
@@ -1156,68 +1441,439 @@
         badge.className = "badge " + st.k; badge.textContent = st.t;
         card.classList.toggle("intrude", st.k==="intrude");
         card.classList.toggle("forbid", st.k==="forbid");
+        card.classList.toggle("ppl-orange-card", s.entered > 9 && st.k !== "intrude" && st.k !== "forbid");
+        card.classList.toggle("ppl-yellow-card", s.entered > 3 && s.entered <= 9 && st.k !== "intrude" && st.k !== "forbid");
+        card.classList.toggle("nobody", s.entered === 0);
         /* Donut 仅存在于有限空间卡片；作业面卡片只有大数字 .p-in，做空值防护 */
         var arc = card.querySelector(".d-arc");
         if(arc){
           var ratio = s.lim ? Math.min(1, s.entered/s.lim) : 0;
+          var arcCol = statusColor(st.k);
+          if(st.k === "work" || st.k === "idle"){
+            if(s.entered > 9) arcCol = "#ff5500";
+            else if(s.entered > 3) arcCol = "#ffee00";
+          }
           arc.setAttribute("stroke-dasharray", (ratio*CIRC).toFixed(1)+" "+CIRC.toFixed(1));
-          arc.setAttribute("stroke", statusColor(st.k));
-          card.querySelector(".d-num").textContent = s.entered + "/" + s.lim;
+          arc.setAttribute("stroke", arcCol);
+          var dNum = card.querySelector(".d-num");
+          if(dNum) {
+            dNum.textContent = s.entered + "/" + s.lim;
+            if (s.entered > 9 && st.k !== "intrude") {
+              dNum.style.color = "#ff5500";
+              dNum.style.textShadow = "0 0 10px rgba(255,85,0,.8)";
+            } else if (s.entered > 3 && st.k !== "intrude") {
+              dNum.style.color = "#ffee00";
+              dNum.style.textShadow = "0 0 10px rgba(255,238,0,.8)";
+            } else {
+              dNum.style.color = "#fff";
+              dNum.style.textShadow = "";
+            }
+          }
           card.querySelector(".d-pct").textContent = Math.round(ratio*100) + "%";
         }
         var pIn = card.querySelector(".p-in");
-        if(pIn) pIn.innerHTML = s.entered + "<small>人</small>";
+        if(pIn) {
+          pIn.innerHTML = s.entered + "<small>人</small>";
+          if (s.entered > 9 && st.k !== "intrude" && st.k !== "forbid") {
+            pIn.style.color = "#ff5500";
+            pIn.style.textShadow = "0 0 14px rgba(255,85,0,.85)";
+          } else if (s.entered > 3 && st.k !== "intrude" && st.k !== "forbid") {
+            pIn.style.color = "#ffee00";
+            pIn.style.textShadow = "0 0 12px rgba(255,238,0,.8)";
+          } else {
+            pIn.style.color = "";
+            pIn.style.textShadow = "";
+          }
+        }
       });
     }
 
-    /* ---------------- 数据概览（4 项指标，随空间视图模式整套切换口径） ----------------
-       有限空间：当前船上总人数（实时，当前项目全部空间在场人数合计）/
-         今日有限空间进舱数（有限空间中已进人空间数 / 有限空间总数）/
-         有限空间作业人数（有限空间各空间在舱人数合计）/
-         预警中区域（有限空间中禁入闯入 + 气体超限空间数）；
-       作业面：当前区域总人数（实时，当前项目/厂区全部空间在场人数合计）/
-         今日作业人数（作业面各区域现场作业人员合计）/
-         作业面数量（作业面总数）/
-         预警中区域（作业面中禁入闯入 + 气体超限区域数）。
-       切换模式标签 / 区域 / 船舶项目时均由本函数按当前口径重算并同步刷新名称与数值。 */
+    /* ---------------- 数据概览（4 项核心指标，随船舶/厂区项目整套自适应切换） ----------------
+       船舶项目（4 个数据标签）：
+         1. 当前船上总人数：全船各空间实时在岗总人数
+         2. 舱内密集人员数：密闭舱室中人数 >3 人的空间在场人员合计（重点防范人员密集引发的窒息、火灾与疏散通道阻塞风险）
+         3. 有限空间总人数：有限空间各舱室在场作业人员总和
+         4. 今日有限空间进舱数/总数：今日已进舱空间数量 / 有限空间总数
+       厂区项目（4 个数据标签）：
+         1. 当前厂区总人数
+         2. 区域密集人员数
+         3. 作业面总人数
+         4. 今日作业面开工数/总数
+    */
     var OV_ICONS = {
-      crew:  '<svg viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.2-3.6 4-5.4 7.5-5.4s6.3 1.8 7.5 5.4"/></svg>',
-      door:  '<svg viewBox="0 0 24 24" fill="none" stroke="#1fe08a" stroke-width="2"><path d="M14 3.5h5.5v17H14"/><path d="M14 3.5H4.5v17H14"/><circle cx="11.6" cy="12" r=".9" fill="#1fe08a" stroke="none"/><circle cx="7.6" cy="8.2" r="1.5"/><path d="M5.2 20.5c.6-2.5 1.3-3.7 2.4-3.7s1.8 1.2 2.4 3.7"/></svg>',
-      group: '<svg viewBox="0 0 24 24" fill="none" stroke="#3d9bff" stroke-width="2"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 20c.9-3.2 3.1-4.9 6-4.9s5.1 1.7 6 4.9"/><circle cx="17.2" cy="9.5" r="2.4"/><path d="M16 15.4c2.3.3 3.9 1.8 4.6 4.3"/></svg>',
-      grid:  '<svg viewBox="0 0 24 24" fill="none" stroke="#3d9bff" stroke-width="2"><rect x="4" y="4" width="7" height="7" rx="1.4"/><rect x="13" y="4" width="7" height="7" rx="1.4"/><rect x="4" y="13" width="7" height="7" rx="1.4"/><rect x="13" y="13" width="7" height="7" rx="1.4"/></svg>',
-      bell:  '<svg viewBox="0 0 24 24" fill="none" stroke="#ff3b5c" stroke-width="2"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 3h-15Z"/><path d="M10 21a2.2 2.2 0 0 0 4 0"/></svg>'
+      crew:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.2-3.6 4-5.4 7.5-5.4s6.3 1.8 7.5 5.4"/></svg>',
+      dense: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><circle cx="19" cy="8" r="1.5" fill="#ff7700" stroke="none"/></svg>',
+      group: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><path d="M5 18a4 4 0 0 1 8 0"/><path d="M15 8h4M15 12h4M15 16h2"/></svg>',
+      door:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 3.5h6.5v17H13"/><path d="M13 3.5H4v17h9"/><circle cx="10.5" cy="12" r="1" fill="currentColor"/><path d="M4 20.5h16"/></svg>',
+      grid:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="7" height="7" rx="1.4"/><rect x="13" y="4" width="7" height="7" rx="1.4"/><rect x="4" y="13" width="7" height="7" rx="1.4"/><rect x="13" y="13" width="7" height="7" rx="1.4"/></svg>',
+      bell:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 3h-15Z"/><path d="M10 21a2.2 2.2 0 0 0 4 0"/></svg>'
     };
-    function sumEntered(list){ var t = 0; list.forEach(function(s){ t += s.entered; }); return t; }
-    function countEntered(list){ var t = 0; list.forEach(function(s){ if(s.entered > 0) t++; }); return t; }
-    function countAlarms(list){ var t = 0; list.forEach(function(s){ if(isAlarmSpace(s)) t++; }); return t; }
+    function sumEntered(list){ var t = 0; if(!list) return 0; list.forEach(function(s){ t += s.entered; }); return t; }
+    function sumDenseEntered(list){ var t = 0; if(!list) return 0; list.forEach(function(s){ if(s.entered > 3) t += s.entered; }); return t; }
+    function countEntered(list){ var t = 0; if(!list) return 0; list.forEach(function(s){ if(s.entered > 0) t++; }); return t; }
+    function countAlarms(list){ var t = 0; if(!list) return 0; list.forEach(function(s){ if(isAlarmSpace(s)) t++; }); return t; }
+    /* ---------------- 船舱进出规则人员统计与花名册 ---------------- */
+    var ccFilterKeyword = "";
+    var ccFilterCabin = "ALL";
+    var ccFilterStatus = "ALL";
+
+    /* 获取当前项目基于进出规则统计的在舱人员明细列表 */
+    function getCabinPersonnelList(){
+      var isShip = projRegion(state.proj) === "ship";
+      var projObj = PROJECTS[state.proj];
+
+      // 1. 优先读取「船舱配置」模块保存在本地存储中的在舱受控人员数据
+      try {
+        var raw = localStorage.getItem("ship_cabin_personnel_v1");
+        if(raw){
+          var parsed = JSON.parse(raw);
+          if(Array.isArray(parsed) && parsed.length > 0){
+            var matched = parsed.filter(function(p){
+              if(!p.projectName) return true;
+              return p.projectName.indexOf(projObj.tag) !== -1 || p.projectName.indexOf(projObj.name) !== -1 || projObj.name.indexOf(p.projectName) !== -1;
+            });
+            if(matched.length > 0) return matched;
+          }
+        }
+      } catch(e){}
+
+      // 2. 依据当前项目各舱位及关联激励器规则动态构建花名册
+      var confSpaces = (state.sets && state.sets.confined) ? state.sets.confined : [];
+      var list = [];
+      var teams = isShip ? CREW_TEAMS.ship : CREW_TEAMS.yard;
+      var EXCITERS = [
+        { code:"EX-01-A", name:"人孔直梯进舱激励器 (125KHz)" },
+        { code:"EX-01-B", name:"双层底压载舱主入舱激励器 (125KHz)" },
+        { code:"EX-02-A", name:"机舱底层水密门激励器 (125KHz)" },
+        { code:"EX-03-A", name:"气闸门内侧感应激励器 (125KHz)" }
+      ];
+
+      confSpaces.forEach(function(s, sIdx){
+        if(s.entered <= 0) return;
+        var exciter = EXCITERS[sIdx % EXCITERS.length];
+        var spaceCrew = makeCrew(s, !isShip);
+        spaceCrew.forEach(function(c, cIdx){
+          var stayMins = Math.round((Date.now() - c.entryTs) / 60000);
+          var stayHours = Math.floor(stayMins / 60);
+          var remMins = stayMins % 60;
+          var durationStr = (stayHours > 0 ? (stayHours + "小时") : "") + remMins + "分";
+          var entryD = new Date(c.entryTs);
+          var entryTimeStr = pad(entryD.getHours()) + ":" + pad(entryD.getMinutes()) + ":" + pad(entryD.getSeconds());
+          
+          var status = "在舱作业中";
+          if(s.forbid === "intrude"){
+            status = "非法闯入";
+          } else if(stayMins > 120){
+            status = "停留超时";
+          }
+
+          list.push({
+            id: c.id,
+            workerId: "EMP-" + (2000 + (sIdx * 37 + cIdx * 19) % 7999),
+            name: c.name,
+            team: c.team,
+            trade: c.trade,
+            tagCode: "TAG-UWB-" + (8100 + (sIdx * 43 + cIdx * 17) % 899),
+            location: s.name,
+            entryTime: entryTimeStr,
+            duration: durationStr,
+            durationMinutes: stayMins,
+            status: status,
+            triggeredExciterCode: exciter.code,
+            triggeredExciterName: exciter.name
+          });
+        });
+      });
+
+      return list;
+    }
+
+    /* 根据进出规则统计进入船舱的人员总数 */
+    function getCabinRuleTotalEntered(){
+      var list = getCabinPersonnelList();
+      return list.length;
+    }
+
+    /* 渲染船舱人员监控面板 */
+    function renderCabinCrewPanel(){
+      var ccPanel = document.getElementById("cabinCrewPanel");
+      if(!ccPanel) return;
+      var allList = getCabinPersonnelList();
+
+      var cabinNames = [];
+      var seenLocs = {};
+      allList.forEach(function(item){
+        if(item.location && !seenLocs[item.location]){
+          seenLocs[item.location] = true;
+          cabinNames.push(item.location);
+        }
+      });
+
+      var filtered = allList.filter(function(item){
+        if(ccFilterCabin !== "ALL" && item.location !== ccFilterCabin) return false;
+        if(ccFilterStatus !== "ALL" && item.status !== ccFilterStatus) return false;
+        if(ccFilterKeyword.trim()){
+          var kw = ccFilterKeyword.trim().toLowerCase();
+          var matchId = item.workerId.toLowerCase().indexOf(kw) !== -1;
+          var matchName = item.name.toLowerCase().indexOf(kw) !== -1;
+          var matchTeam = item.team.toLowerCase().indexOf(kw) !== -1;
+          var matchTag = item.tagCode.toLowerCase().indexOf(kw) !== -1;
+          var matchLoc = item.location.toLowerCase().indexOf(kw) !== -1;
+          var matchTrade = item.trade ? item.trade.toLowerCase().indexOf(kw) !== -1 : false;
+          if(!matchId && !matchName && !matchTeam && !matchTag && !matchLoc && !matchTrade) return false;
+        }
+        return true;
+      });
+
+      var cabinOpts = '<option value="ALL">全部船舱位置</option>' + cabinNames.map(function(loc){
+        return '<option value="' + loc + '"' + (ccFilterCabin === loc ? ' selected' : '') + '>' + loc + '</option>';
+      }).join("");
+
+      var html = '<div class="cc-topbar">'
+        + '<div class="cc-search-box">'
+        + '<svg class="cc-search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>'
+        + '<input type="text" id="ccSearchInput" placeholder="搜索工号/姓名/标签/工种..." value="' + ccFilterKeyword + '">'
+        + '</div>'
+        + '<select class="cc-select" id="ccCabinSelect">' + cabinOpts + '</select>'
+        + '<select class="cc-select" id="ccStatusSelect">'
+        + '<option value="ALL"' + (ccFilterStatus === "ALL" ? ' selected' : '') + '>全部在舱状态</option>'
+        + '<option value="在舱作业中"' + (ccFilterStatus === "在舱作业中" ? ' selected' : '') + '>在舱作业中</option>'
+        + '<option value="停留超时"' + (ccFilterStatus === "停留超时" ? ' selected' : '') + '>停留超时</option>'
+        + '<option value="非法闯入"' + (ccFilterStatus === "非法闯入" ? ' selected' : '') + '>非法闯入</option>'
+        + '</select>'
+        + '<div class="cc-actions">'
+        + '<div class="cc-stat-chip">进出规则统计在舱: <b id="ccTotalNum">' + allList.length + '</b> 人</div>'
+        + '<button type="button" class="cc-btn" id="ccExportBtn" title="导出当前船舱人员花名册"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>导出名单</button>'
+        + '<button type="button" class="cc-btn" id="ccRefreshBtn" title="刷新船舱人员数据"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>刷新</button>'
+        + '</div>'
+        + '</div>'
+        + '<div class="cc-table-wrap">'
+        + '<table class="cc-table">'
+        + '<thead><tr>'
+        + '<th>工号</th><th>姓名</th><th>工种</th><th>班组</th><th>标签编号</th><th>所在位置</th><th>进舱规则/关联激励器</th><th>进入时间</th><th>停留时间</th><th>在舱状态</th>'
+        + '</tr></thead>'
+        + '<tbody>';
+
+      if(filtered.length === 0){
+        html += '<tr><td colspan="10" class="cc-empty">未查询到符合条件的在舱人员</td></tr>';
+      } else {
+        filtered.forEach(function(p){
+          var isIntrude = p.status === "非法闯入";
+          var isTimeout = p.status === "停留超时";
+          var rowCls = isIntrude ? ' class="intrude-row"' : (isTimeout ? ' class="timeout-row"' : '');
+          var pillCls = isIntrude ? 'intrude' : (isTimeout ? 'timeout' : 'work');
+          var pillIcon = isIntrude ? '⚠️ ' : (isTimeout ? '⏱ ' : '● ');
+
+          html += '<tr' + rowCls + '>'
+            + '<td class="col-id">' + p.workerId + '</td>'
+            + '<td class="col-name">' + p.name + '</td>'
+            + '<td>' + (p.trade || '作业人员') + '</td>'
+            + '<td>' + p.team + '</td>'
+            + '<td class="col-tag">' + p.tagCode + '</td>'
+            + '<td class="col-loc">' + p.location + '</td>'
+            + '<td class="col-exciter">' + (p.triggeredExciterName || (p.triggeredExciterCode + ' 进舱激励器')) + '</td>'
+            + '<td class="col-time">' + p.entryTime + '</td>'
+            + '<td class="col-stay">' + p.duration + '</td>'
+            + '<td><span class="cc-pill ' + pillCls + '">' + pillIcon + p.status + '</span></td>'
+            + '</tr>';
+        });
+      }
+
+      html += '</tbody></table></div>';
+      ccPanel.innerHTML = html;
+
+      // 绑定输入与下拉事件
+      var inputEl = document.getElementById("ccSearchInput");
+      if(inputEl){
+        inputEl.addEventListener("input", function(e){
+          ccFilterKeyword = e.target.value;
+          renderCabinCrewPanel();
+          var ni = document.getElementById("ccSearchInput");
+          if(ni){ ni.focus(); ni.selectionStart = ni.selectionEnd = ni.value.length; }
+        });
+      }
+      var cabinSel = document.getElementById("ccCabinSelect");
+      if(cabinSel){
+        cabinSel.addEventListener("change", function(e){
+          ccFilterCabin = e.target.value;
+          renderCabinCrewPanel();
+        });
+      }
+      var statusSel = document.getElementById("ccStatusSelect");
+      if(statusSel){
+        statusSel.addEventListener("change", function(e){
+          ccFilterStatus = e.target.value;
+          renderCabinCrewPanel();
+        });
+      }
+      var refreshBtn = document.getElementById("ccRefreshBtn");
+      if(refreshBtn){
+        refreshBtn.addEventListener("click", function(){
+          renderCabinCrewPanel();
+          toast("船舱进出人员物联感知数据已刷新");
+        });
+      }
+      var exportBtn = document.getElementById("ccExportBtn");
+      if(exportBtn){
+        exportBtn.addEventListener("click", function(){
+          exportCabinCrewCSV(filtered);
+        });
+      }
+    }
+
+    function exportCabinCrewCSV(list){
+      if(!list || !list.length){ toast("暂无可导出的人员名单"); return; }
+      var header = "工号,姓名,工种,班组,标签编号,所在位置,关联激励器,进入时间,停留时间,状态\n";
+      var rows = list.map(function(item){
+        return '"' + item.workerId + '","' + item.name + '","' + (item.trade || '') + '","' + item.team + '","' + item.tagCode + '","' + item.location + '","' + (item.triggeredExciterName || '') + '","' + item.entryTime + '","' + item.duration + '","' + item.status + '"';
+      }).join("\n");
+      var blob = new Blob(["\uFEFF" + header + rows], { type: "text/csv;charset=utf-8;" });
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "智慧船厂_船舱在舱受控人员花名册_" + new Date().toISOString().slice(0, 10) + ".csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast("已成功导出 " + list.length + " 条船舱人员数据");
+    }
+
     function refreshOverview(){
+      var isShip = projRegion(state.proj) === "ship";
       var conf = state.sets ? state.sets.confined : [];
       var wf = state.sets ? state.sets.workface : [];
       var totalAll = sumEntered(conf) + sumEntered(wf); /* 当前项目全部空间在场总人数（双模式合计，实时口径） */
+
       var m;
-      if(state.mode === "workface"){
+      if(isShip){
+        /* 1、作业面大屏中舱内密集人员数为展示舱内人员数统计，根据船舶项目中船舱设置进出规则，统计进入的人员总数 */
+        var cabinRulePpl = getCabinRuleTotalEntered();
+        var confPpl = sumEntered(conf);
+        var enteredSpaces = countEntered(conf);
+        var totalSpaces = conf.length || 16;
+        var entryRatio = totalSpaces ? Math.round(enteredSpaces / totalSpaces * 100) : 0;
+
         m = [
-          { ico:OV_ICONS.crew,  lab:"当前区域总人数", num:totalAll, tot:"" },
-          { ico:OV_ICONS.crew,  lab:"今日作业人数",   num:sumEntered(wf), tot:"" },
-          { ico:OV_ICONS.grid,  lab:"作业面数量",     num:wf.length, tot:"" },
-          { ico:OV_ICONS.bell,  lab:"预警中区域",     num:countAlarms(wf), tot:"" }
+          {
+            ico: OV_ICONS.crew,
+            lab: "当前船上总人数",
+            num: totalAll,
+            tot: " 人",
+            tag: "全船受控",
+            sub: "在岗作业总人数",
+            pct: Math.min(100, Math.round(totalAll / 120 * 100)),
+            cls: "c"
+          },
+          {
+            ico: OV_ICONS.dense,
+            lab: "舱内密集人员数",
+            num: cabinRulePpl,
+            tot: " 人",
+            tag: "进出规则统计",
+            sub: "船舱进出规则受控在舱",
+            pct: confPpl ? Math.min(100, Math.round(cabinRulePpl / Math.max(1, confPpl) * 100)) : 0,
+            cls: "o"
+          },
+          {
+            ico: OV_ICONS.group,
+            lab: "有限空间总人数",
+            num: confPpl,
+            tot: " 人",
+            tag: "密闭舱室作业",
+            sub: "在舱受控人员",
+            pct: totalAll ? Math.min(100, Math.round(confPpl / totalAll * 100)) : 0,
+            cls: "b"
+          },
+          {
+            ico: OV_ICONS.door,
+            lab: "今日有限空间进舱数/总数",
+            num: enteredSpaces,
+            tot: " / " + totalSpaces + " 舱",
+            tag: "开工率 " + entryRatio + "%",
+            sub: "作业舱位覆盖率",
+            pct: entryRatio,
+            cls: "g"
+          }
         ];
       } else {
+        var wfDense = sumDenseEntered(wf);
+        var wfPpl = sumEntered(wf);
+        var enteredWf = countEntered(wf);
+        var totalWf = wf.length || 16;
+        var wfDenseCount = 0;
+        wf.forEach(function(s){ if(s.entered > 3) wfDenseCount++; });
+        var wfRatio = totalWf ? Math.round(enteredWf / totalWf * 100) : 0;
+
         m = [
-          { ico:OV_ICONS.crew,  lab:"当前船上总人数",     num:totalAll, tot:"" },
-          { ico:OV_ICONS.door,  lab:"今日有限空间进舱数", num:countEntered(conf), tot:" / " + conf.length },
-          { ico:OV_ICONS.group, lab:"有限空间作业人数",   num:sumEntered(conf), tot:"" },
-          { ico:OV_ICONS.bell,  lab:"预警中区域",         num:countAlarms(conf), tot:"" }
+          {
+            ico: OV_ICONS.crew,
+            lab: "当前厂区总人数",
+            num: totalAll,
+            tot: " 人",
+            tag: "厂区制造部",
+            sub: "在岗作业总人数",
+            pct: Math.min(100, Math.round(totalAll / 150 * 100)),
+            cls: "c"
+          },
+          {
+            ico: OV_ICONS.dense,
+            lab: "区域密集人员数",
+            num: wfDense,
+            tot: " 人",
+            tag: ">3人密集区域",
+            sub: "涉及 " + wfDenseCount + " 处密集作业面",
+            pct: wfPpl ? Math.min(100, Math.round(wfDense / wfPpl * 100)) : 0,
+            cls: "o"
+          },
+          {
+            ico: OV_ICONS.grid,
+            lab: "作业面总人数",
+            num: wfPpl,
+            tot: " 人",
+            tag: "作业面施工",
+            sub: "现场施工作业人员",
+            pct: totalAll ? Math.min(100, Math.round(wfPpl / totalAll * 100)) : 0,
+            cls: "b"
+          },
+          {
+            ico: OV_ICONS.door,
+            lab: "今日作业面开工数/总数",
+            num: enteredWf,
+            tot: " / " + totalWf + " 处",
+            tag: "开工率 " + wfRatio + "%",
+            sub: "作业面开工覆盖率",
+            pct: wfRatio,
+            cls: "g"
+          }
         ];
       }
+
       for(var i = 0; i < 4; i++){
         var n = i + 1;
-        document.getElementById("ovIco" + n).innerHTML = m[i].ico;
-        document.getElementById("ovLab" + n).textContent = m[i].lab;
-        document.getElementById("ovNum" + n).textContent = m[i].num;
-        document.getElementById("ovTot" + n).textContent = m[i].tot;
+        var box = document.getElementById("ovBox" + n);
+        if(!box) continue;
+        box.removeAttribute("hidden");
+        box.className = "metric " + m[i].cls;
+        var elIco = document.getElementById("ovIco" + n);
+        var elLab = document.getElementById("ovLab" + n);
+        var elNum = document.getElementById("ovNum" + n);
+        var elTot = document.getElementById("ovTot" + n);
+        var elTag = document.getElementById("ovTag" + n);
+        var elSub = document.getElementById("ovSub" + n);
+        var elBar = document.getElementById("ovBar" + n);
+        if(elIco) elIco.innerHTML = m[i].ico;
+        if(elLab) elLab.textContent = m[i].lab;
+        if(elNum) elNum.textContent = m[i].num;
+        if(elTot) elTot.textContent = m[i].tot;
+        if(elTag) elTag.textContent = m[i].tag;
+        if(elSub) elSub.textContent = m[i].sub;
+        if(elBar) elBar.style.width = m[i].pct + "%";
       }
-      document.getElementById("ovBox4").classList.toggle("alarm", m[3].num > 0);
+
+      var box2 = document.getElementById("ovBox2");
+      if(box2){
+        box2.classList.toggle("dense-active", m[1].num > 0);
+      }
     }
 
     /* ---------------- 项目 / 模式切换 ---------------- */
@@ -1226,8 +1882,23 @@
       document.getElementById("curProjName").textContent = "当前项目：" + p.name;
       document.getElementById("tabConfined").classList.toggle("active", state.mode==="confined");
       document.getElementById("tabWorkface").classList.toggle("active", state.mode==="workface");
+      var tabCabinCrew = document.getElementById("tabCabinCrew");
+      if(tabCabinCrew) tabCabinCrew.classList.toggle("active", state.mode==="cabincrew");
       document.getElementById("tabShip").classList.toggle("active", state.region==="ship");
       document.getElementById("tabYard").classList.toggle("active", state.region==="yard");
+
+      var cardsEl = document.getElementById("cards");
+      var pagerEl = document.getElementById("pager");
+      var ccPanelEl = document.getElementById("cabinCrewPanel");
+      if(state.mode === "cabincrew"){
+        if(cardsEl) cardsEl.style.display = "none";
+        if(pagerEl) pagerEl.style.display = "none";
+        if(ccPanelEl) ccPanelEl.style.display = "flex";
+      } else {
+        if(cardsEl) cardsEl.style.display = "";
+        if(pagerEl) pagerEl.style.display = "";
+        if(ccPanelEl) ccPanelEl.style.display = "none";
+      }
     }
     function switchProject(i){
       if(i === state.proj && state.spaces.length) { /* 仍允许刷新高亮 */ }
@@ -1235,14 +1906,38 @@
       /* 切换到厂区项目时，空间视图强制切回「作业面」模式（即使此前手动切到有限空间） */
       if(projRegion(i) === "yard") state.mode = "workface";
       buildSpaces(); applyProjectUI(); renderProjects(); renderCards(); refreshOverview(); renderCrewStats(); seedLog(true);
+      if(state.mode === "cabincrew") renderCabinCrewPanel();
     }
     function switchMode(m){
       if(m === state.mode) return;
-      state.mode = m; state.spaces = state.sets[m]; state.selIdx = defaultSel();
-      applyProjectUI(); renderProjects(); renderCards(); refreshOverview(); seedLog(true);
+      state.mode = m;
+      if(m !== "cabincrew"){
+        state.spaces = sortSpaces(state.sets[m]);
+        state.selIdx = defaultSel();
+      }
+      applyProjectUI();
+      if(m === "cabincrew"){
+        renderCabinCrewPanel();
+      } else {
+        renderProjects();
+        renderCards();
+      }
+      refreshOverview();
+      seedLog(true);
     }
     document.getElementById("tabConfined").addEventListener("click", function(){ switchMode("confined"); });
     document.getElementById("tabWorkface").addEventListener("click", function(){ switchMode("workface"); });
+    var tabCabinCrew = document.getElementById("tabCabinCrew");
+    if(tabCabinCrew){
+      tabCabinCrew.addEventListener("click", function(){ switchMode("cabincrew"); });
+    }
+    var ovBox2 = document.getElementById("ovBox2");
+    if(ovBox2){
+      ovBox2.style.cursor = "pointer";
+      ovBox2.setAttribute("title", "点击切换至空间视图【船舱人员】标签查看完整在舱名单");
+      ovBox2.addEventListener("click", function(){ switchMode("cabincrew"); });
+    }
+
     /* 区域切换联动：仅设定默认项目与默认模式，之后用户仍可自由切换项目与模式标签 */
     function switchRegion(r){
       if(r === state.region){
@@ -1254,6 +1949,7 @@
       if(r === "yard"){ state.proj = YARD_START; state.mode = "workface"; }
       else { state.proj = 0; state.mode = "confined"; }
       buildSpaces(); applyProjectUI(); renderProjects(); renderCards(); refreshOverview(); renderCrewStats(); seedLog(true);
+      if(state.mode === "cabincrew") renderCabinCrewPanel();
     }
     document.getElementById("tabShip").addEventListener("click", function(){ switchRegion("ship"); });
     document.getElementById("tabYard").addEventListener("click", function(){ switchRegion("yard"); });
@@ -1345,16 +2041,28 @@
     function logAlarm(kind, space, fresh, backMin){
       var t = backMin ? new Date(Date.now() - backMin * 60000) : new Date();
       var hm = pad(t.getHours()) + ":" + pad(t.getMinutes());
-      var label = kind === "intrusion" ? "禁入闯入" : "气体超限";
+      var isIntr = kind === "intrusion";
+      var label = isIntr ? "禁入闯入" : "气体超限";
+      var crew = (space.crew && space.crew.length) ? space.crew[0] : null;
+      var intruderName = crew ? crew.name : "非法闯入者";
       logSeq++;
       var li = document.createElement("li");
       li.className = "alarm";
       if(fresh) li.classList.add("fresh");
       li.setAttribute("data-log", logSeq);
-      li.innerHTML = '<span class="lt">'+hm+'</span>'
-        + '<span class="lp-act">'+label+'</span>'
-        + '<span class="lp-loc">'+space.name+'</span>';
-      li._track = { type:"alarm", msg: hm+" "+label+" "+space.name, time: nowTime() };
+      
+      if(isIntr){
+        li.innerHTML = '<span class="lt">'+hm+'</span>'
+          + '<span class="badge-intruder" style="font-size:10px;padding:1px 5px;margin-right:2px">⚠️ 非法闯入</span>'
+          + '<span class="lp-name" style="color:#ff3b5c;font-weight:700;margin-right:4px">'+intruderName+'</span>'
+          + '<span class="lp-loc" style="color:#ff9fb0;font-weight:600">擅闯【'+space.name+'】</span>';
+        li._track = { type:"alarm", isIntrusion:true, msg: hm + " [⚠️ 非法闯入人员] " + intruderName + "（工号: " + (crew ? crew.id : "SY10928") + "）擅闯禁入作业区域 " + space.name, time: nowTime(), intruderName: intruderName, spaceName: space.name };
+      } else {
+        li.innerHTML = '<span class="lt">'+hm+'</span>'
+          + '<span class="lp-act">'+label+'</span>'
+          + '<span class="lp-loc">'+space.name+'</span>';
+        li._track = { type:"alarm", isIntrusion:false, msg: hm + " 气体超限告警 " + space.name, time: nowTime() };
+      }
       li.addEventListener("click", function(){ openTrack(li._track); });
       logList.appendChild(li);
       while(logList.children.length > 60) logList.removeChild(logList.firstChild);
@@ -1418,16 +2126,23 @@
       var s = state.spaces[i];
       var st = spaceStatus(s);
       var crew = s.crew || [];
+      var isIntrude = isIntrusion(s);
       document.getElementById("dTitle").textContent = s.name;
       document.getElementById("dEn").textContent = s.en + " · " + PROJECTS[state.proj].name;
       var b = document.getElementById("dBadge");
       b.className = "badge " + st.k; b.textContent = st.t;
-      document.getElementById("dCrewTitle").textContent = "空间内人员名单 · 共 " + crew.length + " 人（与卡片「舱内人员」一致）";
+      var titleExtra = isIntrude ? ' <span class="badge-intruder" style="margin-left:10px">⚠️ 检测到非法闯入人员</span>' : '';
+      document.getElementById("dCrewTitle").innerHTML = "空间内人员名单 · 共 " + crew.length + " 人" + titleExtra;
       document.getElementById("dCrewWrap").innerHTML = crew.length
-        ? '<table class="crew-table"><thead><tr><th>工号</th><th>姓名</th><th>工种</th><th>班组</th><th>进入时间</th><th>停留时间</th></tr></thead><tbody>'
+        ? '<table class="crew-table"><thead><tr><th>工号</th><th>姓名</th><th>工种</th><th>班组</th><th>进入时间</th><th>停留时间</th><th>人员状态</th></tr></thead><tbody>'
           + crew.map(function(w){
-              return '<tr><td class="c-id">'+w.id+'</td><td class="c-name">'+w.name+'</td><td>'+w.trade+'</td><td>'+w.team+'</td>'
-                + '<td class="c-time">'+fmtClock(w.entryTs)+'</td><td class="c-stay" data-entry="'+w.entryTs+'">'+fmtStay(w.entryTs)+'</td></tr>';
+              var trCls = isIntrude ? ' class="intruder-row"' : '';
+              var statusCell = isIntrude
+                ? '<span class="badge-intruder">⚠️ 非法闯入人员</span>'
+                : '<span style="color:#1fe08a;font-size:12px;font-weight:600">正常在岗</span>';
+              return '<tr'+trCls+'><td class="c-id">'+w.id+'</td><td class="c-name">'+w.name+'</td><td>'+w.trade+'</td><td>'+w.team+'</td>'
+                + '<td class="c-time">'+fmtClock(w.entryTs)+'</td><td class="c-stay" data-entry="'+w.entryTs+'">'+fmtStay(w.entryTs)+'</td>'
+                + '<td>'+statusCell+'</td></tr>';
             }).join("")
           + '</tbody></table>'
         : '<div class="empty-note">当前空间内暂无人员进入。</div>';
@@ -1435,8 +2150,8 @@
       document.getElementById("dTeamStats").innerHTML = crewStatRows(crew, "team", ["#3d9bff","#1fe08a","#ffb020","#b07dff","#2fd8c8"]);
       document.getElementById("dMeta").innerHTML =
           '<span>作业票号<b class="mono">'+s.permit+'</b></span>'
-        + '<span>现场安全责任人<b>'+s.guardian+'</b></span>'
-        + '<span>安全责任人电话<b class="mono">'+s.phone+'</b></span>'
+        + '<span>现场安全监护人<b>'+s.guardian+'</b></span>'
+        + '<span>安全监护人电话<b class="mono">'+s.phone+'</b></span>'
         + '<span>定员限额<b>'+s.lim+' 人</b></span>'
         + '<span>作业中<b>'+s.working+' 人</b></span>';
       detailMask.classList.add("open");
@@ -1454,10 +2169,17 @@
     var trackMask = document.getElementById("trackMask");
     function openTrack(ev){
       document.getElementById("trackSub").textContent = "EVENT TRACKING · " + ev.time;
-      document.getElementById("trackMsg").textContent = ev.msg;
       var alarm = ev.type === "alarm";
+      var isIntrusionEv = ev.isIntrusion || (ev.msg && ev.msg.indexOf("非法闯入") >= 0);
+      var intruderBanner = isIntrusionEv
+        ? '<div style="background:rgba(255,59,92,.22);border:1px solid #ff3b5c;padding:10px 14px;border-radius:6px;color:#ff3b5c;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:10px;box-shadow:0 0 12px rgba(255,59,92,.3);">'
+          + '<span class="badge-intruder">⚠️ 非法闯入人员</span>'
+          + '<span>人员姓名：<b style="color:#fff;text-decoration:underline">'+(ev.intruderName || "闯入者")+'</b> 违反禁入安防规程，已同步进行广播报警与警报推送！</span>'
+          + '</div>'
+        : '';
+      document.getElementById("trackMsg").innerHTML = intruderBanner + '<div style="font-size:15px;line-height:1.5;color:#eaf8ff;">' + ev.msg + '</div>';
       var steps = alarm
-        ? [ ["事件上报 · 传感器自动触发","done",ev.time], ["指挥中心确认 · 值班调度受理","done",ev.time], ["联锁处置 · 强排风启动 / 监护人现场核查","doing","进行中"], ["复测合格 · 监护人签字复核关闭","wait","待处置"] ]
+        ? [ ["事件上报 · 传感器/定位卡自动触发","done",ev.time], ["指挥中心确认 · 值班调度受理并确认非法闯入","done",ev.time], ["联锁处置 · 声光报警启动 / 监护人前往拦截","doing","处置中"], ["核实清场 · 确认人员安全撤离并归档","wait","待处置"] ]
         : [ ["事件上报 · 系统自动记录","done",ev.time], ["指挥中心确认 · 值班调度受理","done",ev.time], ["现场核查 · 监护人确认无异常","done",ev.time], ["归档关闭 · 纳入班组台账","done",ev.time] ];
       document.getElementById("trackSteps").innerHTML = steps.map(function(st){
         var lab = st[1]==="done" ? "已完成" : (st[1]==="doing" ? "处置中" : "待处置");
@@ -1498,14 +2220,17 @@
     document.getElementById("logMore").addEventListener("click", function(){
       var rows = Array.prototype.map.call(logList.children, function(li){
         var t = li._track || { type:"", msg:"", time:"" };
-        var kind = t.type === "alarm" ? '<span style="color:#ff5c74;font-weight:700">告警</span>'
-          : (t.type === "out" ? '<span style="color:#ffb020;font-weight:700">离开</span>' : '<span style="color:#1fe08a;font-weight:700">进入</span>');
-        return '<tr><td style="font-family:var(--mono);white-space:nowrap">'+t.time+'</td>'
+        var isIntr = t.isIntrusion || (t.msg && t.msg.indexOf("非法闯入") >= 0);
+        var kind = isIntr ? '<span class="badge-intruder" style="font-size:11px">⚠️ 非法闯入</span>'
+          : (t.type === "alarm" ? '<span style="color:#ff5c74;font-weight:700">气体告警</span>'
+          : (t.type === "out" ? '<span style="color:#ffb020;font-weight:700">离开</span>' : '<span style="color:#1fe08a;font-weight:700">进入</span>'));
+        var rowStyle = isIntr ? ' style="background:rgba(255,59,92,.18);color:#ff3b5c;font-weight:700"' : '';
+        return '<tr'+rowStyle+'><td style="font-family:var(--mono);white-space:nowrap">'+t.time+'</td>'
           + '<td style="white-space:nowrap">'+kind+'</td>'
           + '<td>'+t.msg+'</td></tr>';
       }).join("");
       document.getElementById("logAllBody").innerHTML = rows
-        ? '<table class="alarm-table"><thead><tr><th>时间</th><th>类型</th><th>记录</th></tr></thead><tbody>'+rows+'</tbody></table>'
+        ? '<table class="alarm-table"><thead><tr><th>时间</th><th>类型</th><th>记录明细</th></tr></thead><tbody>'+rows+'</tbody></table>'
         : '<div class="empty-note">暂无记录。</div>';
       document.getElementById("logMask").classList.add("open");
     });

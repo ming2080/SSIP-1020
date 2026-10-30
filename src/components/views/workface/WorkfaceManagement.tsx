@@ -57,6 +57,21 @@ interface WorkfaceManagementProps {
   onNavigateToScreen?: () => void;
 }
 
+// 归一化状态判断 (两状态模型：允许作业 / 禁止进入)
+export const getNormalizedStatus = (status: string): '允许作业' | '禁止进入' => {
+  if (
+    status === '禁止进入' || 
+    status === 'forbidden' || 
+    status === 'restricted' || 
+    status === '禁入中' || 
+    status === 'paused' ||
+    status === '封锁'
+  ) {
+    return '禁止进入';
+  }
+  return '允许作业';
+};
+
 export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, onNavigateToScreen }: WorkfaceManagementProps) {
   // 数据列表
   const [workfaces, setWorkfaces] = useState<WorkfaceRecord[]>(() => getStoredWorkfaces());
@@ -172,7 +187,7 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
 
       // 状态筛选
       if (filterStatus !== 'ALL') {
-        const norm = wf.status === 'active' || wf.status === '作业中' ? '作业中' : (wf.status === 'forbidden' || wf.status === 'restricted' || wf.status === '禁入中' ? '禁入中' : '空闲中');
+        const norm = getNormalizedStatus(wf.status);
         if (norm !== filterStatus) {
           return false;
         }
@@ -185,7 +200,7 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
   // 统计概览计算
   const stats = useMemo(() => {
     const total = workfaces.length;
-    const active = workfaces.filter(w => w.status === 'active').length;
+    const active = workfaces.filter(w => getNormalizedStatus(w.status) === '允许作业').length;
     const highRisk = workfaces.filter(w => w.riskLevel === '重大风险(红)' || w.riskLevel === '较大风险(橙)').length;
     const totalDevices = workfaces.reduce((acc, w) => {
       return acc + (w.boundBaseStations?.length || 0) + (w.boundGasDetectors?.length || 0) + (w.boundCameras?.length || 0);
@@ -219,15 +234,8 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
     );
   };
 
-  // 归一化状态判断
-  const getNormalizedStatus = (status: string) => {
-    if (status === 'active' || status === '作业中') return '作业中';
-    if (status === 'forbidden' || status === 'restricted' || status === '禁入中') return '禁入中';
-    return '空闲中';
-  };
-
-  // 状态修改 (下拉框直接触发)
-  const handleUpdateStatus = (wf: WorkfaceRecord, newStatus: '作业中' | '空闲中' | '禁入中') => {
+  // 状态修改 (下拉框直接触发：允许作业 / 禁止进入)
+  const handleUpdateStatus = (wf: WorkfaceRecord, newStatus: '允许作业' | '禁止进入') => {
     const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
     const updated = workfaces.map(item => {
       if (item.id === wf.id) {
@@ -380,18 +388,21 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
     }
   };
 
-  // 状态徽标样式 (作业中 / 空闲中 / 禁入中)
+  // 状态徽标样式 (两状态：允许作业 / 禁止进入)
   const getStatusBadgeCls = (status: string) => {
     const norm = getNormalizedStatus(status);
-    switch (norm) {
-      case '作业中':
-        return { label: '作业中', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' };
-      case '禁入中':
-        return { label: '禁入中', cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' };
-      case '空闲中':
-      default:
-        return { label: '空闲中', cls: 'bg-slate-100 text-slate-700 border-slate-200', dot: 'bg-slate-400' };
+    if (norm === '禁止进入') {
+      return { 
+        label: '禁止进入', 
+        cls: 'bg-rose-50 text-rose-700 border-rose-200 shadow-2xs', 
+        dot: 'bg-rose-500' 
+      };
     }
+    return { 
+      label: '允许作业', 
+      cls: 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-2xs', 
+      dot: 'bg-emerald-500' 
+    };
   };
 
   return (
@@ -521,7 +532,7 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
               </>
             )}
 
-            {/* 状态筛选 (作业中/空闲中/禁入中) - 仅作业面标签展示 */}
+            {/* 状态筛选 (两状态：允许作业 / 禁止进入) - 仅作业面标签展示 */}
             {activeTypeTab === 'workface' && (
               <select
                 value={filterStatus}
@@ -532,9 +543,8 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                 className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
               >
                 <option value="ALL">全部状态</option>
-                <option value="作业中">🟢 作业中</option>
-                <option value="空闲中">🔵 空闲中</option>
-                <option value="禁入中">🔴 禁入中</option>
+                <option value="允许作业">🟢 允许作业</option>
+                <option value="禁止进入">🔴 禁止进入</option>
               </select>
             )}
 
@@ -743,16 +753,15 @@ export function WorkfaceManagement({ onNavigateToTracking, onNavigateToMonitor, 
                               value=""
                               onChange={e => {
                                 if (e.target.value) {
-                                  handleUpdateStatus(wf, e.target.value as '作业中' | '空闲中' | '禁入中');
+                                  handleUpdateStatus(wf, e.target.value as '允许作业' | '禁止进入');
                                 }
                               }}
                               className="px-2 py-0.5 rounded border border-blue-200 text-xs font-medium bg-blue-50/80 hover:bg-blue-100 text-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer transition-colors shadow-2xs"
                               title="点击变更状态"
                             >
                               <option value="" disabled hidden>状态变更</option>
-                              <option value="作业中" className="text-emerald-600 font-semibold bg-white">作业中</option>
-                              <option value="空闲中" className="text-slate-600 font-semibold bg-white">空闲中</option>
-                              <option value="禁入中" className="text-red-600 font-semibold bg-white">禁入中</option>
+                              <option value="允许作业" className="text-emerald-600 font-semibold bg-white">允许作业</option>
+                              <option value="禁止进入" className="text-rose-600 font-semibold bg-white">禁止进入</option>
                             </select>
                           )}
 

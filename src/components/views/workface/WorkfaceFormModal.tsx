@@ -163,6 +163,14 @@ export function WorkfaceFormModal({
   const [elevation, setElevation] = useState<string>('+8.0m ~ +16.0m');
   const [volume, setVolume] = useState<string>('1200');
 
+  // 仅筛选在建状态的船舶项目
+  const inProgressProjects = useMemo(() => {
+    return MOCK_PROJECTS.filter(p => p.status === 'in_progress');
+  }, []);
+
+  // 引用关联在建项目列表选择 (默认为所有在建状态的船舶项目全选)
+  const [selectedLinkedProjectIds, setSelectedLinkedProjectIds] = useState<string[]>([]);
+
   // 船模管理有限空间模式专用的 3D 船模选择状态
   const [shipModelsList, setShipModelsList] = useState<ShipModel[]>([]);
   const [selectedShipModelId, setSelectedShipModelId] = useState<string>('');
@@ -438,6 +446,13 @@ export function WorkfaceFormModal({
 
       setSelectedMeasures(initialData.safetyMeasures || []);
       setDescription(initialData.description || '');
+
+      // 引用关联在建项目列表回填 (默认为所有在建状态的船舶项目全选)
+      if (initialData.linkedProjectIds && initialData.linkedProjectIds.length > 0) {
+        setSelectedLinkedProjectIds(initialData.linkedProjectIds);
+      } else {
+        setSelectedLinkedProjectIds(inProgressProjects.map(p => p.id));
+      }
     } else {
       // 默认生成编号
       const randomSeq = Math.floor(100 + Math.random() * 900);
@@ -495,6 +510,7 @@ export function WorkfaceFormModal({
 
       setSelectedMeasures(COMMON_SAFETY_MEASURES.slice(0, 4));
       setDescription('');
+      setSelectedLinkedProjectIds(inProgressProjects.map(p => p.id));
     }
     setErrorMsg('');
     setActiveTab('basic');
@@ -671,6 +687,12 @@ export function WorkfaceFormModal({
         : (belongingType === 'project' ? (floorObj.elevation || elevation || '+8.0m ~ +16.0m') : currentYardSubArea.specs),
       volume: volume.trim() || undefined,
       
+      // 引用关联在线在建项目列表
+      linkedProjectIds: isConfinedMode ? selectedLinkedProjectIds : undefined,
+      linkedProjectNames: isConfinedMode 
+        ? inProgressProjects.filter(p => selectedLinkedProjectIds.includes(p.id)).map(p => p.name) 
+        : undefined,
+
       // 船模衍生扩展字段同步
       shipModelId: isConfinedMode 
         ? currentShipModelObj?.id 
@@ -1048,6 +1070,85 @@ export function WorkfaceFormModal({
                 }}
                 required={true}
               />
+            </div>
+          )}
+
+          {/* 关联在建船舶项目 (独立卡片区域，放在表单后面，仅显示在建状态的船舶项目) */}
+          {isConfinedMode && (
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3.5 shadow-2xs animate-in fade-in duration-150">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                <div className="flex items-center gap-2">
+                  <Ship className="w-4 h-4 text-blue-600" />
+                  <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <span>关联在建船舶项目 <span className="text-red-500">*</span></span>
+                  </label>
+                  <span className="text-[11px] text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full font-semibold border border-blue-200">
+                    已关联 {selectedLinkedProjectIds.length} / {inProgressProjects.length} 个在建工程
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedLinkedProjectIds(inProgressProjects.map(p => p.id))}
+                    className="text-blue-600 hover:text-blue-800 hover:underline font-bold cursor-pointer transition-colors"
+                  >
+                    全选在建项目
+                  </button>
+                  <span className="text-slate-300">|</span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedLinkedProjectIds([])}
+                    className="text-slate-500 hover:text-slate-800 hover:underline font-medium cursor-pointer transition-colors"
+                  >
+                    清空
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                {inProgressProjects.map(prj => {
+                  const isChecked = selectedLinkedProjectIds.includes(prj.id);
+                  return (
+                    <div
+                      key={prj.id}
+                      onClick={() => {
+                        if (isChecked) {
+                          setSelectedLinkedProjectIds(prev => prev.filter(id => id !== prj.id));
+                        } else {
+                          setSelectedLinkedProjectIds(prev => [...prev, prj.id]);
+                        }
+                      }}
+                      className={`p-2.5 rounded-lg border text-xs cursor-pointer transition-all flex items-center justify-between ${
+                        isChecked
+                          ? 'bg-blue-50/90 border-blue-400 text-blue-900 shadow-2xs font-medium'
+                          : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0 pr-2">
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                          isChecked ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 bg-white'
+                        }`}>
+                          {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
+                        </div>
+                        <div className="truncate min-w-0">
+                          <span className="font-bold block truncate" title={prj.name}>{prj.name}</span>
+                          <span className="text-[10px] text-slate-500 font-mono">{prj.shipCode || prj.id} · 建造进度 {prj.progress}%</span>
+                        </div>
+                      </div>
+
+                      <span className="text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0 border bg-emerald-50 text-emerald-700 border-emerald-200">
+                        🟢 在建中
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <p className="text-[10px] text-slate-500 flex items-center gap-1 pt-0.5">
+                <Info className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                <span>提示：保存后，勾选之在线在建船舶项目的船舱有限空间管理中将联动出现或同步更新此作业面。</span>
+              </p>
             </div>
           )}
 

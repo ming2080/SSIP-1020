@@ -19,11 +19,31 @@ import {
   MapPin,
   Crosshair,
   Building2,
-  Compass
+  Compass,
+  Check,
+  Link,
+  ShieldAlert
 } from 'lucide-react';
 import { MOCK_PROJECTS } from '@/src/data/mockProjects';
+import { getStoredWorkfaces, WorkfaceRecord } from '@/src/data/workfaceData';
 
 export type DeviceTab = 'main_station' | 'exciter' | 'gas_detector' | 'alarm' | 'camera';
+
+// 关联作业面与船舶有限空间项定义 (支持多选、动态增删)
+export interface DeviceAssociatedWorkface {
+  id: string;               // 关联唯一ID
+  type: 'workface' | 'confinedSpace'; // 类型: 全厂通用作业面 | 船舶工程有限空间
+  workfaceId?: string;      // 作业面/空间ID
+  name: string;             // 作业面/舱室名称
+  code?: string;            // 编号 (如 WF-SEC-01)
+  projectId?: string;       // 工程项目ID (若为有限空间)
+  projectName?: string;     // 工程项目名称 (若为有限空间)
+  modelLevel?: string;      // 船体分层ID (若为有限空间)
+  modelLevelName?: string;  // 船体分层名称 (若为有限空间)
+  yardZone?: string;        // 厂区功能分区名称 (若为全厂作业面)
+  yardSubArea?: string;     // 厂区车间/工位名称 (若为全厂作业面)
+  electricFence?: string;   // 关联电子围栏编号
+}
 
 // BIM 3D 模型分层定义
 export interface ModelLayerOption {
@@ -136,6 +156,8 @@ export interface BaseStationDevice {
   modelLevelName?: string;// 模型分层名称
   workfaceId?: string;    // 关联作业面ID (全厂通用设备)
   workfaceName?: string;  // 关联作业面名称
+  confinedSpaceName?: string; // 关联有限空间名称
+  associatedWorkfaces?: DeviceAssociatedWorkface[]; // 扩展多作业面/有限空间关联列表
   status: '在线' | '离线'; // 基站状态
   recycleStatus: string;  // 基站回收状态（设备安装、已回收、维护中、待安装、临时撤场、拟拆除等）
   location: string;       // 安装位置
@@ -169,6 +191,8 @@ export interface GasDetectorDevice {
   modelLevelName?: string;// 模型分层名称
   workfaceId?: string;    // 关联作业面ID (全厂通用设备)
   workfaceName?: string;  // 关联作业面名称
+  confinedSpaceName?: string; // 关联有限空间名称
+  associatedWorkfaces?: DeviceAssociatedWorkface[]; // 扩展多作业面/有限空间关联列表
   location: string;        // 安装位置
   floor?: string;          // 安装楼层
   positionX?: number;
@@ -192,6 +216,8 @@ export interface AlarmDevice {
   modelLevelName?: string;// 模型分层名称
   workfaceId?: string;    // 关联作业面ID (全厂通用设备)
   workfaceName?: string;  // 关联作业面名称
+  confinedSpaceName?: string; // 关联有限空间名称
+  associatedWorkfaces?: DeviceAssociatedWorkface[]; // 扩展多作业面/有限空间关联列表
   location: string;        // 安装位置
   floor?: string;          // 安装楼层
   positionX?: number;
@@ -216,6 +242,8 @@ export interface CameraDevice {
   modelLevelName?: string;// 模型分层名称
   workfaceId?: string;    // 关联作业面ID (全厂通用设备)
   workfaceName?: string;  // 关联作业面名称
+  confinedSpaceName?: string; // 关联有限空间名称
+  associatedWorkfaces?: DeviceAssociatedWorkface[]; // 扩展多作业面/有限空间关联列表
   createdAt: string;       // 创建时间
   isStreaming: boolean;    // 推流状态 (true: 推流中, false: 停止推流)
   rtspUrl?: string;        // RTSP视频流
@@ -594,6 +622,174 @@ export function DeviceManagement() {
   // 表单临时编辑状态
   const [formFields, setFormFields] = useState<Record<string, any>>({});
 
+  // 实时同步加载系统作业面数据
+  const [storedWorkfaces, setStoredWorkfaces] = useState<WorkfaceRecord[]>(() => {
+    try {
+      return getStoredWorkfaces();
+    } catch {
+      return [];
+    }
+  });
+
+  React.useEffect(() => {
+    const handleUpdate = () => {
+      try {
+        setStoredWorkfaces(getStoredWorkfaces());
+      } catch {}
+    };
+    window.addEventListener('workfaces_updated', handleUpdate);
+    return () => window.removeEventListener('workfaces_updated', handleUpdate);
+  }, []);
+
+  // 全厂作业面候选库 (整合系统存储与内置全厂作业面)
+  const allYardOptions = useMemo(() => {
+    const fromStorage = storedWorkfaces
+      .filter(w => w.belongingType === 'yard')
+      .map(w => ({
+        id: w.id,
+        code: w.code,
+        name: w.name,
+        zone: w.yardZoneName || '总装焊与分段建造区',
+        subArea: w.yardSubAreaName || '标准工位',
+        safetyOfficer: w.safetyOfficer || '',
+        fenceCode: `EF-${w.code?.replace('WF-', '') || 'SEC-01'}`
+      }));
+    const seen = new Set(fromStorage.map(y => y.id));
+    const merged = [...fromStorage];
+    YARD_WORKFACE_OPTIONS.forEach(opt => {
+      if (!seen.has(opt.id)) {
+        merged.push(opt);
+      }
+    });
+    return merged;
+  }, [storedWorkfaces]);
+
+  // 模态框中动态增删关联作业面/有限空间的表单状态
+  const [isAddingAssoc, setIsAddingAssoc] = useState<boolean>(false);
+  const [newAssocType, setNewAssocType] = useState<'workface' | 'confinedSpace'>('workface');
+  const [newYardWfId, setNewYardWfId] = useState<string>(YARD_WORKFACE_OPTIONS[0].id);
+  const [newPrjId, setNewPrjId] = useState<string>(MOCK_PROJECTS[0].id);
+  const [newModelLevel, setNewModelLevel] = useState<string>(MODEL_LAYER_OPTIONS[1].id);
+  const [newSpaceName, setNewSpaceName] = useState<string>('');
+
+  // 添加关联作业面/有限空间
+  const handleAddAssociation = () => {
+    const currentAssocs: DeviceAssociatedWorkface[] = formFields.associatedWorkfaces || [];
+
+    if (newAssocType === 'workface') {
+      const matched = allYardOptions.find(w => w.id === newYardWfId) || allYardOptions[0];
+      if (currentAssocs.some(a => a.type === 'workface' && (a.workfaceId === matched.id || a.name === matched.name))) {
+        setFormError(`作业面【${matched.name}】已在关联列表中，请勿重复添加`);
+        return;
+      }
+      const newAssoc: DeviceAssociatedWorkface = {
+        id: `assoc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        type: 'workface',
+        workfaceId: matched.id,
+        name: matched.name,
+        code: matched.code,
+        yardZone: matched.zone,
+        yardSubArea: matched.subArea,
+        electricFence: matched.fenceCode || 'EF-SEC-01'
+      };
+      const updated = [...currentAssocs, newAssoc];
+      setFormFields({
+        ...formFields,
+        associatedWorkfaces: updated,
+        ...(updated.length === 1 ? {
+          associationType: 'global',
+          project: '全厂通用设备',
+          projectId: '',
+          modelLevel: 'all',
+          modelLevelName: '全厂公共区域',
+          workfaceId: newAssoc.workfaceId,
+          workfaceName: newAssoc.name,
+          electricFence: newAssoc.electricFence
+        } : {})
+      });
+    } else {
+      const prj = MOCK_PROJECTS.find(p => p.id === newPrjId) || MOCK_PROJECTS[0];
+      const layerOpt = MODEL_LAYER_OPTIONS.find(l => l.id === newModelLevel) || MODEL_LAYER_OPTIONS[1];
+      const spaceName = newSpaceName.trim() || `${layerOpt.name}密闭舱室作业面`;
+
+      if (currentAssocs.some(a => a.type === 'confinedSpace' && a.projectId === prj.id && a.name === spaceName)) {
+        setFormError(`有限空间【${spaceName}】已在关联列表中，请勿重复添加`);
+        return;
+      }
+
+      const newAssoc: DeviceAssociatedWorkface = {
+        id: `assoc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        type: 'confinedSpace',
+        name: spaceName,
+        code: `CS-${prj.id.slice(-4)}-0${currentAssocs.length + 1}`,
+        projectId: prj.id,
+        projectName: prj.name,
+        modelLevel: layerOpt.id,
+        modelLevelName: layerOpt.fullName,
+        electricFence: `EF-${prj.id.slice(-5)}-CS0${currentAssocs.length + 1}`
+      };
+
+      const updated = [...currentAssocs, newAssoc];
+      setFormFields({
+        ...formFields,
+        associatedWorkfaces: updated,
+        ...(updated.length === 1 ? {
+          associationType: 'project',
+          projectId: newAssoc.projectId,
+          project: newAssoc.projectName,
+          modelLevel: newAssoc.modelLevel,
+          modelLevelName: newAssoc.modelLevelName,
+          confinedSpaceName: newAssoc.name,
+          electricFence: newAssoc.electricFence
+        } : {})
+      });
+      setNewSpaceName('');
+    }
+
+    setFormError(null);
+    setIsAddingAssoc(false);
+  };
+
+  // 移除关联作业面/有限空间
+  const handleRemoveAssociation = (assocId: string) => {
+    const currentAssocs: DeviceAssociatedWorkface[] = formFields.associatedWorkfaces || [];
+    const updated = currentAssocs.filter(a => a.id !== assocId);
+    
+    // 更新首项基准属性
+    const nextPrimary = updated[0];
+    let syncFields: Record<string, any> = {};
+    if (nextPrimary) {
+      if (nextPrimary.type === 'workface') {
+        syncFields = {
+          associationType: 'global',
+          project: '全厂通用设备',
+          projectId: '',
+          modelLevel: 'all',
+          modelLevelName: '全厂公共区域',
+          workfaceId: nextPrimary.workfaceId,
+          workfaceName: nextPrimary.name,
+          electricFence: nextPrimary.electricFence
+        };
+      } else {
+        syncFields = {
+          associationType: 'project',
+          projectId: nextPrimary.projectId,
+          project: nextPrimary.projectName,
+          modelLevel: nextPrimary.modelLevel,
+          modelLevelName: nextPrimary.modelLevelName,
+          confinedSpaceName: nextPrimary.name,
+          electricFence: nextPrimary.electricFence
+        };
+      }
+    }
+
+    setFormFields({
+      ...formFields,
+      associatedWorkfaces: updated,
+      ...syncFields
+    });
+  };
+
   // 顶部筛选与表单用到的全量项目列表
   const projectOptions = useMemo(() => {
     return [
@@ -635,8 +831,13 @@ export function DeviceManagement() {
       const matchCode = !activeQuery.code || 
         d.code.toLowerCase().includes(activeQuery.code.toLowerCase()) || 
         d.name.toLowerCase().includes(activeQuery.code.toLowerCase());
-      const matchProject = !activeQuery.project || d.project === activeQuery.project || d.projectId === activeQuery.project;
-      const matchModelLevel = !activeQuery.modelLevel || d.modelLevel === activeQuery.modelLevel;
+      const matchProject = !activeQuery.project || 
+        d.project === activeQuery.project || 
+        d.projectId === activeQuery.project ||
+        d.associatedWorkfaces?.some(a => a.projectName === activeQuery.project || a.projectId === activeQuery.project);
+      const matchModelLevel = !activeQuery.modelLevel || 
+        d.modelLevel === activeQuery.modelLevel ||
+        d.associatedWorkfaces?.some(a => a.modelLevel === activeQuery.modelLevel);
       return matchCode && matchProject && matchModelLevel;
     });
   }, [baseStations, activeQuery]);
@@ -647,8 +848,13 @@ export function DeviceManagement() {
       const matchCode = !activeQuery.code || 
         d.code.toLowerCase().includes(activeQuery.code.toLowerCase()) || 
         d.name.toLowerCase().includes(activeQuery.code.toLowerCase());
-      const matchProject = !activeQuery.project || d.project === activeQuery.project || d.projectId === activeQuery.project;
-      const matchModelLevel = !activeQuery.modelLevel || d.modelLevel === activeQuery.modelLevel;
+      const matchProject = !activeQuery.project || 
+        d.project === activeQuery.project || 
+        d.projectId === activeQuery.project ||
+        d.associatedWorkfaces?.some(a => a.projectName === activeQuery.project || a.projectId === activeQuery.project);
+      const matchModelLevel = !activeQuery.modelLevel || 
+        d.modelLevel === activeQuery.modelLevel ||
+        d.associatedWorkfaces?.some(a => a.modelLevel === activeQuery.modelLevel);
       return matchCode && matchProject && matchModelLevel;
     });
   }, [exciters, activeQuery]);
@@ -659,8 +865,13 @@ export function DeviceManagement() {
       const matchSn = !activeQuery.code || 
         d.sn.toLowerCase().includes(activeQuery.code.toLowerCase()) || 
         d.name.toLowerCase().includes(activeQuery.code.toLowerCase());
-      const matchProject = !activeQuery.project || d.project === activeQuery.project || d.projectId === activeQuery.project;
-      const matchModelLevel = !activeQuery.modelLevel || d.modelLevel === activeQuery.modelLevel;
+      const matchProject = !activeQuery.project || 
+        d.project === activeQuery.project || 
+        d.projectId === activeQuery.project ||
+        d.associatedWorkfaces?.some(a => a.projectName === activeQuery.project || a.projectId === activeQuery.project);
+      const matchModelLevel = !activeQuery.modelLevel || 
+        d.modelLevel === activeQuery.modelLevel ||
+        d.associatedWorkfaces?.some(a => a.modelLevel === activeQuery.modelLevel);
       return matchSn && matchProject && matchModelLevel;
     });
   }, [gasDetectors, activeQuery]);
@@ -671,8 +882,13 @@ export function DeviceManagement() {
       const matchSn = !activeQuery.code || 
         d.sn.toLowerCase().includes(activeQuery.code.toLowerCase()) || 
         d.name.toLowerCase().includes(activeQuery.code.toLowerCase());
-      const matchProject = !activeQuery.project || d.project === activeQuery.project || d.projectId === activeQuery.project;
-      const matchModelLevel = !activeQuery.modelLevel || d.modelLevel === activeQuery.modelLevel;
+      const matchProject = !activeQuery.project || 
+        d.project === activeQuery.project || 
+        d.projectId === activeQuery.project ||
+        d.associatedWorkfaces?.some(a => a.projectName === activeQuery.project || a.projectId === activeQuery.project);
+      const matchModelLevel = !activeQuery.modelLevel || 
+        d.modelLevel === activeQuery.modelLevel ||
+        d.associatedWorkfaces?.some(a => a.modelLevel === activeQuery.modelLevel);
       return matchSn && matchProject && matchModelLevel;
     });
   }, [alarms, activeQuery]);
@@ -683,8 +899,13 @@ export function DeviceManagement() {
       const matchName = !activeQuery.code || 
         d.name.toLowerCase().includes(activeQuery.code.toLowerCase()) || 
         d.code.toLowerCase().includes(activeQuery.code.toLowerCase());
-      const matchProject = !activeQuery.project || d.project === activeQuery.project || d.projectId === activeQuery.project;
-      const matchModelLevel = !activeQuery.modelLevel || d.modelLevel === activeQuery.modelLevel;
+      const matchProject = !activeQuery.project || 
+        d.project === activeQuery.project || 
+        d.projectId === activeQuery.project ||
+        d.associatedWorkfaces?.some(a => a.projectName === activeQuery.project || a.projectId === activeQuery.project);
+      const matchModelLevel = !activeQuery.modelLevel || 
+        d.modelLevel === activeQuery.modelLevel ||
+        d.associatedWorkfaces?.some(a => a.modelLevel === activeQuery.modelLevel);
       let matchDate = true;
       if (activeQuery.startDate && d.createdAt < activeQuery.startDate) matchDate = false;
       if (activeQuery.endDate && d.createdAt > activeQuery.endDate + ' 23:59:59') matchDate = false;
@@ -706,11 +927,26 @@ export function DeviceManagement() {
   // 打开新增模态框
   const handleOpenCreate = () => {
     setFormError(null);
+    setIsAddingAssoc(false);
+    setNewSpaceName('');
+
     const timeStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
     const defaultAssociation = 'project';
     const defaultProjId = MOCK_PROJECTS[0].id;
     const defaultProjName = MOCK_PROJECTS[0].name;
-    const defaultWf = YARD_WORKFACE_OPTIONS[0];
+    const defaultWf = allYardOptions[0] || YARD_WORKFACE_OPTIONS[0];
+
+    const initialAssocs: DeviceAssociatedWorkface[] = [{
+      id: `assoc-${Date.now()}-1`,
+      type: 'confinedSpace',
+      name: '1#液货舱绝热合拢面',
+      code: 'WF-LNG-01',
+      projectId: defaultProjId,
+      projectName: defaultProjName,
+      modelLevel: 'middle',
+      modelLevelName: MODEL_LAYER_OPTIONS[1].fullName,
+      electricFence: 'EF-LNG-CS01'
+    }];
 
     const commonBase = {
       associationType: defaultAssociation,
@@ -720,10 +956,12 @@ export function DeviceManagement() {
       modelLevelName: MODEL_LAYER_OPTIONS[1].fullName,
       workfaceId: defaultWf.id,
       workfaceName: defaultWf.name,
+      confinedSpaceName: '1#液货舱绝热合拢面',
+      associatedWorkfaces: initialAssocs,
       positionX: 350.20,
       positionY: 10.10,
       positionZ: -150.40,
-      electricFence: 'EF-SEC-01',
+      electricFence: 'EF-LNG-CS01',
       installationSite: '舱内'
     };
 
@@ -780,10 +1018,46 @@ export function DeviceManagement() {
   // 打开编辑模态框
   const handleOpenEdit = (item: any) => {
     setFormError(null);
+    setIsAddingAssoc(false);
+    setNewSpaceName('');
     setSelectedDevice(item);
+
     const isGlobal = item.associationType === 'global' || item.project === '全厂通用设备';
     const targetPrjId = item.projectId || (MOCK_PROJECTS.find(p => p.name === item.project)?.id || MOCK_PROJECTS[0].id);
     const targetPrjName = item.project || (isGlobal ? '全厂通用设备' : MOCK_PROJECTS[0].name);
+
+    let initialAssocs: DeviceAssociatedWorkface[] = [];
+    if (item.associatedWorkfaces && Array.isArray(item.associatedWorkfaces) && item.associatedWorkfaces.length > 0) {
+      initialAssocs = item.associatedWorkfaces.map((a: any) => ({ ...a }));
+    } else {
+      if (isGlobal) {
+        const matchedWf = allYardOptions.find(w => w.id === item.workfaceId || w.name === item.workfaceName) || allYardOptions[0];
+        initialAssocs = [{
+          id: `assoc-${Date.now()}-1`,
+          type: 'workface',
+          workfaceId: matchedWf.id,
+          name: item.workfaceName || matchedWf.name,
+          code: matchedWf.code,
+          yardZone: matchedWf.zone,
+          yardSubArea: matchedWf.subArea,
+          electricFence: item.electricFence || matchedWf.fenceCode
+        }];
+      } else {
+        const prj = MOCK_PROJECTS.find(p => p.id === item.projectId || p.name === item.project) || MOCK_PROJECTS[0];
+        const layerOpt = getLayerOption(item.modelLevel) || MODEL_LAYER_OPTIONS[1];
+        initialAssocs = [{
+          id: `assoc-${Date.now()}-1`,
+          type: 'confinedSpace',
+          name: item.confinedSpaceName || `${layerOpt.name}密闭舱室作业面`,
+          code: `CS-${prj.id.slice(-4)}-01`,
+          projectId: prj.id,
+          projectName: prj.name,
+          modelLevel: layerOpt.id,
+          modelLevelName: layerOpt.fullName,
+          electricFence: item.electricFence || 'EF-LNG-CS01'
+        }];
+      }
+    }
 
     setFormFields({
       ...item,
@@ -792,8 +1066,10 @@ export function DeviceManagement() {
       project: targetPrjName,
       modelLevel: item.modelLevel || 'middle',
       modelLevelName: item.modelLevelName || getLayerOption(item.modelLevel)?.fullName || MODEL_LAYER_OPTIONS[1].fullName,
-      workfaceId: item.workfaceId || (isGlobal ? YARD_WORKFACE_OPTIONS[0].id : undefined),
-      workfaceName: item.workfaceName || (isGlobal ? YARD_WORKFACE_OPTIONS[0].name : undefined),
+      workfaceId: item.workfaceId || (isGlobal ? allYardOptions[0]?.id : undefined),
+      workfaceName: item.workfaceName || (isGlobal ? allYardOptions[0]?.name : undefined),
+      confinedSpaceName: item.confinedSpaceName || (initialAssocs.find(a => a.type === 'confinedSpace')?.name || ''),
+      associatedWorkfaces: initialAssocs,
       code: item.code ?? '',
       name: item.name ?? '',
       location: item.location ?? '',
@@ -839,35 +1115,61 @@ export function DeviceManagement() {
       return;
     }
     
-    // 计算最终关联模式与造船项目
-    const assocType = formFields.associationType || (formFields.project === '全厂通用设备' ? 'global' : 'project');
-    const isGlobal = assocType === 'global';
+    // 计算最终关联模式与造船项目（以首个关联项为基准，兼顾系统全局联动）
+    const finalAssocs: DeviceAssociatedWorkface[] = formFields.associatedWorkfaces || [];
 
+    let assocType: 'global' | 'project' = 'global';
     let finalProjectId = '';
     let finalProjectName = '全厂通用设备';
     let finalModelLevel = 'all';
     let finalModelLevelName = '全厂公共区域';
-
     let finalWorkfaceId: string | undefined = undefined;
     let finalWorkfaceName: string | undefined = undefined;
+    let finalConfinedSpaceName: string | undefined = undefined;
+    let finalElectricFence = 'EF-SEC-01';
 
-    if (isGlobal) {
-      const matchedWf = YARD_WORKFACE_OPTIONS.find(w => w.id === formFields.workfaceId) || YARD_WORKFACE_OPTIONS[0];
-      finalWorkfaceId = matchedWf.id;
-      finalWorkfaceName = matchedWf.name;
+    if (finalAssocs.length > 0) {
+      const primary = finalAssocs[0];
+      if (primary.type === 'workface') {
+        assocType = 'global';
+        finalProjectId = '';
+        finalProjectName = '全厂通用设备';
+        finalModelLevel = 'all';
+        finalModelLevelName = '全厂公共区域';
+        finalWorkfaceId = primary.workfaceId;
+        finalWorkfaceName = primary.name;
+        finalElectricFence = primary.electricFence || 'EF-SEC-01';
+      } else {
+        assocType = 'project';
+        finalProjectId = primary.projectId || MOCK_PROJECTS[0].id;
+        finalProjectName = primary.projectName || MOCK_PROJECTS[0].name;
+        finalModelLevel = primary.modelLevel || 'middle';
+        finalModelLevelName = primary.modelLevelName || MODEL_LAYER_OPTIONS[1].fullName;
+        finalWorkfaceId = primary.workfaceId;
+        finalWorkfaceName = primary.name;
+        finalConfinedSpaceName = primary.name;
+        finalElectricFence = primary.electricFence || 'EF-LNG-CS01';
+      }
     } else {
-      const selectedPrj = MOCK_PROJECTS.find(p => p.id === formFields.projectId) || 
-                          MOCK_PROJECTS.find(p => p.name === formFields.project) || 
-                          MOCK_PROJECTS[0];
-      finalProjectId = selectedPrj.id;
-      finalProjectName = selectedPrj.name;
-
-      const layerOpt = getLayerOption(formFields.modelLevel) || MODEL_LAYER_OPTIONS[0];
-      finalModelLevel = layerOpt.id;
-      finalModelLevelName = layerOpt.fullName;
+      assocType = formFields.associationType || (formFields.project === '全厂通用设备' ? 'global' : 'project');
+      const isGlobal = assocType === 'global';
+      if (isGlobal) {
+        const matchedWf = allYardOptions.find(w => w.id === formFields.workfaceId) || allYardOptions[0];
+        finalWorkfaceId = matchedWf.id;
+        finalWorkfaceName = matchedWf.name;
+        finalElectricFence = formFields.electricFence || 'EF-SEC-01';
+      } else {
+        const selectedPrj = MOCK_PROJECTS.find(p => p.id === formFields.projectId) || 
+                            MOCK_PROJECTS.find(p => p.name === formFields.project) || 
+                            MOCK_PROJECTS[0];
+        finalProjectId = selectedPrj.id;
+        finalProjectName = selectedPrj.name;
+        const layerOpt = getLayerOption(formFields.modelLevel) || MODEL_LAYER_OPTIONS[0];
+        finalModelLevel = layerOpt.id;
+        finalModelLevelName = layerOpt.fullName;
+        finalElectricFence = formFields.electricFence || 'EF-PRJ-01';
+      }
     }
-
-    const finalElectricFence = formFields.electricFence || (isGlobal ? 'EF-SEC-01' : 'EF-PRJ-01');
 
     if (activeTab === 'main_station' || activeTab === 'exciter') {
       const setList = activeTab === 'main_station' ? setBaseStations : setExciters;
@@ -886,6 +1188,8 @@ export function DeviceManagement() {
           modelLevelName: finalModelLevelName,
           workfaceId: finalWorkfaceId,
           workfaceName: finalWorkfaceName,
+          confinedSpaceName: finalConfinedSpaceName,
+          associatedWorkfaces: finalAssocs,
           status: formFields.status || '在线',
           recycleStatus: formFields.recycleStatus || '设备安装',
           location: formFields.location || '测试',
@@ -916,6 +1220,8 @@ export function DeviceManagement() {
           modelLevelName: finalModelLevelName,
           workfaceId: finalWorkfaceId,
           workfaceName: finalWorkfaceName,
+          confinedSpaceName: finalConfinedSpaceName,
+          associatedWorkfaces: finalAssocs,
           positionX: Number(formFields.positionX ?? 350.20),
           positionY: Number(formFields.positionY ?? 10.10),
           positionZ: Number(formFields.positionZ ?? -150.40),
@@ -938,6 +1244,8 @@ export function DeviceManagement() {
           modelLevelName: finalModelLevelName,
           workfaceId: finalWorkfaceId,
           workfaceName: finalWorkfaceName,
+          confinedSpaceName: finalConfinedSpaceName,
+          associatedWorkfaces: finalAssocs,
           location: formFields.location || '',
           floor: formFields.floor || '',
           positionX: Number(formFields.positionX ?? 350.20),
@@ -958,6 +1266,8 @@ export function DeviceManagement() {
           modelLevelName: finalModelLevelName,
           workfaceId: finalWorkfaceId,
           workfaceName: finalWorkfaceName,
+          confinedSpaceName: finalConfinedSpaceName,
+          associatedWorkfaces: finalAssocs,
           positionX: Number(formFields.positionX ?? 350.20),
           positionY: Number(formFields.positionY ?? 10.10),
           positionZ: Number(formFields.positionZ ?? -150.40),
@@ -979,6 +1289,8 @@ export function DeviceManagement() {
           modelLevelName: finalModelLevelName,
           workfaceId: finalWorkfaceId,
           workfaceName: finalWorkfaceName,
+          confinedSpaceName: finalConfinedSpaceName,
+          associatedWorkfaces: finalAssocs,
           location: formFields.location || '',
           floor: formFields.floor || '',
           positionX: Number(formFields.positionX ?? 350.20),
@@ -999,6 +1311,8 @@ export function DeviceManagement() {
           modelLevelName: finalModelLevelName,
           workfaceId: finalWorkfaceId,
           workfaceName: finalWorkfaceName,
+          confinedSpaceName: finalConfinedSpaceName,
+          associatedWorkfaces: finalAssocs,
           positionX: Number(formFields.positionX ?? 350.20),
           positionY: Number(formFields.positionY ?? 10.10),
           positionZ: Number(formFields.positionZ ?? -150.40),
@@ -1021,6 +1335,8 @@ export function DeviceManagement() {
           modelLevelName: finalModelLevelName,
           workfaceId: finalWorkfaceId,
           workfaceName: finalWorkfaceName,
+          confinedSpaceName: finalConfinedSpaceName,
+          associatedWorkfaces: finalAssocs,
           createdAt: formFields.createdAt || new Date().toISOString().replace('T', ' ').substring(0, 19),
           isStreaming: formFields.isStreaming !== undefined ? formFields.isStreaming : true,
           rtspUrl: formFields.rtspUrl || '',
@@ -1042,6 +1358,8 @@ export function DeviceManagement() {
           modelLevelName: finalModelLevelName,
           workfaceId: finalWorkfaceId,
           workfaceName: finalWorkfaceName,
+          confinedSpaceName: finalConfinedSpaceName,
+          associatedWorkfaces: finalAssocs,
           positionX: Number(formFields.positionX ?? 350.20),
           positionY: Number(formFields.positionY ?? 10.10),
           positionZ: Number(formFields.positionZ ?? -150.40),
@@ -1692,11 +2010,11 @@ export function DeviceManagement() {
         </div>
       </div>
 
-      {/* 5. 新增 / 编辑 模态框 (包含造船项目及 3D BIM 模型分层关联配置) */}
+      {/* 5. 新增 / 编辑 模态框 (包含造船项目及 3D BIM 模型分层关联配置，支持扩展增删多个作业面或有限空间) */}
       {(modalMode === 'create' || modalMode === 'edit') && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
-            <div className="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex justify-between items-center shrink-0">
               <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
                 {(activeTab === 'main_station' || activeTab === 'exciter') && <Radio className="w-4 h-4 text-blue-600" />}
                 {activeTab === 'gas_detector' && <Flame className="w-4 h-4 text-amber-500" />}
@@ -1719,199 +2037,265 @@ export function DeviceManagement() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveForm} className="p-5 space-y-4 text-xs">
+            <form onSubmit={handleSaveForm} className="p-5 space-y-4 text-xs overflow-y-auto flex-1">
               
-              {/* [通用的关联模式选择区域] */}
-              <div className="col-span-2 bg-slate-50/80 p-3 rounded-lg border border-slate-200/80">
-                <label className="block text-slate-700 font-bold mb-1.5 text-xs">设备关联范围设置</label>
-                <div className="flex items-center gap-6">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="associationType"
-                      checked={formFields.associationType === 'global'}
-                      onChange={() => {
-                        const defaultWf = YARD_WORKFACE_OPTIONS[0];
-                        setFormFields({ 
-                          ...formFields, 
-                          associationType: 'global', 
-                          projectId: '', 
-                          project: '全厂通用设备',
-                          modelLevel: 'all',
-                          modelLevelName: '全厂公共区域',
-                          workfaceId: formFields.workfaceId || defaultWf.id,
-                          workfaceName: formFields.workfaceName || defaultWf.name,
-                          confinedSpaceId: undefined,
-                          confinedSpaceName: undefined,
-                          electricFence: YARD_WORKFACE_OPTIONS.find(w => w.id === (formFields.workfaceId || defaultWf.id))?.fenceCode || defaultWf.fenceCode,
-                          positionX: null,
-                          positionY: null,
-                          positionZ: null
-                        });
-                        setFormError(null);
-                      }}
-                      className="w-4 h-4 text-purple-600 focus:ring-purple-500 cursor-pointer"
-                    />
-                    <span className="text-xs font-semibold text-purple-700">🏢 全厂通用设备（选择全厂通用作业面与电子围栏）</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="associationType"
-                      checked={formFields.associationType === 'project'}
-                      onChange={() => {
-                        const defaultPrj = MOCK_PROJECTS[0];
-                        setFormFields({ 
-                          ...formFields, 
-                          associationType: 'project', 
-                          projectId: formFields.projectId || defaultPrj.id, 
-                          project: (formFields.project && formFields.project !== '全厂通用设备') ? formFields.project : defaultPrj.name,
-                          modelLevel: (formFields.modelLevel && formFields.modelLevel !== 'all') ? formFields.modelLevel : 'deck',
-                          modelLevelName: (formFields.modelLevelName && formFields.modelLevelName !== '全厂公共区域') ? formFields.modelLevelName : MODEL_LAYER_OPTIONS[0].fullName,
-                          workfaceId: undefined,
-                          workfaceName: undefined,
-                          electricFence: 'EF-PRJ-01',
-                          positionX: null,
-                          positionY: null,
-                          positionZ: null
-                        });
-                        setFormError(null);
-                      }}
-                      className="w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                    />
-                    <span className="text-xs font-semibold text-sky-700">🚢 关联造船工程项目与船型分层</span>
-                  </label>
+              {/* [可扩展关联作业面与船舶有限空间管理区] */}
+              <div className="bg-slate-50/90 rounded-xl border border-slate-200/90 p-3.5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1 rounded-md bg-blue-100 text-blue-700">
+                      <Layers className="w-4 h-4" />
+                    </span>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <label className="text-slate-800 font-bold text-xs">
+                          关联作业面 / 有限空间
+                        </label>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/80 font-semibold">
+                          已配置 {(formFields.associatedWorkfaces || []).length} 处空间
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-0.5">
+                        支持为当前设备灵活关联多处全厂作业面或船舶工程分层舱位，可动态增删扩展
+                      </p>
+                    </div>
+                  </div>
+
+                  {!isAddingAssoc && (
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingAssoc(true)}
+                      className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-[11px] font-semibold flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>添加作业面 / 空间</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* 动态添加抽屉/表单框 */}
+                {isAddingAssoc && (
+                  <div className="bg-white p-3.5 rounded-lg border border-blue-200 shadow-xs space-y-3 animate-in fade-in zoom-in-98 duration-150">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                      <span className="font-bold text-xs text-blue-900 flex items-center gap-1.5">
+                        <Plus className="w-3.5 h-3.5 text-blue-600" />
+                        添加新的关联作业面 / 船舶有限空间
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAddingAssoc(false);
+                          setNewSpaceName('');
+                        }}
+                        className="text-slate-400 hover:text-slate-600 p-0.5 rounded"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* 选择添加类型 */}
+                    <div className="grid grid-cols-2 gap-2 bg-slate-100/80 p-1 rounded-lg">
+                      <button
+                        type="button"
+                        onClick={() => setNewAssocType('workface')}
+                        className={`py-1.5 px-3 rounded text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          newAssocType === 'workface'
+                            ? 'bg-white text-purple-700 shadow-xs border border-purple-200'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        <Building2 className="w-3.5 h-3.5 text-purple-600" />
+                        <span>🏢 全厂通用作业面</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewAssocType('confinedSpace')}
+                        className={`py-1.5 px-3 rounded text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          newAssocType === 'confinedSpace'
+                            ? 'bg-white text-sky-700 shadow-xs border border-sky-200'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        <Ship className="w-3.5 h-3.5 text-blue-600" />
+                        <span>🚢 船舶工程有限空间</span>
+                      </button>
+                    </div>
+
+                    {/* 类型 1：全厂通用作业面选择 */}
+                    {newAssocType === 'workface' && (
+                      <div className="space-y-2">
+                        <label className="block text-slate-700 font-semibold text-[11px]">
+                          选择全厂作业面及对应电子围栏 <span className="text-rose-500">*</span>
+                        </label>
+                        <select
+                          value={newYardWfId || allYardOptions[0]?.id}
+                          onChange={(e) => setNewYardWfId(e.target.value)}
+                          className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:border-purple-500 bg-white cursor-pointer"
+                        >
+                          {allYardOptions.map(wf => (
+                            <option key={wf.id} value={wf.id}>
+                              🏢 [{wf.code}] {wf.name} (工位: {wf.subArea} | 围栏: {wf.fenceCode})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {/* 类型 2：船舶工程有限空间选择 */}
+                    {newAssocType === 'confinedSpace' && (
+                      <div className="space-y-2.5">
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <div>
+                            <label className="block text-slate-700 font-semibold text-[11px] mb-1">
+                              所属造船工程项目 <span className="text-rose-500">*</span>
+                            </label>
+                            <select
+                              value={newPrjId || MOCK_PROJECTS[0].id}
+                              onChange={(e) => setNewPrjId(e.target.value)}
+                              className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:border-blue-500 bg-white cursor-pointer"
+                            >
+                              {MOCK_PROJECTS.map(prj => (
+                                <option key={prj.id} value={prj.id}>
+                                  🚢 [{prj.id}] {prj.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-slate-700 font-semibold text-[11px] mb-1">
+                              模型分层区域 <span className="text-rose-500">*</span>
+                            </label>
+                            <select
+                              value={newModelLevel || 'middle'}
+                              onChange={(e) => setNewModelLevel(e.target.value)}
+                              className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:border-blue-500 bg-white cursor-pointer"
+                            >
+                              {MODEL_LAYER_OPTIONS.map(layer => (
+                                <option key={layer.id} value={layer.id}>
+                                  📐 {layer.fullName}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-slate-700 font-semibold text-[11px] mb-1">
+                            有限空间 / 舱位作业面名称 (可选，留空将自动生成标准舱室名)
+                          </label>
+                          <input
+                            type="text"
+                            value={newSpaceName}
+                            onChange={(e) => setNewSpaceName(e.target.value)}
+                            placeholder="如: 1#液货舱双层底密闭空间 / 2#压载舱"
+                            className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:border-blue-500 bg-white"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex justify-end gap-2 pt-1 border-t border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAddingAssoc(false);
+                          setNewSpaceName('');
+                        }}
+                        className="px-3 py-1 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded text-xs cursor-pointer"
+                      >
+                        取消
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleAddAssociation}
+                        className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold flex items-center gap-1 cursor-pointer shadow-2xs"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>确认添加至关联列表</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* 已关联空间列表 */}
+                <div className="space-y-1.5">
+                  {(!formFields.associatedWorkfaces || formFields.associatedWorkfaces.length === 0) ? (
+                    <div className="p-3 text-center bg-white rounded-lg border border-dashed border-slate-200 text-slate-400 text-xs">
+                      暂未关联作业面或有限空间，请点击上方“添加作业面 / 空间”进行配置
+                    </div>
+                  ) : (
+                    formFields.associatedWorkfaces.map((assoc: DeviceAssociatedWorkface, index: number) => {
+                      const isFirst = index === 0;
+                      return (
+                        <div
+                          key={assoc.id}
+                          className="flex items-center justify-between p-2.5 bg-white rounded-lg border border-slate-200 hover:border-blue-200 transition-colors shadow-2xs group"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-500 font-mono text-[10px] font-bold flex items-center justify-center shrink-0">
+                              {index + 1}
+                            </span>
+                            {assoc.type === 'workface' ? (
+                              <span className="p-1 rounded bg-purple-50 text-purple-600 shrink-0">
+                                <Building2 className="w-3.5 h-3.5" />
+                              </span>
+                            ) : (
+                              <span className="p-1 rounded bg-sky-50 text-blue-600 shrink-0">
+                                <Ship className="w-3.5 h-3.5" />
+                              </span>
+                            )}
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-bold text-slate-800 text-xs truncate">
+                                  {assoc.name}
+                                </span>
+                                {assoc.code && (
+                                  <span className="font-mono text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.2 rounded shrink-0">
+                                    {assoc.code}
+                                  </span>
+                                )}
+                                {isFirst && (
+                                  <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded shrink-0">
+                                    主关联
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5 truncate">
+                                {assoc.type === 'workface' ? (
+                                  <>
+                                    <span>工位: {assoc.yardSubArea || '厂区车间'}</span>
+                                    <span>•</span>
+                                    <span className="font-mono text-purple-700">围栏: {assoc.electricFence}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="text-blue-700 font-medium">项目: {assoc.projectName}</span>
+                                    <span>•</span>
+                                    <span className="text-sky-700">分层: {assoc.modelLevelName}</span>
+                                    <span>•</span>
+                                    <span className="font-mono text-emerald-700">围栏: {assoc.electricFence}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveAssociation(assoc.id)}
+                              className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors cursor-pointer"
+                              title="移除此关联空间"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
-
-              {/* [模式一：关联全厂通用作业面卡片 - 参考电子围栏联动] */}
-              {formFields.associationType === 'global' && (
-                <div className="bg-purple-50/40 p-3.5 rounded-xl border border-purple-200/80 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                      <Building2 className="w-4 h-4 text-purple-600" />
-                      关联全厂通用作业面（参考电子围栏联动）
-                    </span>
-                    <span className="text-[10px] text-purple-700 font-mono bg-purple-100/90 px-2 py-0.5 rounded border border-purple-200">
-                      电子围栏自动绑定机制
-                    </span>
-                  </div>
-
-                  <div>
-                    <label className="block text-slate-700 font-semibold mb-1 text-[11px]">
-                      选择全厂作业面 <span className="text-rose-500">*</span>
-                    </label>
-                    <select
-                      value={formFields.workfaceId || YARD_WORKFACE_OPTIONS[0].id}
-                      onChange={(e) => {
-                        const selectedWf = YARD_WORKFACE_OPTIONS.find(w => w.id === e.target.value);
-                        if (selectedWf) {
-                          setFormFields({
-                            ...formFields,
-                            workfaceId: selectedWf.id,
-                            workfaceName: selectedWf.name,
-                            electricFence: selectedWf.fenceCode,
-                            location: formFields.location || selectedWf.subArea,
-                            positionX: null,
-                            positionY: null,
-                            positionZ: null
-                          });
-                          setFormError(null);
-                        }
-                      }}
-                      className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:border-purple-500 bg-white font-sans cursor-pointer shadow-2xs"
-                    >
-                      {YARD_WORKFACE_OPTIONS.map(wf => (
-                        <option key={wf.id} value={wf.id}>
-                          🏢 [{wf.code}] {wf.name} (工位: {wf.subArea} | 围栏: {wf.fenceCode})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-
-                </div>
-              )}
-
-              {/* [模式二：关联造船项目与船型分层卡片 - 参考电子围栏联动] */}
-              {formFields.associationType === 'project' && (
-                <div className="bg-sky-50/40 p-3.5 rounded-xl border border-sky-200/80 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                      <Ship className="w-4 h-4 text-blue-600" />
-                      关联造船工程项目与船型分层（参考电子围栏联动）
-                    </span>
-                    <span className="text-[10px] text-sky-700 font-mono bg-sky-100/90 px-2 py-0.5 rounded border border-sky-200">
-                      造船工程视角
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* 关联造船工程项目 */}
-                    <div>
-                      <label className="block text-slate-700 font-semibold mb-1 text-[11px]">
-                        选择造船工程项目 <span className="text-rose-500">*</span>
-                      </label>
-                      <select
-                        value={formFields.projectId || (MOCK_PROJECTS.find(p => p.name === formFields.project)?.id || MOCK_PROJECTS[0].id)}
-                        onChange={(e) => {
-                          const selectedPrj = MOCK_PROJECTS.find(p => p.id === e.target.value);
-                          if (selectedPrj) {
-                            setFormFields({
-                              ...formFields,
-                              projectId: selectedPrj.id,
-                              project: selectedPrj.name,
-                              electricFence: 'EF-PRJ-01',
-                              positionX: null,
-                              positionY: null,
-                              positionZ: null
-                            });
-                            setFormError(null);
-                          }
-                        }}
-                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:border-blue-500 bg-white font-sans cursor-pointer shadow-2xs"
-                      >
-                        {MOCK_PROJECTS.map(prj => (
-                          <option key={prj.id} value={prj.id}>
-                            🚢 [{prj.id}] {prj.name} ({prj.shipType})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* 关联船型模型分层 */}
-                    <div>
-                      <label className="block text-slate-700 font-semibold mb-1 text-[11px]">
-                        模型分层选择 <span className="text-rose-500">*</span>
-                      </label>
-                      <select
-                        value={formFields.modelLevel || 'deck'}
-                        onChange={(e) => {
-                          const layerOpt = MODEL_LAYER_OPTIONS.find(l => l.id === e.target.value);
-                          setFormFields({
-                            ...formFields,
-                            modelLevel: e.target.value,
-                            modelLevelName: layerOpt ? layerOpt.fullName : '',
-                            positionX: null,
-                            positionY: null,
-                            positionZ: null
-                          });
-                          setFormError(null);
-                        }}
-                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:border-blue-500 bg-white font-sans cursor-pointer shadow-2xs"
-                      >
-                        {MODEL_LAYER_OPTIONS.map(layer => (
-                          <option key={layer.id} value={layer.id}>
-                            📐 {layer.fullName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-
-                </div>
-              )}
 
               {/* [模态表单 1] 主基站 / 激励器 特定属性 */}
               {(activeTab === 'main_station' || activeTab === 'exciter') && (
@@ -2335,7 +2719,9 @@ export function DeviceManagement() {
                   <div className="flex items-center gap-1.5 bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800">
                     <span className="text-slate-400 text-[11px] shrink-0">关联作业面/工程:</span>
                     <span className="font-bold text-amber-300 text-[11px] truncate">
-                      {formFields.associationType === 'global' ? (formFields.workfaceName || '全厂通用作业面') : (formFields.project || '造船工程项目')}
+                      {formFields.associatedWorkfaces && formFields.associatedWorkfaces.length > 0
+                        ? `${formFields.associatedWorkfaces[0].name}${formFields.associatedWorkfaces.length > 1 ? ` (等 ${formFields.associatedWorkfaces.length} 处空间)` : ''}`
+                        : (formFields.associationType === 'global' ? (formFields.workfaceName || '全厂通用作业面') : (formFields.project || '造船工程项目'))}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5 bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800">
@@ -2424,78 +2810,126 @@ export function DeviceManagement() {
                 </div>
               </div>
 
-              {/* 造船工程项目与空间关联卡片 */}
-              <div className="p-3 bg-gradient-to-br from-slate-50 to-blue-50/30 rounded-lg border border-slate-200/90 space-y-2 text-xs">
+              {/* 造船工程项目与空间关联卡片 (支持多作业面/有限空间清单展示) */}
+              <div className="p-3 bg-gradient-to-br from-slate-50 to-blue-50/30 rounded-lg border border-slate-200/90 space-y-2.5 text-xs">
                 <div className="flex items-center justify-between pb-1.5 border-b border-slate-200/60">
                   <span className="font-bold text-slate-800 flex items-center gap-1.5">
-                    {selectedDevice.associationType === 'global' ? <Building2 className="w-4 h-4 text-purple-600" /> : <Ship className="w-4 h-4 text-blue-600" />}
-                    {selectedDevice.associationType === 'global' ? '全厂通用场景与作业面绑定' : '造船工程项目与船型分层绑定'}
+                    <Layers className="w-4 h-4 text-blue-600" />
+                    关联作业面与船舶有限空间
                   </span>
-                  {selectedDevice.associationType === 'global' || selectedDevice.project === '全厂通用设备' ? (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700">
-                      全厂通用配置
+                  {selectedDevice.associatedWorkfaces && selectedDevice.associatedWorkfaces.length > 0 ? (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">
+                      已关联 {selectedDevice.associatedWorkfaces.length} 处空间
                     </span>
                   ) : (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800">
-                      指定项目 3D 绑定
-                    </span>
+                    selectedDevice.associationType === 'global' || selectedDevice.project === '全厂通用设备' ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700">
+                        全厂通用配置
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800">
+                        指定项目 3D 绑定
+                      </span>
+                    )
                   )}
                 </div>
 
-                {selectedDevice.associationType === 'global' || selectedDevice.project === '全厂通用设备' ? (
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-500">关联全厂作业面：</span>
-                      <span className="font-bold text-purple-800">{selectedDevice.workfaceName || '全厂通用作业面'}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-500">联动电子围栏：</span>
-                      <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                        🛡️ {selectedDevice.electricFence || 'EF-SEC-01'}
-                      </span>
-                    </div>
+                {selectedDevice.associatedWorkfaces && selectedDevice.associatedWorkfaces.length > 0 ? (
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                    {selectedDevice.associatedWorkfaces.map((assoc: any, idx: number) => (
+                      <div key={assoc.id || idx} className="p-2 bg-white rounded-lg border border-slate-200/80 space-y-1 shadow-2xs">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            {assoc.type === 'workface' ? (
+                              <span className="p-0.5 bg-purple-50 text-purple-700 rounded"><Building2 className="w-3.5 h-3.5" /></span>
+                            ) : (
+                              <span className="p-0.5 bg-sky-50 text-blue-600 rounded"><Ship className="w-3.5 h-3.5" /></span>
+                            )}
+                            <span className="font-bold text-slate-800 text-xs">{assoc.name}</span>
+                            {assoc.code && <span className="font-mono text-[10px] text-slate-500 bg-slate-100 px-1 py-0.2 rounded">{assoc.code}</span>}
+                          </div>
+                          {idx === 0 && (
+                            <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded">
+                              主关联
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-slate-500 flex-wrap">
+                          {assoc.type === 'workface' ? (
+                            <>
+                              <span>工位: {assoc.yardSubArea || '厂区车间'}</span>
+                              <span>•</span>
+                              <span className="font-mono text-purple-700">围栏: {assoc.electricFence}</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-blue-700 font-medium">项目: {assoc.projectName}</span>
+                              <span>•</span>
+                              <span className="text-sky-700">分层: {assoc.modelLevelName}</span>
+                              <span>•</span>
+                              <span className="font-mono text-emerald-700">围栏: {assoc.electricFence}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-500">工程项目编码及名称：</span>
-                      <div className="flex items-center gap-1.5 font-bold text-slate-900">
-                        <span className="font-mono bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded text-[11px]">
-                          {selectedDevice.projectId || 'PRJ'}
+                  selectedDevice.associationType === 'global' || selectedDevice.project === '全厂通用设备' ? (
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500">关联全厂作业面：</span>
+                        <span className="font-bold text-purple-800">{selectedDevice.workfaceName || '全厂通用作业面'}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500">联动电子围栏：</span>
+                        <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                          🛡️ {selectedDevice.electricFence || 'EF-SEC-01'}
                         </span>
-                        <span>{selectedDevice.project}</span>
                       </div>
                     </div>
-
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-500">船型模型分层：</span>
-                      {(() => {
-                        const l = getLayerOption(selectedDevice.modelLevel);
-                        return l ? (
-                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-bold border ${l.badgeBg} ${l.badgeText} ${l.badgeBorder}`}>
-                            <Layers className="w-3.5 h-3.5" />
-                            <span>{l.fullName}</span>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500">工程项目编码及名称：</span>
+                        <div className="flex items-center gap-1.5 font-bold text-slate-900">
+                          <span className="font-mono bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded text-[11px]">
+                            {selectedDevice.projectId || 'PRJ'}
                           </span>
-                        ) : (
-                          <span className="font-semibold text-slate-800">{selectedDevice.modelLevelName || '通用视角'}</span>
-                        );
-                      })()}
-                    </div>
+                          <span>{selectedDevice.project}</span>
+                        </div>
+                      </div>
 
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-500">关联有限空间：</span>
-                      <span className="font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
-                        🔒 {selectedDevice.confinedSpaceName || '标准工程舱室'}
-                      </span>
-                    </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500">船型模型分层：</span>
+                        {(() => {
+                          const l = getLayerOption(selectedDevice.modelLevel);
+                          return l ? (
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-bold border ${l.badgeBg} ${l.badgeText} ${l.badgeBorder}`}>
+                              <Layers className="w-3.5 h-3.5" />
+                              <span>{l.fullName}</span>
+                            </span>
+                          ) : (
+                            <span className="font-semibold text-slate-800">{selectedDevice.modelLevelName || '通用视角'}</span>
+                          );
+                        })()}
+                      </div>
 
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-500">联动电子围栏：</span>
-                      <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                        🛡️ {selectedDevice.electricFence || 'EF-LNG-CS01'}
-                      </span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500">关联有限空间：</span>
+                        <span className="font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                          🔒 {selectedDevice.confinedSpaceName || '标准工程舱室'}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500">联动电子围栏：</span>
+                        <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                          🛡️ {selectedDevice.electricFence || 'EF-LNG-CS01'}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )
                 )}
 
                 <div className="pt-1.5 border-t border-slate-200/60 flex justify-between items-center font-mono text-[11px]">
