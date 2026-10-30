@@ -16,8 +16,8 @@
         --text:#d7f2ff; --muted:#8ab4cf; --muted2:#6f9dbd;
         --font:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC","Source Han Sans SC",sans-serif;
         --mono:"SF Mono","JetBrains Mono",Consolas,"Roboto Mono",monospace;
-        /* unified corner-radius scale: large panels / medium cards / small chips & buttons */
-        --r-xl:16px; --r-lg:12px; --r-md:9px; --r-sm:6px; --r-xs:4px;
+        /* unified corner-radius scale: Apple squircle aesthetic scale */
+        --r-2xl:24px; --r-xl:20px; --r-lg:16px; --r-md:12px; --r-sm:8px; --r-xs:6px;
       }
       *{box-sizing:border-box; margin:0; padding:0;}
       html,body{height:100%;}
@@ -43,21 +43,19 @@
           linear-gradient(90deg, rgba(0,140,200,.05) 1px, transparent 1px);
         background-size:48px 48px;
       }
-      /* ---------- generic panel ---------- */
+      /* ---------- generic panel: Apple-style Squircle Rounded Design ---------- */
       .panel{
         position:relative; background:linear-gradient(180deg, var(--panel), var(--panel2));
-        border:1px solid var(--line-soft); border-radius:var(--r-lg);
-        box-shadow:inset 0 1px 0 rgba(140,220,255,.09), inset 0 0 24px rgba(0,90,160,.12), 0 0 0 1px rgba(0,0,0,.25), 0 0 18px rgba(0,120,200,.07);
+        backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+        border:1.5px solid rgba(0,210,255,.26); border-radius:var(--r-2xl);
+        box-shadow:inset 0 1px 1px rgba(180,240,255,.16), inset 0 0 28px rgba(0,90,160,.12), 0 8px 24px rgba(0,0,0,.35);
+        overflow:hidden;
       }
-      .panel::before,.panel::after{
-        content:""; position:absolute; width:15px; height:15px; border-color:var(--cyan); border-style:solid; opacity:.85; pointer-events:none; z-index:3;
-      }
-      .panel::before{ top:-1px; left:-1px; border-width:2px 0 0 2px; border-top-left-radius:var(--r-lg); }
-      .panel::after{ bottom:-1px; right:-1px; border-width:0 2px 2px 0; border-bottom-right-radius:var(--r-lg); }
+      .panel::before, .panel::after{ display:none; }
       .p-head{
-        display:flex; align-items:center; gap:9px; height:38px; padding:0 14px;
-        border-bottom:1px solid var(--line-soft); border-radius:var(--r-lg) var(--r-lg) 0 0;
-        background:linear-gradient(90deg, rgba(0,120,190,.20), rgba(0,120,190,.05) 45%, transparent 75%);
+        display:flex; align-items:center; gap:9px; height:40px; padding:0 18px;
+        border-bottom:1px solid rgba(0,180,240,.18); border-radius:var(--r-2xl) var(--r-2xl) 0 0;
+        background:linear-gradient(90deg, rgba(0,120,190,.22), rgba(0,120,190,.06) 45%, transparent 75%);
       }
       .p-head .tick{ width:4px; height:16px; border-radius:2px; background:linear-gradient(180deg,#7df3ff,var(--cyan)); box-shadow:0 0 8px var(--cyan); }
       .p-head h2{ font-size:16px; font-weight:600; letter-spacing:2px; color:#eaf8ff; text-shadow:0 0 10px rgba(0,200,255,.28); white-space:nowrap; }
@@ -91,20 +89,17 @@
       .mech.l{ right:calc(50% + 430px); } .mech.r{ left:calc(50% + 430px); transform:scaleX(-1); }
       .mech::after{ content:""; position:absolute; right:0; top:-3px; width:8px; height:8px; background:var(--cyan); transform:rotate(45deg); box-shadow:0 0 8px var(--cyan); }
       #fsBtn{ cursor:pointer; display:flex; align-items:center; justify-content:center; color:#cfeeff;
-        background:rgba(4,24,50,.85); border:1px solid var(--line); border-radius:var(--r-sm); padding:9px 11px; transition:background .2s, color .2s, box-shadow .2s; }
+        background:rgba(4,24,50,.85); border:1px solid var(--line); border-radius:var(--r-md); padding:9px 11px; transition:background .2s, color .2s, box-shadow .2s; }
       #fsBtn svg{ width:19px; height:19px; display:block; }
       #fsBtn:hover{ background:rgba(0,80,140,.5); color:#fff; border-color:rgba(0,229,255,.6); box-shadow:0 0 14px rgba(0,229,255,.28), inset 0 1px 0 rgba(140,220,255,.16); }
-      /* ---------- auto-flip interval control (top-right, beside fullscreen) ----------
-         custom dropdown in the board's own language: deep-blue glass face, neon-cyan
-         rim + glow, same radius as the fullscreen icon button; dark option panel with
-         hover highlight and a glowing check on the active tier */
+      /* ---------- auto-flip interval control (top-right, beside fullscreen) ---------- */
       .flip-ctl{ display:flex; align-items:center; gap:8px; }
       .flip-ctl .flip-label{ font-size:12.5px; color:var(--muted); letter-spacing:2px; white-space:nowrap; }
       .flip-dd{ position:relative; }
       .flip-btn{
         cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:10px; min-width:106px;
         font-family:var(--font); font-size:13.5px; font-weight:600; letter-spacing:1px; color:#dff6ff;
-        padding:9px 12px; border:1px solid var(--line); border-radius:var(--r-sm);
+        padding:9px 12px; border:1px solid var(--line); border-radius:var(--r-md);
         background:linear-gradient(180deg, rgba(12,46,84,.92), rgba(4,22,46,.95));
         box-shadow:inset 0 1px 0 rgba(140,220,255,.15), 0 0 10px rgba(0,120,200,.10);
         transition:border-color .2s, box-shadow .2s, color .2s;
@@ -115,9 +110,10 @@
       .flip-caret{ width:11px; height:11px; flex:none; color:var(--cyan); filter:drop-shadow(0 0 4px rgba(0,229,255,.75)); transition:transform .25s ease; }
       .flip-dd.open .flip-caret{ transform:rotate(180deg); }
       .flip-menu{
-        position:absolute; top:calc(100% + 7px); right:0; z-index:40; min-width:158px; list-style:none; padding:5px;
+        position:absolute; top:calc(100% + 7px); right:0; z-index:40; min-width:158px; list-style:none; padding:6px;
         background:linear-gradient(180deg, rgba(9,36,70,.97), rgba(3,16,36,.98));
-        border:1px solid rgba(0,200,255,.45); border-radius:var(--r-md);
+        backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+        border:1.5px solid rgba(0,200,255,.45); border-radius:var(--r-lg);
         box-shadow:0 16px 36px rgba(0,0,0,.55), 0 0 24px rgba(0,150,255,.22), inset 0 1px 0 rgba(140,220,255,.15);
         opacity:0; transform:translateY(-5px); pointer-events:none; transition:opacity .18s ease, transform .18s ease;
       }
@@ -137,42 +133,45 @@
       .col{ display:flex; flex-direction:column; gap:12px; min-height:0; min-width:0; }
       .col-left{ grid-area:left; } .col-center{ grid-area:mid; } .col-right{ grid-area:right; }
       /* ---------- left: projects ---------- */
-      .region-tabs{ display:flex; border-bottom:1px solid var(--line-soft); }
+      .region-tabs{ display:flex; border-bottom:1px solid var(--line-soft); padding:4px 6px; gap:6px; background:rgba(2,12,28,.4); }
       .region-tabs button{
         flex:1; cursor:pointer; font-family:var(--font); font-size:13.5px; font-weight:600; letter-spacing:2px;
-        padding:7.5px 0; color:var(--muted); background:rgba(3,16,36,.6); border:none; border-right:1px solid var(--line-soft);
+        padding:8px 0; color:var(--muted); background:rgba(3,16,36,.6); border:1px solid rgba(0,180,255,.15);
+        border-radius:var(--r-md);
         transition:color .2s, background .2s, box-shadow .2s;
       }
       .region-tabs button:last-child{ border-right:none; }
       .region-tabs button.active{ color:#03222e; background:linear-gradient(180deg,#5ff0ff,#00b8dd); box-shadow:0 0 14px rgba(0,229,255,.4); }
       .region-tabs button:not(.active):hover{ color:#dff6ff; }
       .proj-panel{ flex:1; display:flex; flex-direction:column; min-height:0; }
-      #projList{ flex:1; display:flex; flex-direction:column; min-height:0; }
+      #projList{ flex:1; display:flex; flex-direction:column; min-height:0; overflow-y:auto; overflow-x:hidden; scrollbar-width:thin; scrollbar-color:rgba(0,180,255,.3) transparent; padding:4px 0; }
+      #projList::-webkit-scrollbar{ width:4px; }
+      #projList::-webkit-scrollbar-thumb{ background:rgba(0,180,255,.3); border-radius:3px; }
       .proj{
-        flex:none; display:flex; gap:9px; align-items:center; padding:9px 12px; cursor:pointer;
-        border-bottom:1px solid rgba(0,150,210,.10); border-left:3px solid transparent; border-radius:var(--r-sm); transition:background .2s;
+        flex:none; display:flex; gap:9px; align-items:center; padding:8px 11px; cursor:pointer; margin:2px 6px;
+        border:1px solid transparent; border-left:3px solid transparent; border-radius:var(--r-md); transition:background .2s, border-color .2s;
       }
-      .proj:hover{ background:rgba(0,110,180,.12); }
-      .proj.active{ background:linear-gradient(90deg, rgba(0,140,220,.22), rgba(0,140,220,.03)); border-left-color:var(--cyan); }
-      .proj .p-ico{ flex:none; width:38px; height:28px; margin-top:2px; color:#7fc6e8; }
+      .proj:hover{ background:rgba(0,110,180,.14); border-color:rgba(0,180,255,.2); }
+      .proj.active{ background:linear-gradient(90deg, rgba(0,140,220,.26), rgba(0,140,220,.05)); border:1px solid rgba(0,229,255,.45); border-left-width:3px; border-left-color:var(--cyan); }
+      .proj .p-ico{ flex:none; width:34px; height:26px; margin-top:2px; color:#7fc6e8; }
       .proj .p-ico svg{ width:100%; height:100%; display:block; }
       .proj.active .p-ico{ color:var(--cyan); filter:drop-shadow(0 0 6px rgba(0,229,255,.7)); }
-      .proj.active{ box-shadow:inset 0 0 0 1px rgba(0,229,255,.5), 0 0 14px rgba(0,160,255,.16); }
-      .proj h3{ font-size:16.5px; font-weight:600; color:#eaf8ff; letter-spacing:.5px; }
+      .proj.active{ box-shadow:inset 0 0 0 1px rgba(0,229,255,.4), 0 0 14px rgba(0,160,255,.16); }
+      .proj h3{ font-size:15px; font-weight:600; color:#eaf8ff; letter-spacing:.5px; }
       .proj.active h3{ color:#fff; }
-      .proj p{ font-size:12px; color:var(--muted); margin-top:3px; line-height:1.45; }
+      .proj p{ font-size:11.5px; color:var(--muted); margin-top:2px; line-height:1.35; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:230px; }
       .proj .pstat{ margin-left:auto; flex:none; text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums; }
       .proj .pstat b{ display:block; font-size:15px; color:var(--cyan); }
       .proj .pstat span{ font-size:10px; color:var(--muted2); letter-spacing:1px; }
       /* ---------- center ---------- */
       .center-toolbar{ height:42px; flex:none; display:flex; align-items:center; gap:14px; padding:0 14px; }
       .view-label{ display:flex; align-items:center; gap:8px; font-size:15.5px; font-weight:700; letter-spacing:2px; color:#eaf8ff; white-space:nowrap; }
-      .view-label .tick{ width:8px; height:8px; border-radius:2px; background:var(--cyan); transform:rotate(45deg); box-shadow:0 0 8px var(--cyan); flex:none; }
-      .mode-tabs{ display:flex; gap:6px; margin:0 auto; }
+      .view-label .tick{ width:8px; height:8px; border-radius:3px; background:var(--cyan); transform:rotate(45deg); box-shadow:0 0 8px var(--cyan); flex:none; }
+      .mode-tabs{ display:flex; gap:8px; margin:0 auto; }
       .mode-tabs button{
         cursor:pointer; font-family:var(--font); font-size:14px; font-weight:600; letter-spacing:3px;
-        padding:7px 24px; color:var(--muted); background:rgba(3,16,36,.8); border:1px solid var(--line-soft);
-        border-radius:var(--r-sm); transition:color .2s, background .2s, box-shadow .2s;
+        padding:7px 24px; color:var(--muted); background:rgba(3,16,36,.8); border:1.5px solid var(--line-soft);
+        border-radius:var(--r-md); transition:color .2s, background .2s, box-shadow .2s;
       }
       .mode-tabs button.active{ color:#eafcff; background:linear-gradient(180deg, rgba(0,140,220,.75), rgba(0,80,150,.75)); box-shadow:0 0 16px rgba(0,180,255,.45), inset 0 0 12px rgba(0,229,255,.25); text-shadow:0 0 8px rgba(160,240,255,.8); }
       .mode-tabs button:not(.active):hover{ color:#dff6ff; }
@@ -193,35 +192,37 @@
       .card{
         position:relative; cursor:pointer; padding:8px 10px 7px; display:flex; flex-direction:column; gap:5px; min-width:0; min-height:0;
         background:linear-gradient(180deg, rgba(8,30,58,.92), rgba(4,16,35,.96));
-        border:1px solid var(--line-soft); border-radius:var(--r-lg);
-        box-shadow:inset 0 1px 0 rgba(140,220,255,.07), inset 0 0 22px rgba(0,90,160,.10), 0 0 12px rgba(0,120,200,.05);
-        transition:border-color .2s, box-shadow .2s;
+        border:1.5px solid rgba(0,200,255,.24); border-radius:var(--r-lg);
+        backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+        box-shadow:inset 0 1px 1px rgba(180,240,255,.10), inset 0 0 20px rgba(0,90,160,.10), 0 4px 16px rgba(0,0,0,.35);
+        transition:border-color .2s, box-shadow .2s, transform .2s;
+        overflow:hidden;
       }
-      .card:hover{ border-color:rgba(0,229,255,.55); box-shadow:0 0 18px rgba(0,180,255,.22), inset 0 0 22px rgba(0,90,160,.14); }
-      .card::before{ content:""; position:absolute; top:-1px; left:-1px; width:14px; height:14px; border-top:2px solid var(--cyan); border-left:2px solid var(--cyan); border-top-left-radius:var(--r-lg); opacity:.8; }
+      .card:hover{ border-color:rgba(0,229,255,.65); box-shadow:0 0 22px rgba(0,180,255,.28), inset 0 0 22px rgba(0,90,160,.16); transform:translateY(-2px); }
+      .card::before{ display:none; }
       .card.intrude{ border-color:rgba(255,59,92,.85); animation:intrudeBreathe 1.6s ease-in-out infinite; }
       @keyframes intrudeBreathe{ 0%,100%{ box-shadow:inset 0 1px 0 rgba(255,150,170,.10), inset 0 0 22px rgba(255,59,92,.08), 0 0 9px rgba(255,59,92,.22); } 50%{ box-shadow:inset 0 1px 0 rgba(255,150,170,.16), inset 0 0 26px rgba(255,59,92,.16), 0 0 28px rgba(255,59,92,.62); } }
-      .card.intrude::before{ border-color:var(--red); }
-      .card.forbid{ border-color:rgba(255,122,89,.45); }
-      .card.forbid::before{ border-color:#ff7a59; }
+      .card.intrude::before{ display:none; }
+      .card.forbid{ border-color:rgba(255,122,89,.55); }
+      .card.forbid::before{ display:none; }
       .card.ppl-orange-card{ border-color:rgba(255,85,0,.85); box-shadow:0 0 20px rgba(255,85,0,.42), inset 0 0 22px rgba(255,85,0,.15); }
-      .card.ppl-orange-card::before{ border-color:#ff5500; }
+      .card.ppl-orange-card::before{ display:none; }
       .card.ppl-yellow-card{ border-color:rgba(250,204,21,.8); box-shadow:0 0 14px rgba(250,204,21,.35), inset 0 0 18px rgba(250,204,21,.10); }
-      .card.ppl-yellow-card::before{ border-color:#facc15; }
+      .card.ppl-yellow-card::before{ display:none; }
       /* ---------- nobody / empty state card: 人数为0暗灰弱化 ---------- */
       .card.nobody{
         background:linear-gradient(180deg, rgba(13,20,30,.88), rgba(7,12,18,.95));
-        border-color:rgba(85,105,128,.28);
+        border-color:rgba(85,105,128,.32);
         box-shadow:inset 0 1px 0 rgba(255,255,255,.03), inset 0 0 18px rgba(0,0,0,.4), 0 0 6px rgba(0,0,0,.25);
         opacity:.72;
         transition:opacity .25s ease, border-color .25s ease, box-shadow .25s ease;
       }
       .card.nobody:hover{
         opacity:.95;
-        border-color:rgba(135,160,188,.45);
-        box-shadow:0 0 16px rgba(100,130,160,.22), inset 0 0 18px rgba(0,0,0,.35);
+        border-color:rgba(135,160,188,.55);
+        box-shadow:0 0 18px rgba(100,130,160,.25), inset 0 0 18px rgba(0,0,0,.35);
       }
-      .card.nobody::before{ border-color:rgba(110,132,156,.35); }
+      .card.nobody::before{ display:none; }
       .card.nobody .card-ico{
         border-color:rgba(105,128,152,.30);
         color:#738698;
@@ -302,98 +303,95 @@
       .wf-safe .wf-name{ flex:none; color:#eaf8ff; font-size:14.5px; font-weight:600; letter-spacing:1px; }
       .wf-safe .wf-phone{ margin-left:auto; font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:12px; color:var(--muted); white-space:nowrap; }
 
-      /* ---------- TOP STRIP: HERO DATA OVERVIEW METRICS (spans full board ov ov ov) ---------- */
+      /* ---------- TOP STRIP: HERO DATA OVERVIEW METRICS (Apple-style Squircle Rounded Design) ---------- */
       .ov-strip{
         grid-area:ov; display:flex; flex-direction:column; align-items:stretch; min-width:0; min-height:0;
-        background:linear-gradient(180deg, rgba(6,28,58,.95), rgba(2,15,35,.98));
-        border:1.5px solid rgba(0,210,255,.45); border-radius:var(--r-lg);
-        box-shadow:inset 0 1px 0 rgba(140,220,255,.20), inset 0 0 36px rgba(0,110,190,.20), 0 8px 24px rgba(0,0,0,.45), 0 0 28px rgba(0,180,255,.18);
+        background:linear-gradient(180deg, rgba(8,32,66,.92), rgba(3,16,38,.96));
+        backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+        border:1.5px solid rgba(0,210,255,.35); border-radius:24px;
+        box-shadow:inset 0 1px 1px rgba(180,240,255,.25), inset 0 0 36px rgba(0,110,190,.18), 0 12px 36px rgba(0,0,0,.5), 0 0 28px rgba(0,180,255,.15);
       }
+      .ov-strip::before, .ov-strip::after { display:none; } /* Apple squircle aesthetics */
       .ov-strip .p-head{
-        height:40px; padding:0 20px; border-bottom:1px solid rgba(0,180,240,.22);
+        height:42px; padding:0 22px; border-bottom:1px solid rgba(0,180,240,.22);
+        border-radius:24px 24px 0 0;
         background:linear-gradient(90deg, rgba(0,140,220,.28), rgba(0,100,180,.10) 45%, transparent 80%);
       }
+      .ov-strip .p-head h2{ font-size:17.5px; font-weight:700; letter-spacing:2px; }
       .ov-live-tag{
-        display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--cyan);
-        font-family:var(--mono); letter-spacing:1px; padding:3px 12px; border-radius:999px;
+        display:inline-flex; align-items:center; gap:7px; font-size:13px; color:var(--cyan);
+        font-family:var(--mono); letter-spacing:1px; padding:3.5px 13px; border-radius:999px;
         background:rgba(0,229,255,.08); border:1px solid rgba(0,229,255,.30);
       }
       .live-dot{
         width:7px; height:7px; border-radius:50%; background:#00e5ff;
-        box-shadow:0 0 8px #00e5ff; animation:pulseDot 1.6s ease-in-out infinite;
+        box-shadow:0 0 10px #00e5ff; animation:pulseDot 1.6s ease-in-out infinite;
       }
       @keyframes pulseDot{ 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:.4; transform:scale(.75); } }
       .ov-metrics{
         display:grid; grid-template-columns:repeat(4, minmax(0, 1fr));
-        gap:16px; padding:16px 20px 18px; min-height:0; min-width:0;
+        gap:16px; padding:14px 20px 16px; min-height:0; min-width:0;
       }
       .ov-metrics .metric{
-        position:relative; display:flex; flex-direction:row; align-items:center; justify-content:space-between;
-        padding:18px 22px 16px; border-radius:var(--r-lg); min-height:138px;
-        background:linear-gradient(135deg, rgba(8,38,76,.92) 0%, rgba(2,16,38,.98) 100%);
-        border:1.5px solid var(--line-soft);
-        box-shadow:inset 0 1px 0 rgba(140,220,255,.16), inset 0 0 28px rgba(0,90,160,.15), 0 6px 22px rgba(0,0,0,.45);
-        transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+        position:relative; display:flex; flex-direction:column; align-items:stretch; justify-content:space-between;
+        padding:14px 20px 12px; border-radius:18px; min-height:122px;
+        background:linear-gradient(145deg, rgba(10,42,82,.92) 0%, rgba(3,18,42,.98) 100%);
+        border:1.5px solid rgba(0,180,240,.25);
+        box-shadow:inset 0 1px 1.5px rgba(200,245,255,.22), inset 0 0 24px rgba(0,90,160,.16), 0 6px 22px rgba(0,0,0,.45);
+        transition:transform .25s ease, border-color .25s ease, box-shadow .25s ease;
         overflow:hidden;
       }
       .ov-metrics .metric:hover{ transform:translateY(-2px); }
-      .ov-metrics .metric::before{
-        content:""; position:absolute; top:-1px; left:-1px; width:16px; height:16px;
-        border-top:2.5px solid currentColor; border-left:2.5px solid currentColor;
-        border-top-left-radius:var(--r-lg); opacity:.9; pointer-events:none;
-      }
-      .ov-metrics .metric::after{
-        content:""; position:absolute; bottom:-1px; right:-1px; width:16px; height:16px;
-        border-bottom:2.5px solid currentColor; border-right:2.5px solid currentColor;
-        border-bottom-right-radius:var(--r-lg); opacity:.9; pointer-events:none;
-      }
-      .ov-metrics .metric .m-left{ display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:10px; min-width:0; }
+      .ov-metrics .metric::before, .ov-metrics .metric::after { display:none; } /* Apple squircle aesthetics */
+      .ov-metrics .metric .m-top{ display:flex; align-items:center; justify-content:flex-start; width:100%; min-width:0; }
+      .ov-metrics .metric .m-lab{ font-size:19px; font-weight:800; color:#ffffff; letter-spacing:.5px; white-space:nowrap; text-shadow:0 1px 4px rgba(0,0,0,.4); }
+      .ov-metrics .metric .m-bottom{ display:flex; align-items:center; justify-content:space-between; width:100%; margin-top:3px; }
       .ov-metrics .metric .m-ico{
-        width:54px; height:54px; border-radius:12px; border:1.5px solid;
+        width:50px; height:50px; border-radius:13px; border:1.5px solid;
         display:flex; align-items:center; justify-content:center; flex:none;
+        box-shadow:inset 0 1px 1px rgba(255,255,255,.25);
       }
-      .ov-metrics .metric .m-ico svg{ width:30px; height:30px; display:block; }
-      .ov-metrics .metric .m-lab{ font-size:17.5px; font-weight:700; color:#f0f8ff; letter-spacing:1px; white-space:nowrap; }
-      .ov-metrics .metric .m-right{ display:flex; align-items:center; justify-content:flex-end; margin-left:auto; text-align:right; }
+      .ov-metrics .metric .m-ico svg{ width:28px; height:28px; display:block; }
+      .ov-metrics .metric .m-right{ display:flex; align-items:baseline; justify-content:flex-end; margin-left:auto; text-align:right; }
       .ov-metrics .metric .num{
         font-family:var(--mono); font-variant-numeric:tabular-nums;
-        font-size:64px; font-weight:800; line-height:1; letter-spacing:1px;
+        font-size:62px; font-weight:800; line-height:1; letter-spacing:1px;
       }
       .ov-metrics .metric .tot{
-        font-size:22px; color:#a2c8ea; font-weight:700; margin-left:8px;
+        font-size:24px; color:#b0d6f8; font-weight:800; margin-left:8px;
         font-family:var(--font); letter-spacing:0;
       }
 
       /* Metric 4 Theme Palettes */
       .ov-metrics .metric.c{
         border-color:rgba(0,229,255,.55); color:var(--cyan);
-        box-shadow:inset 0 1px 0 rgba(140,220,255,.18), 0 0 22px rgba(0,229,255,.18), inset 0 0 26px rgba(0,229,255,.08);
+        box-shadow:inset 0 1px 1.5px rgba(200,245,255,.30), 0 0 24px rgba(0,229,255,.20), inset 0 0 28px rgba(0,229,255,.10);
       }
-      .ov-metrics .metric.c .num{ color:#00e5ff; text-shadow:0 0 18px rgba(0,229,255,.75); }
-      .ov-metrics .metric.c .m-ico{ color:#00e5ff; background:rgba(0,229,255,.14); border-color:rgba(0,229,255,.5); box-shadow:0 0 12px rgba(0,229,255,.35); }
+      .ov-metrics .metric.c .num{ color:#00e5ff; text-shadow:0 0 22px rgba(0,229,255,.80); }
+      .ov-metrics .metric.c .m-ico{ color:#00e5ff; background:rgba(0,229,255,.16); border-color:rgba(0,229,255,.55); box-shadow:0 0 14px rgba(0,229,255,.38); }
 
       .ov-metrics .metric.o{
-        border-color:rgba(255,136,0,.65); color:#ff9100;
-        box-shadow:inset 0 1px 0 rgba(255,190,140,.18), 0 0 24px rgba(255,136,0,.22), inset 0 0 26px rgba(255,136,0,.10);
+        border-color:rgba(255,136,0,.68); color:#ff9100;
+        box-shadow:inset 0 1px 1.5px rgba(255,220,180,.30), 0 0 26px rgba(255,136,0,.25), inset 0 0 28px rgba(255,136,0,.12);
       }
-      .ov-metrics .metric.o .num{ color:#ff9100; text-shadow:0 0 20px rgba(255,145,0,.85); }
-      .ov-metrics .metric.o .m-ico{ color:#ff9922; background:rgba(255,136,0,.15); border-color:rgba(255,150,30,.6); box-shadow:0 0 14px rgba(255,136,0,.4); }
+      .ov-metrics .metric.o .num{ color:#ff9100; text-shadow:0 0 24px rgba(255,145,0,.90); }
+      .ov-metrics .metric.o .m-ico{ color:#ff9922; background:rgba(255,136,0,.18); border-color:rgba(255,150,30,.65); box-shadow:0 0 16px rgba(255,136,0,.42); }
       .ov-metrics .metric.o.dense-active{ animation:denseBreathe 2s ease-in-out infinite; }
-      @keyframes denseBreathe{ 0%,100%{ box-shadow:inset 0 1px 0 rgba(255,190,140,.18), 0 0 18px rgba(255,136,0,.2), inset 0 0 26px rgba(255,136,0,.08); } 50%{ box-shadow:inset 0 1px 0 rgba(255,220,160,.25), 0 0 32px rgba(255,136,0,.45), inset 0 0 34px rgba(255,136,0,.18); } }
+      @keyframes denseBreathe{ 0%,100%{ box-shadow:inset 0 1px 1.5px rgba(255,220,180,.30), 0 0 20px rgba(255,136,0,.22), inset 0 0 28px rgba(255,136,0,.10); } 50%{ box-shadow:inset 0 1px 2px rgba(255,240,200,.40), 0 0 36px rgba(255,136,0,.50), inset 0 0 36px rgba(255,136,0,.22); } }
 
       .ov-metrics .metric.b{
-        border-color:rgba(61,155,255,.6); color:#3d9bff;
-        box-shadow:inset 0 1px 0 rgba(140,200,255,.18), 0 0 22px rgba(61,155,255,.18), inset 0 0 26px rgba(61,155,255,.08);
+        border-color:rgba(61,155,255,.65); color:#3d9bff;
+        box-shadow:inset 0 1px 1.5px rgba(200,230,255,.30), 0 0 24px rgba(61,155,255,.20), inset 0 0 28px rgba(61,155,255,.10);
       }
-      .ov-metrics .metric.b .num{ color:#4da6ff; text-shadow:0 0 18px rgba(61,155,255,.75); }
-      .ov-metrics .metric.b .m-ico{ color:#4da6ff; background:rgba(61,155,255,.14); border-color:rgba(61,155,255,.5); box-shadow:0 0 12px rgba(61,155,255,.35); }
+      .ov-metrics .metric.b .num{ color:#4da6ff; text-shadow:0 0 22px rgba(61,155,255,.80); }
+      .ov-metrics .metric.b .m-ico{ color:#4da6ff; background:rgba(61,155,255,.16); border-color:rgba(61,155,255,.55); box-shadow:0 0 14px rgba(61,155,255,.38); }
 
       .ov-metrics .metric.g{
-        border-color:rgba(31,224,138,.6); color:#1fe08a;
-        box-shadow:inset 0 1px 0 rgba(140,255,200,.18), 0 0 22px rgba(31,224,138,.18), inset 0 0 26px rgba(31,224,138,.08);
+        border-color:rgba(31,224,138,.65); color:#1fe08a;
+        box-shadow:inset 0 1px 1.5px rgba(180,255,220,.30), 0 0 24px rgba(31,224,138,.20), inset 0 0 28px rgba(31,224,138,.10);
       }
-      .ov-metrics .metric.g .num{ color:#1fe08a; text-shadow:0 0 18px rgba(31,224,138,.75); }
-      .ov-metrics .metric.g .m-ico{ color:#1fe08a; background:rgba(31,224,138,.14); border-color:rgba(31,224,138,.5); box-shadow:0 0 12px rgba(31,224,138,.35); }
+      .ov-metrics .metric.g .num{ color:#1fe08a; text-shadow:0 0 22px rgba(31,224,138,.80); }
+      .ov-metrics .metric.g .m-ico{ color:#1fe08a; background:rgba(31,224,138,.16); border-color:rgba(31,224,138,.55); box-shadow:0 0 14px rgba(31,224,138,.38); }
 
       /* ---------- right: crew statistics ---------- */
       .head-stat{ font-size:12px; color:var(--muted); letter-spacing:1px; white-space:nowrap; }
@@ -430,20 +428,23 @@
       /* ---------- modals ---------- */
       .modal-mask{ position:fixed; inset:0; background:rgba(0,4,12,.72); backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center; z-index:60; }
       .modal-mask.open{ display:flex; }
-      .modal{ width:880px; max-width:94vw; background:linear-gradient(180deg,#07203f,#030f22); border:1px solid rgba(0,200,255,.5); border-radius:var(--r-xl);
-        box-shadow:0 0 44px rgba(0,160,255,.35), inset 0 1px 0 rgba(140,220,255,.12); padding:0; overflow:hidden; }
-      .modal-head{ display:flex; align-items:center; gap:12px; padding:16px 22px 13px; border-bottom:1px solid var(--line-soft);
+      .modal{ width:880px; max-width:94vw; background:linear-gradient(180deg,#07203f,#030f22);
+        backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+        border:1.5px solid rgba(0,210,255,.45); border-radius:28px;
+        box-shadow:0 20px 60px rgba(0,0,0,.65), 0 0 44px rgba(0,160,255,.35), inset 0 1px 1px rgba(140,220,255,.2); padding:0; overflow:hidden; }
+      .modal-head{ display:flex; align-items:center; gap:12px; padding:16px 24px 14px; border-bottom:1px solid rgba(0,180,240,.18);
+        border-radius:28px 28px 0 0;
         background:linear-gradient(90deg, rgba(0,120,190,.22), transparent 70%); }
       .modal-head h3{ font-size:21px; letter-spacing:1px; color:#fff; }
       .modal-head .en{ font-size:11px; color:var(--muted); font-family:var(--mono); }
-      .modal-close{ margin-left:auto; cursor:pointer; width:34px; height:34px; flex:none; border:1px solid var(--line); border-radius:var(--r-sm); background:rgba(3,16,36,.8);
+      .modal-close{ margin-left:auto; cursor:pointer; width:34px; height:34px; flex:none; border:1px solid var(--line); border-radius:var(--r-md); background:rgba(3,16,36,.8);
         color:#cfeeff; font-size:17px; line-height:1; transition:background .2s, color .2s; }
       .modal-close:hover{ background:rgba(160,20,45,.6); color:#fff; }
-      .modal-body{ padding:18px 22px 20px; display:grid; grid-template-columns:1.5fr 1fr; gap:20px; }
+      .modal-body{ padding:20px 24px 22px; display:grid; grid-template-columns:1.5fr 1fr; gap:20px; }
       .modal-body.single{ grid-template-columns:1fr; }
       .mb-sec h4{ font-size:13px; letter-spacing:2px; color:var(--cyan); margin-bottom:10px; font-weight:600; }
       /* ---------- detail modal: crew roster ---------- */
-      .crew-wrap{ max-height:342px; overflow-y:auto; border:1px solid var(--line-soft); border-radius:var(--r-sm); background:rgba(2,12,26,.55);
+      .crew-wrap{ max-height:342px; overflow-y:auto; border:1px solid rgba(0,180,240,.20); border-radius:var(--r-lg); background:rgba(2,12,26,.55);
         scrollbar-width:thin; scrollbar-color:rgba(0,180,255,.45) rgba(0,40,80,.25); }
       .crew-wrap::-webkit-scrollbar{ width:7px; }
       .crew-wrap::-webkit-scrollbar-thumb{ background:rgba(0,170,230,.45); border-radius:4px; }
@@ -461,10 +462,10 @@
       .crew-stats h4{ font-size:13px; letter-spacing:2px; color:var(--cyan); margin-bottom:10px; font-weight:600; }
       .cs-row{ display:flex; align-items:center; gap:9px; font-size:13px; padding:3.5px 0; }
       .cs-name{ width:64px; flex:none; color:#cfe9f7; white-space:nowrap; }
-      .cs-bar{ flex:1; height:9px; border-radius:5px; background:rgba(0,120,190,.13); overflow:hidden; box-shadow:inset 0 1px 2px rgba(0,0,0,.35); }
-      .cs-bar i{ display:block; height:100%; border-radius:5px; }
+      .cs-bar{ flex:1; height:9px; border-radius:999px; background:rgba(0,120,190,.13); overflow:hidden; box-shadow:inset 0 1px 2px rgba(0,0,0,.35); }
+      .cs-bar i{ display:block; height:100%; border-radius:999px; }
       .cs-num{ width:44px; flex:none; text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums; color:#eaf8ff; font-weight:700; font-size:13px; }
-      .d-meta{ display:flex; flex-wrap:wrap; gap:8px 26px; margin-top:18px; padding:11px 14px; border:1px solid var(--line-soft); border-radius:var(--r-sm);
+      .d-meta{ display:flex; flex-wrap:wrap; gap:8px 26px; margin-top:18px; padding:12px 16px; border:1px solid rgba(0,180,240,.20); border-radius:var(--r-lg);
         background:rgba(2,14,30,.6); font-size:13px; color:var(--muted); }
       .d-meta b{ color:#eaf8ff; font-weight:600; margin-left:6px; }
       .d-meta b.mono{ font-family:var(--mono); font-variant-numeric:tabular-nums; }
@@ -486,15 +487,17 @@
       .steps .stime{ margin-left:auto; font-family:var(--mono); font-size:12px; color:var(--muted); flex:none; }
       /* ---------- toast ---------- */
       #toast{ position:fixed; left:50%; bottom:34px; transform:translateX(-50%) translateY(20px); z-index:80; opacity:0; pointer-events:none;
-        background:rgba(3,18,38,.95); border:1px solid var(--line); border-radius:var(--r-md); box-shadow:0 6px 24px rgba(0,0,0,.45), 0 0 16px rgba(0,160,255,.18); color:#dff6ff; font-size:14px; letter-spacing:1px; padding:11px 22px;
+        background:rgba(3,18,38,.95); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+        border:1.5px solid var(--line); border-radius:var(--r-lg); box-shadow:0 8px 32px rgba(0,0,0,.55), 0 0 20px rgba(0,160,255,.25); color:#dff6ff; font-size:14px; letter-spacing:1px; padding:12px 24px;
         transition:opacity .25s, transform .25s; }
       #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
       /* ---------- cabin crew panel view ---------- */
       .cabin-crew-panel{
         flex:1; display:flex; flex-direction:column; min-height:0; overflow:hidden;
         background:linear-gradient(180deg, rgba(6,28,58,.94), rgba(2,14,32,.98));
-        border:1.5px solid rgba(0,210,255,.35); border-radius:var(--r-lg);
-        box-shadow:inset 0 1px 0 rgba(140,220,255,.14), inset 0 0 28px rgba(0,90,160,.12), 0 6px 24px rgba(0,0,0,.45);
+        backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+        border:1.5px solid rgba(0,210,255,.35); border-radius:var(--r-2xl);
+        box-shadow:inset 0 1px 1px rgba(140,220,255,.16), inset 0 0 28px rgba(0,90,160,.14), 0 8px 28px rgba(0,0,0,.45);
         animation:fadeIn .25s ease-out;
       }
       .cc-table-wrap{
@@ -585,39 +588,47 @@
           </div>
           <div class="ov-metrics">
             <div class="metric c" id="ovBox1">
-              <div class="m-left">
-                <span class="m-ico" id="ovIco1"></span>
+              <div class="m-top">
                 <span class="m-lab" id="ovLab1">当前船上总人数</span>
               </div>
-              <div class="m-right">
-                <div class="num"><span id="ovNum1">0</span><span class="tot" id="ovTot1"> 人</span></div>
+              <div class="m-bottom">
+                <span class="m-ico" id="ovIco1"></span>
+                <div class="m-right">
+                  <div class="num"><span id="ovNum1">0</span><span class="tot" id="ovTot1"> 人</span></div>
+                </div>
               </div>
             </div>
             <div class="metric o" id="ovBox2" style="cursor:pointer;" title="点击切换至空间视图【船舱区域】标签查看完整在舱名单">
-              <div class="m-left">
-                <span class="m-ico" id="ovIco2"></span>
+              <div class="m-top">
                 <span class="m-lab" id="ovLab2">舱内密集人员数</span>
               </div>
-              <div class="m-right">
-                <div class="num"><span id="ovNum2">0</span><span class="tot" id="ovTot2"> 人</span></div>
+              <div class="m-bottom">
+                <span class="m-ico" id="ovIco2"></span>
+                <div class="m-right">
+                  <div class="num"><span id="ovNum2">0</span><span class="tot" id="ovTot2"> 人</span></div>
+                </div>
               </div>
             </div>
             <div class="metric b" id="ovBox3">
-              <div class="m-left">
-                <span class="m-ico" id="ovIco3"></span>
+              <div class="m-top">
                 <span class="m-lab" id="ovLab3">有限空间总人数</span>
               </div>
-              <div class="m-right">
-                <div class="num"><span id="ovNum3">0</span><span class="tot" id="ovTot3"> 人</span></div>
+              <div class="m-bottom">
+                <span class="m-ico" id="ovIco3"></span>
+                <div class="m-right">
+                  <div class="num"><span id="ovNum3">0</span><span class="tot" id="ovTot3"> 人</span></div>
+                </div>
               </div>
             </div>
             <div class="metric g" id="ovBox4">
-              <div class="m-left">
-                <span class="m-ico" id="ovIco4"></span>
+              <div class="m-top">
                 <span class="m-lab" id="ovLab4">今日有限空间进舱数/总数</span>
               </div>
-              <div class="m-right">
-                <div class="num"><span id="ovNum4">0</span><span class="tot" id="ovTot4"> / 16 舱</span></div>
+              <div class="m-bottom">
+                <span class="m-ico" id="ovIco4"></span>
+                <div class="m-right">
+                  <div class="num"><span id="ovNum4">0</span><span class="tot" id="ovTot4"> / 16 舱</span></div>
+                </div>
               </div>
             </div>
           </div>
@@ -848,81 +859,221 @@
           {n:"机舱施工面", e:"Engine Room Working Face", lim:12},
           {n:"艉部系泊作业面", e:"Aft Mooring Face", lim:7, forbid:"empty"}
         ]},
-      { code:"厂区制造部", name:"厂区制造部", en:"FACTORY MANUFACTURING DEPT · YARD MFG-HQ", tag:"厂区制造部",
-        desc:"厂区制造部综合管控 · 动力站、综合管廊、危化品库与厂区公用设施",
-        ov:{ w:88, wt:150, d:27, dt:36, at:13 },
+      { code:"YARD-MFG", name:"制造部区域", en:"MANUFACTURING DEPT · YARD", tag:"制造部",
+        desc:"露天装焊平台、分段堆场、110/128船台、小组立与数控下料加工",
+        ov:{ w:168, wt:240, d:46, dt:58, at:18 },
         confined:[
-          {n:"综合管廊", e:"Utility Corridor", lim:6},
-          {n:"危化品库", e:"Hazchem Store", lim:4, warn:"o2"},
-          {n:"动力站地下泵房", e:"Power Station Pump House", lim:5},
-          {n:"污水处理调节池", e:"Sewage Regulating Tank", lim:4, warn:"h2s"},
-          {n:"消防水池", e:"Fire Water Tank", lim:5, forbid:"empty"},
-          {n:"空压站储气罐区", e:"Air Receiver Tank Area", lim:3, forbid:"intrude"}
+          {n:"分段合拢内舱", e:"Block Erection Compartment", lim:8, warn:"co"},
+          {n:"船台地坑与暗沟", e:"Berth Trench & Pit", lim:5},
+          {n:"数控切割除尘地坑", e:"CNC Cutting Dust Pit", lim:4},
+          {n:"预处理循环水池", e:"Pre-treatment Water Tank", lim:4, warn:"h2s"},
+          {n:"拼板机地下液压站", e:"Panel Line Hydraulic Pit", lim:4},
+          {n:"江边扣件地下阀室", e:"Riverside Valve Chamber", lim:3, forbid:"empty"}
         ],
         workface:[
-          {n:"厂区主干道施工面", e:"Yard Main Road Face", lim:12},
-          {n:"动力站检修面", e:"Power Station Maintenance Face", lim:9, warn:"co"},
-          {n:"综合仓库装卸面", e:"General Warehouse Face", lim:10},
-          {n:"厂区管网巡检面", e:"Yard Pipeline Inspection Face", lim:7, forbid:"intrude"},
-          {n:"物资堆场整理面", e:"Material Yard Face", lim:11},
-          {n:"应急物资储备面", e:"Emergency Supplies Face", lim:6, forbid:"empty"}
+          {n:"露天装焊平台（一）", e:"Open-air Welding Platform 1", guardian:"陈强", lim:16},
+          {n:"露天装焊平台（二）", e:"Open-air Welding Platform 2", guardian:"黄昌华", lim:16},
+          {n:"露天装焊平台（三）", e:"Open-air Welding Platform 3", guardian:"黄昌华", lim:16},
+          {n:"分段堆场", e:"Block Storage Yard", guardian:"周晓曦", lim:14},
+          {n:"预装区域", e:"Pre-outfitting Zone", guardian:"周晓曦", lim:12},
+          {n:"中钢区域", e:"Medium Steel Zone", guardian:"黄陈游", lim:12},
+          {n:"110船台", e:"No.110 Slipway", guardian:"朱浩杰", lim:18},
+          {n:"128船台", e:"No.128 Slipway", guardian:"赵士博", lim:18},
+          {n:"材料堆放区", e:"Material Storage Area", guardian:"朱乾", lim:8},
+          {n:"江边扣件房", e:"Riverside Fastener House", guardian:"唐苏闽", lim:6},
+          {n:"内场小组立区域", e:"Indoor Small Assembly Zone", guardian:"朱乾", lim:15},
+          {n:"划线、拼板区域", e:"Marking & Panel Assembly", guardian:"朱乾", lim:14},
+          {n:"数控切割区域", e:"CNC Cutting Zone", guardian:"廖洋琴", lim:10},
+          {n:"预处理区域", e:"Steel Pre-treatment Zone", guardian:"江冬松", lim:12},
+          {n:"加工区域", e:"Fabrication & Machining Zone", guardian:"朱乾", lim:14},
+          {n:"型材下料区域", e:"Profile Cutting Zone", guardian:"滕柯", lim:10}
         ]},
-      { code:"厂区制造部", name:"涂装车间", en:"COATING WORKSHOP · YARD MFG-A", tag:"涂装车间",
-        desc:"5071㎡ 密闭特涂房 · 喷砂房 · 调漆间 · 涂装外场",
-        ov:{ w:68, wt:120, d:22, dt:30, at:12 },
+      { code:"YARD-LOG", name:"集配部区域", en:"CENTRAL DISTRIBUTION DEPT · YARD", tag:"集配部",
+        desc:"管加工组、试压场、焊接车间、集配堆场、废铁堆场与舾装内场",
+        ov:{ w:142, wt:200, d:38, dt:48, at:15 },
         confined:[
-          {n:"5071㎡ 密闭特涂房", e:"Enclosed Coating Hall 5071㎡", lim:14, warn:"co"},
-          {n:"喷砂房", e:"Blasting Room", lim:6},
+          {n:"管试压地下集水坑", e:"Pipe Hydro-test Sump", lim:4},
+          {n:"表面处理废液池", e:"Surface Treatment Acid Pit", lim:4, warn:"h2s"},
+          {n:"舾装管廊夹层", e:"Outfitting Corridor Mezzanine", lim:5},
+          {n:"焊接烟尘净化舱", e:"Welding Fume Filter Chamber", lim:4},
+          {n:"集配地下排水井", e:"Distribution Drainage Well", lim:3},
+          {n:"废品堆场蓄水池", e:"Scrap Yard Retention Tank", lim:4, forbid:"empty"}
+        ],
+        workface:[
+          {n:"管堆放区（一）", e:"Pipe Storage Area 1", guardian:"黄季青", lim:10},
+          {n:"管加工组", e:"Pipe Fabrication Group", guardian:"施王祥", lim:14},
+          {n:"管堆放区（二）", e:"Pipe Storage Area 2", guardian:"黄季青", lim:10},
+          {n:"堆放区", e:"General Storage Area", guardian:"游再河", lim:8},
+          {n:"管子试压场", e:"Pipe Hydro-test Field", guardian:"倪佳豪", lim:12, warn:"co"},
+          {n:"管焊接车间", e:"Pipe Welding Workshop", guardian:"黄季青", lim:16},
+          {n:"管堆放区（三）", e:"Pipe Storage Area 3", guardian:"游再河", lim:10},
+          {n:"集配堆场（一）", e:"Distribution Yard 1", guardian:"游再河", lim:12},
+          {n:"管子表面处理", e:"Pipe Surface Treatment", guardian:"游再河", lim:10},
+          {n:"集配堆场（二）", e:"Distribution Yard 2", guardian:"杨炎琛", lim:12},
+          {n:"集配仓库", e:"Distribution Warehouse", guardian:"杨炎琛", lim:8},
+          {n:"集配堆场（三）", e:"Distribution Yard 3", guardian:"苏总", lim:12},
+          {n:"集配堆场（四）", e:"Distribution Yard 4", guardian:"苏总", lim:12},
+          {n:"集配堆场（五）", e:"Distribution Yard 5", guardian:"杨炎琛", lim:12},
+          {n:"废铁堆场", e:"Scrap Iron Yard", guardian:"甘乾波", lim:6},
+          {n:"舾装内场（一）", e:"Outfitting Workshop 1", guardian:"周裕昌", lim:14},
+          {n:"舾装内场（二）", e:"Outfitting Workshop 2", guardian:"周裕昌", lim:14},
+          {n:"中钢内场", e:"Medium Steel Workshop", guardian:"程文杰", lim:12}
+        ]},
+      { code:"YARD-PAINT", name:"涂装部区域", en:"PAINTING DEPT · YARD", tag:"涂装部",
+        desc:"密闭特涂房、喷砂除锈、涂装班组、分段堆场（三）与涂装二级库",
+        ov:{ w:78, wt:130, d:24, dt:32, at:12 },
+        confined:[
+          {n:"密闭特涂房", e:"Enclosed Coating Hall", lim:14, warn:"co"},
+          {n:"喷砂除锈房", e:"Blasting Room", lim:6},
           {n:"调漆间", e:"Paint Mixing Room", lim:4, warn:"o2"},
-          {n:"地下泵房", e:"Underground Pump House", lim:5},
-          {n:"储漆间", e:"Paint Storage Room", lim:4, forbid:"empty"},
-          {n:"集水井", e:"Sump Well", lim:3, forbid:"intrude"}
+          {n:"涂装排风地下暗道", e:"Paint Exhaust Tunnel", lim:5},
+          {n:"漆雾过滤净化间", e:"Paint Mist Filtration Room", lim:4},
+          {n:"储漆防爆间", e:"Paint Storage Room", lim:4, forbid:"empty"}
         ],
         workface:[
-          {n:"5071㎡ 密闭特涂房作业面", e:"Coating Hall Working Face", lim:14, warn:"co"},
-          {n:"涂装外场作业面", e:"Outdoor Coating Face", lim:16},
-          {n:"预处理流水线", e:"Pre-treatment Line", lim:12},
-          {n:"喷涂机器人作业面", e:"Robotic Spraying Face", lim:8, forbid:"empty"},
-          {n:"打磨修补作业面", e:"Grinding & Touch-up Face", lim:10, forbid:"intrude"},
-          {n:"涂层检验面", e:"Coating Inspection Face", lim:6, warn:"o2"}
+          {n:"涂装房", e:"Coating Hall Working Face", guardian:"许飞", lim:16, warn:"co"},
+          {n:"涂装班组（一）", e:"Coating Crew 1", guardian:"陈国荣", lim:14},
+          {n:"涂装班组（二）", e:"Coating Crew 2", guardian:"陈国荣", lim:14},
+          {n:"涂装班组（三）", e:"Coating Crew 3", guardian:"陈国荣", lim:14},
+          {n:"分段堆场（三）", e:"Block Yard 3", guardian:"许飞", lim:12},
+          {n:"涂装二级库", e:"Paint Secondary Store", guardian:"许飞", lim:8}
         ]},
-      { code:"厂区制造部", name:"总装焊区", en:"ASSEMBLY & WELDING YARD · YARD MFG-B", tag:"总装焊区",
-        desc:"总装拼装重型平台 · 分段焊接 · 起重吊装",
-        ov:{ w:145, wt:220, d:40, dt:52, at:14 },
+      { code:"YARD-MAT", name:"资材管理部区域", en:"MATERIAL MGMT DEPT · YARD", tag:"资材管理部",
+        desc:"危险品库、管材钢板库、机电库、危废库与各类资材半成品堆场",
+        ov:{ w:64, wt:110, d:18, dt:26, at:11 },
         confined:[
-          {n:"分段合拢舱", e:"Block Erection Compartment", lim:8, warn:"co"},
-          {n:"双层底压载舱", e:"Double Bottom Ballast Tank", lim:6, warn:"h2s"},
-          {n:"隔离空舱", e:"Cofferdam", lim:5, forbid:"empty"},
-          {n:"艏尖隔舱", e:"Forepeak Tank", lim:4},
-          {n:"管隧井", e:"Pipe Tunnel Shaft", lim:4, forbid:"intrude"},
-          {n:"集水井", e:"Bilge Well", lim:3}
+          {n:"危险品防爆地下储罐", e:"Hazchem Underground Tank", lim:4, warn:"o2"},
+          {n:"危废暂存防渗地坑", e:"Hazwaste Sump Pit", lim:3, warn:"h2s"},
+          {n:"机电库电缆夹层", e:"Electric Store Cable Mezzanine", lim:4},
+          {n:"钢板库地下液压顶坑", e:"Steel Plate Hydraulic Pit", lim:3},
+          {n:"资材消防应急蓄水池", e:"Material Fire Water Pool", lim:5},
+          {n:"气瓶库隔离防爆间", e:"Gas Cylinder Chamber", lim:3, forbid:"empty"}
         ],
         workface:[
-          {n:"总装拼装重型平台", e:"Heavy Assembly Platform", lim:28},
-          {n:"分段焊接作业面", e:"Block Welding Face", lim:22},
-          {n:"分段翻身作业面", e:"Block Turnover Face", lim:12},
-          {n:"管系加工面", e:"Pipe Fabrication Face", lim:10, forbid:"intrude"},
-          {n:"起重吊装作业面", e:"Lifting & Rigging Face", lim:9, warn:"co"},
-          {n:"焊缝探伤检测面", e:"Weld NDT Face", lim:6, forbid:"empty"}
+          {n:"危险品库", e:"Hazardous Chemical Store", guardian:"林强", lim:6, warn:"o2"},
+          {n:"管材区域", e:"Pipe Material Yard", guardian:"张桂龙", lim:10},
+          {n:"钢板库", e:"Steel Plate Store", guardian:"张桂龙", lim:8},
+          {n:"机电库（一）", e:"Electrical Store 1", guardian:"高斌", lim:8},
+          {n:"机电库（二）", e:"Electrical Store 2", guardian:"高斌", lim:8},
+          {n:"危废库（一）", e:"Hazardous Waste Store 1", guardian:"高斌", lim:6, warn:"h2s"},
+          {n:"危废库（二）", e:"Hazardous Waste Store 2", guardian:"高斌", lim:6},
+          {n:"资材堆场（一）", e:"Material Yard 1", guardian:"高斌", lim:12},
+          {n:"资材堆场（二）（半成品库）", e:"Semi-finished Material Yard 2", guardian:"高斌", lim:10},
+          {n:"资材堆场（三）", e:"Material Yard 3", guardian:"高斌", lim:10},
+          {n:"资材堆场（四）", e:"Material Yard 4", guardian:"高斌", lim:10}
         ]},
-      { code:"厂区制造部", name:"管隧井作业区", en:"PIPE TUNNEL & SHAFT AREA · YARD MFG-C", tag:"管隧井区",
-        desc:"管隧井 · 地下泵房 · 水下管隧 · 阀门井",
-        ov:{ w:42, wt:80, d:18, dt:26, at:10 },
+      { code:"YARD-PWR", name:"生产保障部区域", en:"PRODUCTION SUPPORT DEPT · YARD", tag:"生产保障部",
+        desc:"氧气/二氧化碳罐区、天然气调压站、变配电房、空压机房、维修段与机加工",
+        ov:{ w:95, wt:160, d:30, dt:42, at:14 },
         confined:[
-          {n:"管隧井", e:"Pipe Tunnel Shaft", lim:4, warn:"h2s"},
-          {n:"地下泵房", e:"Underground Pump House", lim:5},
-          {n:"水下管隧", e:"Underwater Pipe Tunnel", lim:4, warn:"o2"},
-          {n:"阀门井", e:"Valve Shaft", lim:3, forbid:"empty"},
-          {n:"雨水泵站深井", e:"Rainwater Pump Deep Well", lim:4, forbid:"intrude"},
-          {n:"集水井", e:"Sump Well", lim:3}
+          {n:"气体汇流排暗室", e:"Gas Manifold Chamber", lim:4, warn:"o2"},
+          {n:"天然气管沟地下阀井", e:"Gas Trench Valve Pit", lim:3, warn:"co"},
+          {n:"总变电站电缆夹层", e:"Main Substation Cable Duct", lim:4},
+          {n:"空压储气罐排污池", e:"Compressor Drain Sump", lim:3},
+          {n:"生产供水地下泵房", e:"Industrial Water Pump House", lim:5},
+          {n:"变压器事故油池", e:"Transformer Oil Retention Pit", lim:3, forbid:"empty"}
         ],
         workface:[
-          {n:"管隧井口作业面", e:"Tunnel Shaft Mouth Face", lim:6},
-          {n:"管系试压面", e:"Piping Pressure Test Face", lim:8, warn:"co"},
-          {n:"阀门井检修面", e:"Valve Shaft Service Face", lim:5, forbid:"empty"},
-          {n:"泵房设备安装面", e:"Pump Room Equipment Face", lim:9},
-          {n:"管道预制作业面", e:"Pipe Prefabrication Face", lim:11, forbid:"intrude"},
-          {n:"井口吊装作业面", e:"Shaft Head Lifting Face", lim:7, warn:"h2s"}
+          {n:"氧气、二氧化碳罐区（一）", e:"O2 & CO2 Tank Farm 1", guardian:"徐敬业", lim:6, warn:"o2"},
+          {n:"氧气、二氧化碳罐区（二）", e:"O2 & CO2 Tank Farm 2", guardian:"徐敬业", lim:6},
+          {n:"天然气调压站", e:"Natural Gas Regulating Station", guardian:"徐敬业", lim:5, warn:"co"},
+          {n:"电房（一）", e:"Substation 1", guardian:"王少康", lim:6},
+          {n:"电房（二）制造内场", e:"Substation 2 (Mfg Hall)", guardian:"王少康", lim:6},
+          {n:"电房（三）旧码头", e:"Substation 3 (Old Pier)", guardian:"王少康", lim:6},
+          {n:"电房（四）中钢墙边", e:"Substation 4 (Steel Wall)", guardian:"王少康", lim:6},
+          {n:"新涂装房电房", e:"New Paint Shop Substation", guardian:"王少康", lim:6},
+          {n:"电房（六）两万吨", e:"Substation 6 (20K-Ton)", guardian:"王少康", lim:6},
+          {n:"空压机房（一）", e:"Compressor Room 1", guardian:"李昌松", lim:8},
+          {n:"空压机房（二）", e:"Compressor Room 2", guardian:"李昌松", lim:8},
+          {n:"空压机房（三）", e:"Compressor Room 3", guardian:"李昌松", lim:8},
+          {n:"空压机房（五）（新涂装房）", e:"Compressor Room 5 (New Paint)", guardian:"李昌松", lim:8},
+          {n:"空压机房（六）两万吨", e:"Compressor Room 6 (20K-Ton)", guardian:"李昌松", lim:8},
+          {n:"叉车维修点", e:"Forklift Repair Station", guardian:"林永", lim:8},
+          {n:"维修段", e:"Maintenance Section", guardian:"王振科", lim:12},
+          {n:"机加工", e:"Machining Workshop", guardian:"黄文锋", lim:10}
+        ]},
+      { code:"YARD-PIER", name:"码管室区域", en:"PIER MANAGEMENT · YARD", tag:"码管室",
+        desc:"1~4号作业码头泊位与大型滑板堆放区",
+        ov:{ w:56, wt:90, d:16, dt:24, at:8 },
+        confined:[
+          {n:"码头系泊系船地锚洞", e:"Mooring Anchor Cavity", lim:4},
+          {n:"码头岸电地下通道", e:"Shore Power Cable Duct", lim:5},
+          {n:"码头雨水收集深井", e:"Pier Stormwater Deep Well", lim:4},
+          {n:"滑道地下润滑泵坑", e:"Slipway Lubrication Pit", lim:3},
+          {n:"浮码头平衡水箱空舱", e:"Pontoon Ballast Space", lim:4},
+          {n:"码头消防应急泵阀室", e:"Pier Fire Pump Chamber", lim:4, forbid:"empty"}
+        ],
+        workface:[
+          {n:"码头（一）", e:"Pier Berth No.1", guardian:"林礼城", lim:16},
+          {n:"码头（二）", e:"Pier Berth No.2", guardian:"林礼城", lim:16},
+          {n:"码头（三）", e:"Pier Berth No.3", guardian:"朱潮钦", lim:16},
+          {n:"码头（四）", e:"Pier Berth No.4", guardian:"朱潮钦", lim:16},
+          {n:"滑板堆放区（—）", e:"Skid Plate Yard 1", guardian:"张勇建", lim:8},
+          {n:"滑板堆放区（二）", e:"Skid Plate Yard 2", guardian:"张勇建", lim:8}
+        ]},
+      { code:"YARD-ELEC", name:"机电部区域", en:"ELECTROMECHANICAL DEPT · YARD", tag:"机电部",
+        desc:"电缆库与机电内场施工作业区域",
+        ov:{ w:26, wt:45, d:8, dt:14, at:5 },
+        confined:[
+          {n:"电缆敷设地下通道", e:"Cable Underground Duct", lim:5},
+          {n:"配电盘试验测试暗间", e:"Switchboard Test Room", lim:4},
+          {n:"机电调试水密地坑", e:"Electromechanical Test Pit", lim:3},
+          {n:"变频柜散热风道", e:"VFD Cooling Air Shaft", lim:3},
+          {n:"电缆绝缘干燥间", e:"Cable Drying Chamber", lim:4},
+          {n:"备用应急配电隔离间", e:"Backup Power Vault", lim:3, forbid:"empty"}
+        ],
+        workface:[
+          {n:"电缆库", e:"Cable Storage Yard", guardian:"陈苏飞", lim:10},
+          {n:"机电内场", e:"Electromechanical Workshop", guardian:"罗志刚", lim:16}
+        ]},
+      { code:"YARD-OUTFIT", name:"船装部区域", en:"HULL OUTFITTING DEPT · YARD", tag:"船装部",
+        desc:"船装内场一、二区与旧码头船装仓库",
+        ov:{ w:38, wt:60, d:12, dt:18, at:6 },
+        confined:[
+          {n:"舾装件酸洗除锈沉淀池", e:"Outfitting Acid Sump", lim:4},
+          {n:"门窗水密试验舱", e:"Watertight Test Chamber", lim:4},
+          {n:"锚绞机预装地下基座坑", e:"Windlass Foundation Pit", lim:3},
+          {n:"救生设备测试间", e:"Lifesaving Equipment Room", lim:4},
+          {n:"船装五金地下地坑", e:"Hardware Storage Pit", lim:3},
+          {n:"仓库地下排污暗沟", e:"Warehouse Drain Culvert", lim:3, forbid:"empty"}
+        ],
+        workface:[
+          {n:"船装内场（一）", e:"Hull Outfitting Workshop 1", guardian:"谢荣鹏", lim:15},
+          {n:"船装内场（二）", e:"Hull Outfitting Workshop 2", guardian:"谢荣鹏", lim:15},
+          {n:"旧码头船装仓库", e:"Old Pier Outfitting Store", guardian:"谢荣鹏", lim:8}
+        ]},
+      { code:"YARD-ERECT", name:"搭载部区域", en:"ERECTION DEPT · YARD", tag:"搭载部",
+        desc:"两万吨总组区域、两万吨船台与平船台大合拢搭载",
+        ov:{ w:70, wt:110, d:22, dt:30, at:9 },
+        confined:[
+          {n:"船台龙骨墩地下基座沟", e:"Keel Block Foundation Trench", lim:5},
+          {n:"总组双层底对接合拢舱", e:"Block Double Bottom Space", lim:6, warn:"co"},
+          {n:"船台牵引绞车地坑", e:"Winch Traction Pit", lim:4},
+          {n:"船台排水地下廊道", e:"Berth Drainage Gallery", lim:4},
+          {n:"压载调试临时蓄水舱", e:"Ballast Test Water Tank", lim:5},
+          {n:"船台下水滑道观察井", e:"Slipway Observation Well", lim:3, forbid:"empty"}
+        ],
+        workface:[
+          {n:"两万吨总组区域", e:"20K-Ton Block Assembly Zone", guardian:"唐苏闽", lim:24},
+          {n:"两万吨船台", e:"20K-Ton Slipway", guardian:"林衔", lim:26},
+          {n:"平船台", e:"Flat Slipway", guardian:"林武", lim:20}
+        ]},
+      { code:"YARD-ADMIN", name:"综合管理部区域", en:"GENERAL ADMIN DEPT · YARD", tag:"综合管理部",
+        desc:"外场公共区域、办公楼、宿舍楼与生活食堂保障",
+        ov:{ w:44, wt:75, d:12, dt:20, at:6 },
+        confined:[
+          {n:"办公区生活污水化粪池", e:"Sewage Septic Tank", lim:4, warn:"h2s"},
+          {n:"生活饮用水蓄水池", e:"Drinking Water Reservoir", lim:5},
+          {n:"食堂隔油沉淀池", e:"Kitchen Grease Trap Pit", lim:3},
+          {n:"综合电梯井底坑", e:"Elevator Pit", lim:3},
+          {n:"综合消防地下泵房", e:"Admin Fire Pump House", lim:4},
+          {n:"综合楼弱电地下管井", e:"Telecom Cable Pit", lim:3, forbid:"empty"}
+        ],
+        workface:[
+          {n:"外场、公共区域", e:"Outdoor Public Area", guardian:"刘建佳", lim:14},
+          {n:"办公楼", e:"Administration Building", guardian:"江 杰", lim:10},
+          {n:"宿舍楼", e:"Staff Dormitory", guardian:"林 诚", lim:12},
+          {n:"食 堂", e:"Staff Canteen", guardian:"林 诚", lim:8}
         ]}
     ];
 
@@ -1044,7 +1195,21 @@
         if(entered < 1) entered = Math.min(def.lim, ri(1,3));
         working = 0;
       }
-      var g = def.guardian ? def.guardian : pick2guardian();
+      var g;
+      if(def.guardian){
+        if(Array.isArray(def.guardian)){
+          g = def.guardian;
+        } else {
+          var gName = String(def.guardian).trim();
+          var phoneSeed = 0;
+          for(var pi=0; pi<gName.length; pi++) phoneSeed += gName.charCodeAt(pi) * 31;
+          var pTail = ("0000" + (phoneSeed % 10000)).slice(-4);
+          var pMid = ("0000" + (Math.floor(phoneSeed / 7) % 10000)).slice(-4);
+          g = [gName, "13" + ((phoneSeed % 8) + 2) + "-" + pMid.slice(0,4) + "-" + pTail];
+        }
+      } else {
+        g = pick2guardian();
+      }
       var gas = def.gas ? { o2:def.gas.o2, co:def.gas.co, h2s:def.gas.h2s, lel:def.gas.lel } : baseGas(def.warn);
       if(def.forceOver) gas._fo = def.forceOver;
       var s = {
@@ -1142,9 +1307,8 @@
       _seed = 987654 + state.proj*100003;
       var yard = projRegion(state.proj) === "yard";
       var extraC = yard ? EXTRA_YARD_CONFINED : EXTRA_SHIP_CONFINED;
-      var extraW = yard ? EXTRA_YARD_WORKFACE : EXTRA_SHIP_WORKFACE;
-      var rawC = p.confined.concat(extraC).map(function(d,i){ var sp = makeSpace(d,i); sp.crew = makeCrew(sp, yard); return sp; });
-      var rawW = p.workface.concat(extraW).map(function(d,i){ var sp = makeSpace(d,i); sp.crew = makeCrew(sp, yard); return sp; });
+      var rawC = (yard && p.confined && p.confined.length >= 6 ? p.confined : p.confined.concat(extraC)).map(function(d,i){ var sp = makeSpace(d,i); sp.crew = makeCrew(sp, yard); return sp; });
+      var rawW = (yard ? p.workface : p.workface.concat(EXTRA_SHIP_WORKFACE)).map(function(d,i){ var sp = makeSpace(d,i); sp.crew = makeCrew(sp, yard); return sp; });
       state.sets = {
         confined: sortSpaces(rawC),
         workface: sortSpaces(rawW)
@@ -1532,19 +1696,17 @@
       var html = '<div class="cc-table-wrap">'
         + '<table class="cc-table">'
         + '<thead><tr>'
-        + '<th>工号</th><th>姓名</th><th>工种</th><th>班组</th><th>标签编号</th><th>所在位置</th><th>进入时间</th><th>停留时间</th><th>状态</th>'
+        + '<th>工号</th><th>姓名</th><th>工种</th><th>班组</th><th>标签编号</th><th>所在位置</th><th>进入时间</th><th>停留时间</th>'
         + '</tr></thead>'
         + '<tbody>';
 
       if(allList.length === 0){
-        html += '<tr><td colspan="9" class="cc-empty">暂无在舱人员数据</td></tr>';
+        html += '<tr><td colspan="8" class="cc-empty">暂无在舱人员数据</td></tr>';
       } else {
         allList.forEach(function(p){
           var isIntrude = p.status === "异常闯入" || p.status === "非法闯入";
           var isTimeout = p.status === "停留超时";
           var rowCls = isIntrude ? ' class="intrude-row"' : (isTimeout ? ' class="timeout-row"' : '');
-          var pillCls = isIntrude ? 'intrude' : (isTimeout ? 'timeout' : 'work');
-          var pillIcon = isIntrude ? '⚠️ ' : (isTimeout ? '⏱ ' : '● ');
 
           html += '<tr' + rowCls + '>'
             + '<td class="col-id">' + p.workerId + '</td>'
@@ -1555,7 +1717,6 @@
             + '<td class="col-loc">' + p.location + '</td>'
             + '<td class="col-time">' + p.entryTime + '</td>'
             + '<td class="col-stay">' + p.duration + '</td>'
-            + '<td><span class="cc-pill ' + pillCls + '">' + pillIcon + p.status + '</span></td>'
             + '</tr>';
         });
       }
@@ -1566,9 +1727,9 @@
 
     function exportCabinCrewCSV(list){
       if(!list || !list.length){ toast("暂无可导出的人员名单"); return; }
-      var header = "工号,姓名,工种,班组,标签编号,所在位置,关联激励器,进入时间,停留时间,状态\n";
+      var header = "工号,姓名,工种,班组,标签编号,所在位置,关联激励器,进入时间,停留时间\n";
       var rows = list.map(function(item){
-        return '"' + item.workerId + '","' + item.name + '","' + (item.trade || '') + '","' + item.team + '","' + item.tagCode + '","' + item.location + '","' + (item.triggeredExciterName || '') + '","' + item.entryTime + '","' + item.duration + '","' + item.status + '"';
+        return '"' + item.workerId + '","' + item.name + '","' + (item.trade || '') + '","' + item.team + '","' + item.tagCode + '","' + item.location + '","' + (item.triggeredExciterName || '') + '","' + item.entryTime + '","' + item.duration + '"';
       }).join("\n");
       var blob = new Blob(["\uFEFF" + header + rows], { type: "text/csv;charset=utf-8;" });
       var url = URL.createObjectURL(blob);
@@ -1653,7 +1814,7 @@
             lab: "当前厂区总人数",
             num: totalAll,
             tot: " 人",
-            tag: "厂区制造部",
+            tag: (PROJECTS[state.proj] && PROJECTS[state.proj].name) ? PROJECTS[state.proj].name : "厂区区域",
             sub: "在岗作业总人数",
             pct: Math.min(100, Math.round(totalAll / 150 * 100)),
             cls: "c"
@@ -1979,7 +2140,7 @@
       document.getElementById("dCrewWrap").innerHTML = crew.length
         ? '<table class="crew-table"><thead><tr><th>工号</th><th>姓名</th><th>工种</th><th>班组</th><th>进入时间</th><th>停留时间</th><th>人员状态</th></tr></thead><tbody>'
           + crew.map(function(w){
-              var trCls = isIntrude ? ' class="intruder-row"' : '';
+              var trCls = isIntrude ? ' class="intrude-row"' : '';
               var statusCell = isIntrude
                 ? '<span class="badge-intruder">⚠️ 非法闯入人员</span>'
                 : '<span style="color:#1fe08a;font-size:12px;font-weight:600">正常在岗</span>';
